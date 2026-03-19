@@ -136,12 +136,22 @@ export default function GeneratePage() {
 
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Content Type</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
-              {CONTENT_TYPES.map((ct) => (
-                <button key={ct.value} onClick={() => setContentType(ct.value)} style={{ background: contentType === ct.value ? 'rgba(202,255,0,0.08)' : t.toneBg, border: `1px solid ${contentType === ct.value ? 'rgba(202,255,0,0.4)' : t.toneBorder}`, borderRadius: 10, color: contentType === ct.value ? '#CAFF00' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '10px 14px', cursor: 'pointer', transition: 'all 0.15s', fontWeight: contentType === ct.value ? 500 : 400 }}>
-                  {ct.label}
-                </button>
-              ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 10 }}>
+              {[
+  { value: 'instagram_caption', name: 'IG Caption', svg: <svg viewBox="0 0 32 32" width="28" height="28"><defs><radialGradient id="ig1" cx="30%" cy="107%" r="150%"><stop offset="0%" stopColor="#fdf497"/><stop offset="45%" stopColor="#fd5949"/><stop offset="90%" stopColor="#285AEB"/></radialGradient></defs><rect width="32" height="32" rx="8" fill="url(#ig1)"/><rect x="8" y="8" width="16" height="16" rx="4.5" stroke="white" strokeWidth="1.5" fill="none"/><circle cx="16" cy="16" r="4" stroke="white" strokeWidth="1.5" fill="none"/><circle cx="21.5" cy="10.5" r="1" fill="white"/></svg> },
+  { value: 'instagram_bio', name: 'IG Bio', svg: <svg viewBox="0 0 32 32" width="28" height="28"><defs><radialGradient id="ig2" cx="30%" cy="107%" r="150%"><stop offset="0%" stopColor="#fdf497"/><stop offset="45%" stopColor="#fd5949"/><stop offset="90%" stopColor="#285AEB"/></radialGradient></defs><rect width="32" height="32" rx="8" fill="url(#ig2)"/><circle cx="16" cy="13" r="4" fill="white"/><path d="M8 26c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg> },
+  { value: 'twitter_bio', name: 'Twitter', svg: <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="#000"/><path d="M18.244 7.25h3.308l-7.227 8.26 8.502 9.24H16.17l-4.714-5.231-5.401 5.231H2.744l7.73-7.835L1.254 7.25H8.08l4.253 4.622 5.911-4.622zm-1.161 15.52h1.833L7.084 9.126H5.117z" fill="white"/></svg> },
+  { value: 'linkedin_bio', name: 'LinkedIn', svg: <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="#0077B5"/><path d="M10.5 13.5h-3v9h3v-9zm-1.5-4.5a1.75 1.75 0 110 3.5 1.75 1.75 0 010-3.5zm13.5 4.5c-2 0-3 1-3.5 1.75V13.5h-3v9h3v-5c0-1.1.9-2 2-2s2 .9 2 2v5h3v-5.5c0-2.5-1.5-3.5-3.5-3.5z" fill="white"/></svg> },
+  { value: 'youtube_desc', name: 'YouTube', svg: <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="#FF0000"/><path d="M26 16s0-3-.4-4.5a2.3 2.3 0 00-1.6-1.6C22.5 9.5 16 9.5 16 9.5s-6.5 0-8 .4a2.3 2.3 0 00-1.6 1.6C6 13 6 16 6 16s0 3 .4 4.5a2.3 2.3 0 001.6 1.6c1.5.4 8 .4 8 .4s6.5 0 8-.4a2.3 2.3 0 001.6-1.6C26 19 26 16 26 16zm-11.5 3v-6l5.5 3-5.5 3z" fill="white"/></svg> },
+  { value: 'whatsapp_status', name: 'WhatsApp', svg: <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="#25D366"/><path d="M22 10a8.5 8.5 0 00-14.3 9.3L6 26l6.8-1.8A8.5 8.5 0 0022 10zm-6 12.8a7 7 0 01-3.6-1l-.3-.2-2.9.8.8-2.8-.2-.3a7 7 0 1110.7-3.8c.2.7.3 1.4.3 2.1a7 7 0 01-4.8 5.2zm3.8-5.2c-.2-.1-1.2-.6-1.4-.7-.2-.1-.3-.1-.4.1l-.6.7c-.1.1-.2.1-.4 0-.2-.1-.9-.3-1.7-1-.6-.6-1-1.2-1.2-1.4-.1-.2 0-.3.1-.4l.3-.4c.1-.1.1-.2.2-.3 0-.1 0-.2-.1-.3l-.6-1.5c-.2-.4-.3-.4-.4-.4h-.4c-.1 0-.3.1-.5.3-.2.2-.7.7-.7 1.6s.7 1.9.8 2c.1.1 1.4 2.2 3.5 3 .5.2.9.3 1.2.4.5.1 1 .1 1.3.1.4-.1 1.2-.5 1.4-1 .2-.5.2-.9.1-1-.1-.1-.2-.1-.4-.2z" fill="white"/></svg> },
+  { value: 'reels_hook', name: 'Reels', svg: <svg viewBox="0 0 32 32" width="28" height="28"><defs><radialGradient id="ig3" cx="30%" cy="107%" r="150%"><stop offset="0%" stopColor="#fdf497"/><stop offset="45%" stopColor="#fd5949"/><stop offset="90%" stopColor="#285AEB"/></radialGradient></defs><rect width="32" height="32" rx="8" fill="url(#ig3)"/><path d="M11 8l14 8-14 8V8z" fill="white"/></svg> },
+  { value: 'pov_caption', name: 'POV', svg: <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="#1a1a1a"/><text x="16" y="21" textAnchor="middle" fill="white" fontSize="16">🤳</text></svg> },
+].map((ct) => (
+  <button key={ct.value} onClick={() => setContentType(ct.value)} style={{ background: contentType === ct.value ? 'rgba(202,255,0,0.08)' : t.toneBg, border: `1px solid ${contentType === ct.value ? 'rgba(202,255,0,0.4)' : t.toneBorder}`, borderRadius: 12, padding: '12px 6px 10px', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+    {ct.svg}
+    <span style={{ fontSize: 10, color: contentType === ct.value ? '#CAFF00' : t.toneText, fontFamily: "'DM Sans', sans-serif" }}>{ct.name}</span>
+  </button>
+))}
             </div>
           </div>
 
