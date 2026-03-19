@@ -1,65 +1,55 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 
 const PLACEHOLDERS = [
-  "Gym ke baad selfie, feeling pumped 💪",
-  "Beach sunset with besties, golden hour vibes",
-  "New outfit drop, feeling myself fr fr",
-  "Late night study grind, chai in hand ☕",
-  "Cricket match jeet gaye, dil khush hai 🏏",
-  "Goa trip with gang, best days ever 🌊",
-  "Diwali night, lights everywhere ✨",
-  "First day of college, nervous but excited",
-  "Rainy day mood, window seat aur coffee",
-  "Road trip on NH, windows down, music loud 🎵",
-  "Eid ka chand dekha, dil roshan ho gaya 🌙",
-  "Birthday surprise from best friend, crying happy tears 🎂",
-  "First salary aaya, treat toh banta hai 💸",
-  "Mountains trip, cold wind aur hot maggi ⛰️",
-  "Holi ke rang, yaar ke sang 🎨",
-  "New haircut, new me energy fr",
-  "Exam khatam, ab toh freedom 🎉",
-  "Late night drive, city lights aur lofi music 🌃",
-  "Mom ke haath ka khana, nothing hits different 🍱",
-  "First time driving alone, felt so independent 🚗",
-  "Graduation day, 4 saal ki mehnat 🎓",
-  "Solo cafe date, me time is everything ☕",
-  "New year ki raat, dost aur fireworks 🎆",
-  "Morning run done, endorphins hitting hard 🏃",
-  "Baarish mein bheega, zero regrets 🌧️",
-  "IPL final dekha live, kya raat thi 🏏",
-  "Street food with bestie, gol gappe round 2 🥘",
-  "Sunset from terrace, city looks beautiful 🌇",
-  "Internship ka pehla din, nervous but ready 💼",
-  "Siblings ka pyaar, thoda nok jhok bhi 😄",
+  "Make me an aesthetic Instagram caption for my Goa trip sunset photo 🌊",
+  "Write a funny WhatsApp status for Monday morning mood 😂",
+  "Create a savage Twitter bio for a student who codes 🔥",
+  "LinkedIn bio for a fresher engineer, cool but professional 💼",
+  "Hinglish Instagram caption for my gym transformation photo 💪",
+  "POV caption for a late night drive with bestie 🌃",
+  "Motivational Instagram bio for a fitness page 🏋️",
+  "Romantic WhatsApp status in Hinglish for anniversary 💕",
+  "Funny caption for a group photo at a desi wedding 🎉",
+  "Reels hook for a cooking video, make it catchy 🍳",
+  "Aesthetic caption for a rainy day window seat photo 🌧️",
+  "Instagram caption for Diwali night, lights and family vibes 🪔",
+  "POV caption for first day of college, nervous but excited 🎓",
+  "Caption for my first salary celebration post 🥳",
+  "Funny reels hook about being broke after the weekend 💸",
+  "Aesthetic Instagram bio for a photography page 📸",
+  "Hinglish caption for best friend's birthday post 🎂",
+  "Savage WhatsApp status after exam season is over 😤",
+  "Caption for a solo cafe date photo, me time vibes ☕",
+  "Motivational caption for posting after a long break on Instagram 💫",
+  "Funny caption for a gym selfie when you skipped leg day 😅",
+  "Instagram bio for a Gen Z fashion blogger from Delhi 👗",
+  "Reels hook for a study with me video at 2am ⏰",
+  "Caption for a road trip photo, windows down, music loud 🚗",
+  "Hinglish caption for a cricket match watching night 🏏",
+  "Twitter bio for a music producer still in school 🎵",
+  "Funny LinkedIn bio for a marketing intern who loves chai ☕",
+  "Caption for mountains trip, cold wind aur hot maggi ⛰️",
+  "Aesthetic caption for Holi with the gang 🎨",
+  "Instagram bio for a startup founder in Class 12 🚀",
 ];
 
 const TONES = ['Aesthetic', 'Funny', 'Savage', 'Motivational', 'Romantic', 'Professional', 'Desi'];
-const CONTENT_TYPES = [
-  { label: '📸 Instagram Caption', value: 'instagram_caption' },
-  { label: '👤 Instagram Bio', value: 'instagram_bio' },
-  { label: '🐦 Twitter Bio', value: 'twitter_bio' },
-  { label: '💼 LinkedIn Bio', value: 'linkedin_bio' },
-  { label: '▶️ YouTube Description', value: 'youtube_desc' },
-  { label: '💬 WhatsApp Status', value: 'whatsapp_status' },
-  { label: '🎬 Reels Hook', value: 'reels_hook' },
-  { label: '🤳 POV Caption', value: 'pov_caption' },
-];
+const OPTIONS = ['Hinglish 🇮🇳', 'Add Emojis ✨', 'Add Hashtags #'];
 
 export default function GeneratePage() {
   const [input, setInput] = useState('');
   const [placeholder] = useState(() => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
   const [tone, setTone] = useState('Aesthetic');
-  const [contentType, setContentType] = useState('instagram_caption');
-  const [hinglish, setHinglish] = useState(false);
-  const [emoji, setEmoji] = useState(true);
-  const [hashtags, setHashtags] = useState(true);
+  const [selectedOptions, setSelectedOptions] = useState(['Add Emojis ✨', 'Add Hashtags #']);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(null);
   const [dark, setDark] = useState(true);
   const [error, setError] = useState('');
+  const [attachment, setAttachment] = useState(null);
+  const fileRef = useRef(null);
 
   const t = {
     bg: dark ? '#080808' : '#F5F5F0',
@@ -79,6 +69,19 @@ export default function GeneratePage() {
     resultBorder: dark ? '#222222' : '#E8E6E0',
     copyBg: dark ? '#1a1a1a' : '#F0EEE8',
     copyText: dark ? '#888888' : '#666666',
+    attBg: dark ? '#1a1a1a' : '#F0EEE8',
+    attBorder: dark ? '#2a2a2a' : '#D8D6D0',
+  };
+
+  const toggleOption = (opt) => {
+    setSelectedOptions(prev =>
+      prev.includes(opt) ? prev.filter(o => o !== opt) : [...prev, opt]
+    );
+  };
+
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (file) setAttachment(file);
   };
 
   const handleGenerate = async () => {
@@ -87,10 +90,13 @@ export default function GeneratePage() {
     setResults([]);
     setError('');
     try {
+      const hinglish = selectedOptions.includes('Hinglish 🇮🇳');
+      const emoji = selectedOptions.includes('Add Emojis ✨');
+      const hashtags = selectedOptions.includes('Add Hashtags #');
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input, tone, contentType, hinglish, emoji, hashtags }),
+        body: JSON.stringify({ input, tone, contentType: 'auto', hinglish, emoji, hashtags }),
       });
       const data = await res.json();
       if (data.results) setResults(data.results);
@@ -112,49 +118,57 @@ export default function GeneratePage() {
     <div style={{ minHeight: '100vh', background: t.bg, transition: 'all 0.3s', fontFamily: "'DM Sans', sans-serif" }}>
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 40px', borderBottom: `1px solid ${t.border}`, position: 'sticky', top: 0, zIndex: 100, background: t.navBg, backdropFilter: 'blur(12px)' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
-  <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, lineHeight: 1 }}>likhle<span style={{ color: '#CAFF00' }}>.</span></div>
-  <div style={{ fontSize: 11, color: t.muted, letterSpacing: '0.05em', marginTop: 3 }}>AI Caption Generator</div>
-</Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '7px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s' }}>
-            {dark ? '☀️ Light' : '🌙 Dark'}
-          </button>
-        </div>
+          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, lineHeight: 1 }}>likhle<span style={{ color: '#CAFF00' }}>.</span></div>
+          <div style={{ fontSize: 11, color: t.muted, letterSpacing: '0.05em', marginTop: 3 }}>AI Caption Generator</div>
+        </Link>
+        <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '7px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s' }}>
+          {dark ? '☀️ Light' : '🌙 Dark'}
+        </button>
       </nav>
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '60px 20px' }}>
         <div style={{ marginBottom: 48 }}>
           <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 800, letterSpacing: -2, color: t.text, marginBottom: 8 }}>Kya likhna hai? ✍️</h1>
-          <p style={{ fontSize: 16, color: t.muted }}>Apna idea daalo — Likhle baki sambhal leta hai.</p>
+          <p style={{ fontSize: 16, color: t.muted }}>Describe karo — AI sab samajh leta hai.</p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Your Idea</label>
-            <textarea style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 12, color: t.inputText, fontFamily: "'DM Sans', sans-serif", fontSize: 16, padding: '16px 20px', resize: 'vertical', minHeight: 100, outline: 'none', width: '100%', transition: 'border-color 0.2s' }} placeholder={placeholder} value={input} onChange={(e) => setInput(e.target.value)} rows={3} />
-          </div>
 
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Content Type</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 10 }}>
-              {[
-  { value: 'instagram_caption', name: 'IG Caption', svg: <svg viewBox="0 0 32 32" width="28" height="28"><defs><radialGradient id="ig1" cx="30%" cy="107%" r="150%"><stop offset="0%" stopColor="#fdf497"/><stop offset="45%" stopColor="#fd5949"/><stop offset="90%" stopColor="#285AEB"/></radialGradient></defs><rect width="32" height="32" rx="8" fill="url(#ig1)"/><rect x="8" y="8" width="16" height="16" rx="4.5" stroke="white" strokeWidth="1.5" fill="none"/><circle cx="16" cy="16" r="4" stroke="white" strokeWidth="1.5" fill="none"/><circle cx="21.5" cy="10.5" r="1" fill="white"/></svg> },
-  { value: 'instagram_bio', name: 'IG Bio', svg: <svg viewBox="0 0 32 32" width="28" height="28"><defs><radialGradient id="ig2" cx="30%" cy="107%" r="150%"><stop offset="0%" stopColor="#fdf497"/><stop offset="45%" stopColor="#fd5949"/><stop offset="90%" stopColor="#285AEB"/></radialGradient></defs><rect width="32" height="32" rx="8" fill="url(#ig2)"/><circle cx="16" cy="13" r="4" fill="white"/><path d="M8 26c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg> },
-  { value: 'twitter_bio', name: 'Twitter', svg: <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="#000"/><path d="M18.244 7.25h3.308l-7.227 8.26 8.502 9.24H16.17l-4.714-5.231-5.401 5.231H2.744l7.73-7.835L1.254 7.25H8.08l4.253 4.622 5.911-4.622zm-1.161 15.52h1.833L7.084 9.126H5.117z" fill="white"/></svg> },
-  { value: 'linkedin_bio', name: 'LinkedIn', svg: <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="#0077B5"/><path d="M10.5 13.5h-3v9h3v-9zm-1.5-4.5a1.75 1.75 0 110 3.5 1.75 1.75 0 010-3.5zm13.5 4.5c-2 0-3 1-3.5 1.75V13.5h-3v9h3v-5c0-1.1.9-2 2-2s2 .9 2 2v5h3v-5.5c0-2.5-1.5-3.5-3.5-3.5z" fill="white"/></svg> },
-  { value: 'youtube_desc', name: 'YouTube', svg: <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="#FF0000"/><path d="M26 16s0-3-.4-4.5a2.3 2.3 0 00-1.6-1.6C22.5 9.5 16 9.5 16 9.5s-6.5 0-8 .4a2.3 2.3 0 00-1.6 1.6C6 13 6 16 6 16s0 3 .4 4.5a2.3 2.3 0 001.6 1.6c1.5.4 8 .4 8 .4s6.5 0 8-.4a2.3 2.3 0 001.6-1.6C26 19 26 16 26 16zm-11.5 3v-6l5.5 3-5.5 3z" fill="white"/></svg> },
-  { value: 'whatsapp_status', name: 'WhatsApp', svg: <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="#25D366"/><path d="M22 10a8.5 8.5 0 00-14.3 9.3L6 26l6.8-1.8A8.5 8.5 0 0022 10zm-6 12.8a7 7 0 01-3.6-1l-.3-.2-2.9.8.8-2.8-.2-.3a7 7 0 1110.7-3.8c.2.7.3 1.4.3 2.1a7 7 0 01-4.8 5.2zm3.8-5.2c-.2-.1-1.2-.6-1.4-.7-.2-.1-.3-.1-.4.1l-.6.7c-.1.1-.2.1-.4 0-.2-.1-.9-.3-1.7-1-.6-.6-1-1.2-1.2-1.4-.1-.2 0-.3.1-.4l.3-.4c.1-.1.1-.2.2-.3 0-.1 0-.2-.1-.3l-.6-1.5c-.2-.4-.3-.4-.4-.4h-.4c-.1 0-.3.1-.5.3-.2.2-.7.7-.7 1.6s.7 1.9.8 2c.1.1 1.4 2.2 3.5 3 .5.2.9.3 1.2.4.5.1 1 .1 1.3.1.4-.1 1.2-.5 1.4-1 .2-.5.2-.9.1-1-.1-.1-.2-.1-.4-.2z" fill="white"/></svg> },
-  { value: 'reels_hook', name: 'Reels', svg: <svg viewBox="0 0 32 32" width="28" height="28"><defs><radialGradient id="ig3" cx="30%" cy="107%" r="150%"><stop offset="0%" stopColor="#fdf497"/><stop offset="45%" stopColor="#fd5949"/><stop offset="90%" stopColor="#285AEB"/></radialGradient></defs><rect width="32" height="32" rx="8" fill="url(#ig3)"/><path d="M11 8l14 8-14 8V8z" fill="white"/></svg> },
-  { value: 'pov_caption', name: 'POV', svg: <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8" fill="#1a1a1a"/><text x="16" y="21" textAnchor="middle" fill="white" fontSize="16">🤳</text></svg> },
-].map((ct) => (
-  <button key={ct.value} onClick={() => setContentType(ct.value)} style={{ background: contentType === ct.value ? 'rgba(202,255,0,0.08)' : t.toneBg, border: `1px solid ${contentType === ct.value ? 'rgba(202,255,0,0.4)' : t.toneBorder}`, borderRadius: 12, padding: '12px 6px 10px', cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-    {ct.svg}
-    <span style={{ fontSize: 10, color: contentType === ct.value ? '#CAFF00' : t.toneText, fontFamily: "'DM Sans', sans-serif" }}>{ct.name}</span>
-  </button>
-))}
+          {/* Attachment preview */}
+          {attachment && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: t.attBg, border: `1px solid ${t.attBorder}`, borderRadius: 10, padding: '10px 14px', width: 'fit-content' }}>
+              <span style={{ fontSize: 20 }}>📎</span>
+              <div>
+                <div style={{ fontSize: 13, color: t.text }}>{attachment.name}</div>
+                <div style={{ fontSize: 11, color: t.muted }}>{(attachment.size / 1024).toFixed(1)} KB</div>
+              </div>
+              <button onClick={() => setAttachment(null)} style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', fontSize: 16, marginLeft: 6 }}>✕</button>
+            </div>
+          )}
+
+          {/* Input */}
+          <div style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 16, padding: '18px 20px 14px' }}>
+            <textarea
+              style={{ background: 'transparent', border: 'none', color: t.inputText, fontFamily: "'DM Sans', sans-serif", fontSize: 16, resize: 'none', minHeight: 100, outline: 'none', width: '100%', lineHeight: 1.7 }}
+              placeholder={placeholder}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              rows={3}
+            />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${t.border}`, paddingTop: 12, marginTop: 8 }}>
+              <button onClick={() => fileRef.current.click()} style={{ width: 30, height: 30, borderRadius: 8, background: t.toneBg, border: `1px solid ${t.toneBorder}`, color: t.muted, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+              <input ref={fileRef} type="file" accept="image/*,.pdf,.doc,.docx" style={{ display: 'none' }} onChange={handleFile} />
+              <button
+                onClick={handleGenerate}
+                disabled={loading || !input.trim()}
+                style={{ background: '#CAFF00', color: '#000', fontFamily: "'Syne', sans-serif", fontSize: 15, fontWeight: 800, padding: '8px 24px', border: 'none', borderRadius: 10, cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', opacity: loading || !input.trim() ? 0.5 : 1, transition: 'all 0.2s' }}
+              >
+                {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
+              </button>
             </div>
           </div>
 
+          {/* Tone */}
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Tone / Vibe</label>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -166,23 +180,20 @@ export default function GeneratePage() {
             </div>
           </div>
 
+          {/* Options as pills */}
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Options</label>
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              {[{ label: 'Hinglish mode 🇮🇳', val: hinglish, set: setHinglish }, { label: 'Add emojis ✨', val: emoji, set: setEmoji }, { label: 'Add hashtags #', val: hashtags, set: setHashtags }].map(({ label, val, set }) => (
-                <div key={label} onClick={() => set(!val)} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                  <div style={{ width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${val ? '#CAFF00' : t.toneBorder}`, background: val ? '#CAFF00' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#000', transition: 'all 0.15s' }}>{val ? '✓' : ''}</div>
-                  <span style={{ fontSize: 14, color: val ? t.text : t.muted }}>{label}</span>
-                </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {OPTIONS.map((opt) => (
+                <button key={opt} onClick={() => toggleOption(opt)} style={{ background: selectedOptions.includes(opt) ? '#CAFF00' : t.toneBg, border: `1px solid ${selectedOptions.includes(opt) ? '#CAFF00' : t.toneBorder}`, color: selectedOptions.includes(opt) ? '#000' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '8px 16px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontWeight: selectedOptions.includes(opt) ? 700 : 400 }}>
+                  {opt}
+                </button>
               ))}
             </div>
           </div>
-
-          <button onClick={handleGenerate} disabled={loading || !input.trim()} style={{ background: '#CAFF00', color: '#000', fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 800, padding: 16, border: 'none', borderRadius: 12, cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', opacity: loading || !input.trim() ? 0.5 : 1, transition: 'all 0.2s', letterSpacing: -0.5 }}>
-            {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
-          </button>
         </div>
 
+        {/* Loading */}
         {loading && (
           <div style={{ textAlign: 'center', padding: '48px 0', color: t.muted, fontSize: 15 }}>
             <div>AI likh raha hai... ✨</div>
@@ -194,13 +205,14 @@ export default function GeneratePage() {
 
         {error && <div style={{ marginTop: 24, color: '#FF2D78', fontSize: 14, textAlign: 'center' }}>{error}</div>}
 
+        {/* Results */}
         {results.length > 0 && (
           <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text, marginBottom: 8 }}>Yeh lo {results.length} options 🔥</div>
             {results.map((r, i) => (
               <div key={i} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 14, padding: 20, position: 'relative' }}>
-                <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 40 }}>{r}</p>
-                <button onClick={() => handleCopy(r, i)} style={{ position: 'absolute', top: 14, right: 14, background: copied === i ? 'rgba(202,255,0,0.1)' : t.copyBg, border: `1px solid ${copied === i ? '#CAFF00' : t.resultBorder}`, color: copied === i ? '#CAFF00' : t.copyText, fontSize: 12, padding: '5px 12px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontFamily: "'DM Sans', sans-serif" }}>
+                <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 60 }}>{r}</p>
+                <button onClick={() => handleCopy(r, i)} style={{ position: 'absolute', top: 14, right: 14, background: copied === i ? 'rgba(202,255,0,0.1)' : t.copyBg, border: `1px solid ${copied === i ? '#CAFF00' : t.resultBorder}`, color: copied === i ? '#CAFF00' : t.copyText, fontSize: 12, padding: '5px 12px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s' }}>
                   {copied === i ? '✓ Copied!' : 'Copy'}
                 </button>
               </div>
