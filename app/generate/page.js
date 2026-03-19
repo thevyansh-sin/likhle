@@ -1,5 +1,6 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { LuImage, LuFileText, LuFile, LuLink, LuCamera, LuPlus } from 'react-icons/lu';
 import Link from 'next/link';
 
 const PLACEHOLDERS = [
@@ -49,6 +50,7 @@ export default function GeneratePage() {
   const [dark, setDark] = useState(true);
   const [error, setError] = useState('');
   const [attachment, setAttachment] = useState(null);
+  const [showMenu, setShowMenu] = useState(false);
   const fileRef = useRef(null);
 
   const t = {
@@ -156,8 +158,26 @@ export default function GeneratePage() {
               rows={3}
             />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${t.border}`, paddingTop: 12, marginTop: 8 }}>
-              <button onClick={() => fileRef.current.click()} style={{ width: 30, height: 30, borderRadius: 8, background: t.toneBg, border: `1px solid ${t.toneBorder}`, color: t.muted, fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-              <input ref={fileRef} type="file" accept="image/*,.pdf,.doc,.docx" style={{ display: 'none' }} onChange={handleFile} />
+              <div style={{ position: 'relative' }}>
+  <button onClick={() => setShowMenu(!showMenu)} style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', transition: 'color 0.15s' }}>
+    <LuPlus size={22} />
+  </button>
+  {showMenu && (
+    <div style={{ position: 'absolute', bottom: 40, left: 0, background: dark ? '#1e1e1e' : '#fff', border: `1px solid ${t.border}`, borderRadius: 14, padding: 6, width: 200, zIndex: 100, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {[
+        { icon: <LuImage size={16}/>, label: 'Add photo', accept: 'image/*' },
+        { icon: <LuFileText size={16}/>, label: 'Add document', accept: '.pdf,.doc,.docx' },
+        { icon: <LuFile size={16}/>, label: 'Add file', accept: '*' },
+        { icon: <LuLink size={16}/>, label: 'Paste link', accept: null },
+      ].map((item) => (
+        <div key={item.label} onClick={() => { if(item.accept) { fileRef.current.accept = item.accept; fileRef.current.click(); } setShowMenu(false); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: t.muted, transition: 'background 0.1s' }} onMouseEnter={e => e.currentTarget.style.background = dark ? '#252525' : '#f0f0f0'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+          {item.icon}{item.label}
+        </div>
+      ))}
+    </div>
+  )}
+  <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={handleFile} />
+</div>
               <button
                 onClick={handleGenerate}
                 disabled={loading || !input.trim()}
