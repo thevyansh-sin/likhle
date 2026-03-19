@@ -2,6 +2,38 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
+const PLACEHOLDERS = [
+  "Gym ke baad selfie, feeling pumped 💪",
+  "Beach sunset with besties, golden hour vibes",
+  "New outfit drop, feeling myself fr fr",
+  "Late night study grind, chai in hand ☕",
+  "Cricket match jeet gaye, dil khush hai 🏏",
+  "Goa trip with gang, best days ever 🌊",
+  "Diwali night, lights everywhere ✨",
+  "First day of college, nervous but excited",
+  "Rainy day mood, window seat aur coffee",
+  "Road trip on NH, windows down, music loud 🎵",
+  "Eid ka chand dekha, dil roshan ho gaya 🌙",
+  "Birthday surprise from best friend, crying happy tears 🎂",
+  "First salary aaya, treat toh banta hai 💸",
+  "Mountains trip, cold wind aur hot maggi ⛰️",
+  "Holi ke rang, yaar ke sang 🎨",
+  "New haircut, new me energy fr",
+  "Exam khatam, ab toh freedom 🎉",
+  "Late night drive, city lights aur lofi music 🌃",
+  "Mom ke haath ka khana, nothing hits different 🍱",
+  "First time driving alone, felt so independent 🚗",
+  "Graduation day, 4 saal ki mehnat 🎓",
+  "Solo cafe date, me time is everything ☕",
+  "New year ki raat, dost aur fireworks 🎆",
+  "Morning run done, endorphins hitting hard 🏃",
+  "Baarish mein bheega, zero regrets 🌧️",
+  "IPL final dekha live, kya raat thi 🏏",
+  "Street food with bestie, gol gappe round 2 🥘",
+  "Sunset from terrace, city looks beautiful 🌇",
+  "Internship ka pehla din, nervous but ready 💼",
+  "Siblings ka pyaar, thoda nok jhok bhi 😄",
+];
 const TONES = ['Aesthetic', 'Funny', 'Savage', 'Motivational', 'Romantic', 'Professional', 'Desi'];
 const CONTENT_TYPES = [
   { label: '📸 Instagram Caption', value: 'instagram_caption' },
@@ -16,6 +48,7 @@ const CONTENT_TYPES = [
 
 export default function GeneratePage() {
   const [input, setInput] = useState('');
+  const [placeholder] = useState(() => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
   const [tone, setTone] = useState('Aesthetic');
   const [contentType, setContentType] = useState('instagram_caption');
   const [hinglish, setHinglish] = useState(false);
@@ -73,7 +106,7 @@ export default function GeneratePage() {
             <label className="input-label">Your Idea</label>
             <textarea
               className="gen-textarea"
-              placeholder="e.g. Gym ke baad selfie, feeling pumped... or just 'beach sunset aesthetic'"
+              placeholder={placeholder}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               rows={3}
