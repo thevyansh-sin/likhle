@@ -57,6 +57,7 @@ export default function GeneratePage() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(null);
+  const [dark, setDark] = useState(true);
   const [error, setError] = useState('');
 
   const handleGenerate = async () => {
@@ -88,10 +89,15 @@ export default function GeneratePage() {
   };
 
   return (
-    <div className="gen-wrap">
+    <div className="gen-wrap" style={{background: dark ? '#080808' : '#F5F5F0', minHeight: '100vh', transition: 'all 0.3s'}}>
       <nav className="nav">
         <Link href="/" className="logo">likhle<span className="logo-dot">.</span></Link>
-        <span style={{ fontSize: 13, color: 'var(--muted)' }}>AI Caption Generator</span>
+        <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+  <span style={{ fontSize: 13, color: dark ? '#888' : '#666' }}>AI Caption Generator</span>
+  <button onClick={() => setDark(!dark)} style={{background: dark ? '#1a1a1a' : '#E8E6E0', border: 'none', borderRadius:'100px', padding:'6px 14px', cursor:'pointer', fontSize:'13px', color: dark ? '#f0f0f0' : '#111', fontWeight:'500'}}>
+    {dark ? '☀️ Light' : '🌙 Dark'}
+  </button>
+</div>
       </nav>
 
       <div className="gen-body">
