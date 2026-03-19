@@ -34,38 +34,6 @@ Rules:
 Write the 4 versions now:`;
 }
 
-function buildPrompt({ input, tone, contentType, hinglish, emoji, hashtags }) {
-  const typeLabel = typePrompts[contentType] || 'Instagram caption';
-  const langNote = hinglish
-    ? 'Write in Hinglish (a natural mix of Hindi and English, like how Gen Z Indians actually talk — e.g. "yaar this is insane", "sach mein amazing tha").'
-    : 'Write in English.';
-  const emojiNote = emoji ? 'Include relevant emojis naturally.' : 'Do not use emojis.';
-  const hashtagNote = hashtags && contentType === 'instagram_caption'
-    ? 'Add 5-8 relevant hashtags at the end.'
-    : 'Do not add hashtags.';
-
-  return `You are Likhle, an AI writing assistant made for Gen Z Indian creators. You write captions, bios, and social media content that feels authentic, trendy, and resonates with Indian youth culture.
-
-Task: Write 4 different versions of a ${typeLabel}.
-
-Topic/Context: ${input}
-Tone: ${tone}
-${langNote}
-${emojiNote}
-${hashtagNote}
-
-Rules:
-- Each version should be distinctly different (not just synonyms)
-- Keep the ${tone} tone consistently
-- Make it feel genuine, not corporate or AI-generated
-- For Indian-specific references, use them naturally (festivals, food, cricket, Bollywood etc.) ONLY if relevant
-- DO NOT number the versions or add labels
-- Separate each version with exactly this separator: ---SPLIT---
-- Write ONLY the content, no explanations
-
-Write the 4 versions now:`;
-}
-
 export async function POST(req) {
   try {
     const body = await req.json();
