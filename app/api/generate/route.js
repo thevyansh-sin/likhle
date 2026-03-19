@@ -2,16 +2,37 @@ import Groq from 'groq-sdk';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-const typePrompts = {
-  instagram_caption: 'Instagram caption (with line breaks if needed)',
-  instagram_bio: 'Instagram bio (max 150 chars, punchy)',
-  twitter_bio: 'Twitter/X bio (max 160 chars)',
-  linkedin_bio: 'LinkedIn bio (professional but interesting, 2-3 lines)',
-  youtube_desc: 'YouTube video description (2-3 paragraphs)',
-  whatsapp_status: 'WhatsApp status (short, impactful, under 60 chars)',
-  reels_hook: 'Instagram Reels hook — first 3 seconds spoken text (attention-grabbing, makes people stop scrolling)',
-  pov_caption: 'POV-style Instagram caption (starts with "POV:")',
-};
+function buildPrompt({ input, tone, hinglish, emoji, hashtags }) {
+  const langNote = hinglish
+    ? 'Write in Hinglish (natural mix of Hindi and English, like how Gen Z Indians actually talk).'
+    : 'Write in English.';
+  const emojiNote = emoji ? 'Include relevant emojis naturally.' : 'Do not use emojis.';
+  const hashtagNote = hashtags ? 'Add 5-8 relevant hashtags at the end if it is a caption.' : 'Do not add hashtags.';
+
+  return `You are Likhle, an AI writing assistant made for Gen Z Indian creators.
+
+The user will describe what they want in plain language. You must:
+1. Automatically understand what type of content they need (Instagram caption, bio, WhatsApp status, Twitter bio, LinkedIn bio, YouTube description, Reels hook, POV caption etc.)
+2. Write in the tone they described or use this tone: ${tone}
+3. Make it feel authentic and Gen Z
+
+User's request: ${input}
+
+${langNote}
+${emojiNote}
+${hashtagNote}
+
+Rules:
+- Write 4 different versions, each distinctly different
+- Understand the platform and format automatically from the user's description
+- Keep it genuine, not corporate or AI-generated
+- Use Indian cultural references naturally when relevant
+- DO NOT number the versions or add labels
+- Separate each version with exactly: ---SPLIT---
+- Write ONLY the content, nothing else
+
+Write the 4 versions now:`;
+}
 
 function buildPrompt({ input, tone, contentType, hinglish, emoji, hashtags }) {
   const typeLabel = typePrompts[contentType] || 'Instagram caption';
@@ -48,14 +69,13 @@ Write the 4 versions now:`;
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { input, tone, contentType, hinglish, emoji, hashtags } = body;
+    const { input, tone, hinglish, emoji, hashtags } = body;
 
     if (!input?.trim()) {
       return Response.json({ error: 'Input required' }, { status: 400 });
     }
 
-    const prompt = buildPrompt({ input, tone, contentType, hinglish, emoji, hashtags });
-
+    const prompt = buildPrompt({ input, tone, hinglish, emoji, hashtags });
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
