@@ -5,7 +5,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 function buildPrompt({ input, tone, hinglish, emoji, hashtags }) {
   const langNote = hinglish
     ? 'Write in Hinglish (natural mix of Hindi and English, like how Gen Z Indians actually talk).'
-    : 'Write in English.';
+    : 'Write STRICTLY in English only. Do not use any Hindi words at all.';
   const emojiNote = emoji ? 'Include relevant emojis naturally.' : 'Do not use emojis.';
   const hashtagNote = hashtags ? 'Add 5-8 relevant hashtags at the end if it is a caption.' : 'Do not add hashtags.';
 
