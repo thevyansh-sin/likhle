@@ -111,12 +111,12 @@ export default function GeneratePage() {
   return (
     <div style={{ minHeight: '100vh', background: t.bg, transition: 'all 0.3s', fontFamily: "'DM Sans', sans-serif" }}>
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 40px', borderBottom: `1px solid ${t.border}`, position: 'sticky', top: 0, zIndex: 100, background: t.navBg, backdropFilter: 'blur(12px)' }}>
-        <Link href="/" style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, textDecoration: 'none' }}>
-          likhle<span style={{ color: '#CAFF00' }}>.</span>
-        </Link>
+        <Link href="/" style={{ textDecoration: 'none' }}>
+  <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, lineHeight: 1 }}>likhle<span style={{ color: '#CAFF00' }}>.</span></div>
+  <div style={{ fontSize: 11, color: t.muted, letterSpacing: '0.05em', marginTop: 3 }}>AI Caption Generator</div>
+</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 13, color: t.muted }}>AI Caption Generator</span>
-          <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '7px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s' }}>
+                    <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '7px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s' }}>
             {dark ? '☀️ Light' : '🌙 Dark'}
           </button>
         </div>
