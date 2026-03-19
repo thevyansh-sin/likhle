@@ -473,5 +473,5 @@ body {
   .features { padding: 60px 20px; }
   .footer { flex-direction: column; gap: 8px; text-align: center; }
   .options-row { gap: 8px; }
-.mobile-hide { display: none !important; }
+  .mobile-hide { display: none !important; }
 }
