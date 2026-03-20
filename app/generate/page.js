@@ -771,7 +771,22 @@ export default function GeneratePage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, marginTop: 16 }}>
+      <div
+        className="template-scroll-row"
+        style={{
+          display: 'flex',
+          gap: 12,
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          paddingBottom: 6,
+          marginTop: 16,
+          scrollbarColor: `${dark ? '#CAFF00' : '#93b500'} ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(17,17,17,0.08)'}`,
+          scrollbarWidth: 'thin',
+          ['--template-scroll-track']: dark ? 'rgba(255,255,255,0.06)' : 'rgba(17,17,17,0.08)',
+          ['--template-scroll-thumb']: dark ? '#CAFF00' : '#93b500',
+          ['--template-scroll-thumb-hover']: dark ? '#d8ff4d' : '#7f9900',
+        }}
+      >
         {templateLibrary.map((template) => renderTemplateCard(template))}
       </div>
     </div>
