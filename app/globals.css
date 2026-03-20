@@ -119,6 +119,10 @@ body {
   pointer-events: auto;
 }
 
+.scroll-top-button.is-lifted {
+  bottom: clamp(84px, 10vw, 118px);
+}
+
 .scroll-top-button:hover {
   border-color: rgba(202,255,0,0.34);
   background: color-mix(in srgb, var(--bg2) 92%, transparent);
@@ -1616,6 +1620,9 @@ html[data-theme='light'] :is(
     right: 14px;
     bottom: 14px;
     padding: 10px;
+  }
+  .scroll-top-button.is-lifted {
+    bottom: 78px;
   }
   .scroll-top-label { display: none; }
   .info-nav { padding: 16px 20px; }
