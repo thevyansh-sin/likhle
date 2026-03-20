@@ -475,3 +475,16 @@ body {
   .options-row { gap: 8px; }
   .mobile-hide { display: none !important; }
 }
+textarea::-webkit-scrollbar {
+  width: 4px;
+}
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+textarea::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 100px;
+}
+textarea::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
