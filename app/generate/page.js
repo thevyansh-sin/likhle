@@ -176,7 +176,6 @@ export default function GeneratePage() {
         { icon: <LuImage size={16}/>, label: 'Add photo', accept: 'image/*' },
         { icon: <LuFileText size={16}/>, label: 'Add document', accept: '.pdf,.doc,.docx' },
         { icon: <LuFile size={16}/>, label: 'Add file', accept: '*' },
-        { icon: <LuLink size={16}/>, label: 'Paste link', accept: null },
       ].map((item) => (
         <div key={item.label} onClick={() => { if(item.accept) { fileRef.current.accept = item.accept; fileRef.current.click(); } setShowMenu(false); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: t.muted, transition: 'background 0.1s' }} onMouseEnter={e => e.currentTarget.style.background = dark ? '#252525' : '#f0f0f0'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
           {item.icon}{item.label}
