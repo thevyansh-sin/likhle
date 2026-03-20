@@ -9,6 +9,7 @@ const RATE_LIMIT_MAX_REQUESTS = 6;
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_GENERATION_COUNT = 4;
+const MAX_REWRITE_SUGGESTIONS = 3;
 const REWRITE_ACTIONS = {
   shorter: {
     instruction:
@@ -167,6 +168,175 @@ function parseCurrentResult(rawValue) {
   return rawValue.trim().slice(0, 1200);
 }
 
+function parseRewriteInstruction(rawValue) {
+  if (typeof rawValue !== 'string') {
+    return '';
+  }
+
+  return rawValue.trim().slice(0, 240);
+}
+
+function getFallbackRewriteSuggestions({ tone, hinglish, emoji, hashtags }) {
+  const suggestions = [REWRITE_ACTIONS.shorter];
+  const toneSuggestion = {
+    Aesthetic: {
+      label: 'More cinematic',
+      instruction:
+        'Rewrite this caption so it feels more cinematic, polished, and visually evocative while keeping the same core meaning.',
+    },
+    Funny: REWRITE_ACTIONS.moreFunny,
+    Savage: REWRITE_ACTIONS.moreSavage,
+    Motivational: REWRITE_ACTIONS.moreMotivational,
+    Romantic: REWRITE_ACTIONS.moreRomantic,
+    Professional: REWRITE_ACTIONS.moreProfessional,
+    Desi: REWRITE_ACTIONS.moreDesi,
+  }[tone];
+
+  if (toneSuggestion) {
+    suggestions.push(toneSuggestion);
+  }
+
+  if (hinglish) {
+    suggestions.push(REWRITE_ACTIONS.moreHinglish);
+  }
+
+  if (emoji) {
+    suggestions.push(REWRITE_ACTIONS.moreEmoji);
+  }
+
+  if (hashtags) {
+    suggestions.push(REWRITE_ACTIONS.betterHashtags);
+  }
+
+  return suggestions
+    .filter(Boolean)
+    .slice(0, MAX_REWRITE_SUGGESTIONS)
+    .map((suggestion) => ({
+      label: suggestion.label || 'Rework',
+      instruction: suggestion.instruction,
+    }));
+}
+
+function sanitizeSuggestionLabel(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.replace(/\s+/g, ' ').trim().slice(0, 32);
+}
+
+function sanitizeSuggestionInstruction(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.replace(/\s+/g, ' ').trim().slice(0, 220);
+}
+
+function extractJsonPayload(rawValue) {
+  const firstBrace = rawValue.indexOf('{');
+  const lastBrace = rawValue.lastIndexOf('}');
+
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawValue.slice(firstBrace, lastBrace + 1));
+  } catch {
+    return null;
+  }
+}
+
+function normalizeRewriteSuggestions(rawSuggestions, fallbackSuggestions) {
+  if (!Array.isArray(rawSuggestions)) {
+    return fallbackSuggestions;
+  }
+
+  const normalizedSuggestions = [];
+  const seenSuggestions = new Set();
+
+  for (const suggestion of rawSuggestions) {
+    const label = sanitizeSuggestionLabel(suggestion?.label);
+    const instruction = sanitizeSuggestionInstruction(suggestion?.instruction);
+
+    if (!label || !instruction) {
+      continue;
+    }
+
+    const signature = `${label.toLowerCase()}::${instruction.toLowerCase()}`;
+
+    if (seenSuggestions.has(signature)) {
+      continue;
+    }
+
+    seenSuggestions.add(signature);
+    normalizedSuggestions.push({ label, instruction });
+
+    if (normalizedSuggestions.length >= MAX_REWRITE_SUGGESTIONS) {
+      break;
+    }
+  }
+
+  return normalizedSuggestions.length > 0 ? normalizedSuggestions : fallbackSuggestions;
+}
+
+function unwrapNestedResult(item) {
+  if (!item || typeof item !== 'object') {
+    return item;
+  }
+
+  const nestedPayload = extractJsonPayload(typeof item.text === 'string' ? item.text.trim() : '');
+
+  if (!Array.isArray(nestedPayload?.results) || nestedPayload.results.length === 0) {
+    return item;
+  }
+
+  const nestedResult = nestedPayload.results.find(
+    (candidate) => typeof candidate?.text === 'string' && candidate.text.trim().length > 0
+  );
+
+  return nestedResult || item;
+}
+
+function parseStructuredResults(rawValue, { count, tone, hinglish, emoji, hashtags }) {
+  const fallbackSuggestions = getFallbackRewriteSuggestions({ tone, hinglish, emoji, hashtags });
+  const payload = extractJsonPayload(rawValue);
+
+  if (Array.isArray(payload?.results)) {
+    const structuredResults = payload.results
+      .map((item) => {
+        const nextItem = unwrapNestedResult(item);
+        const text = typeof nextItem?.text === 'string' ? nextItem.text.trim().slice(0, 1200) : '';
+
+        if (!text) {
+          return null;
+        }
+
+        return {
+          text,
+          rewriteSuggestions: normalizeRewriteSuggestions(nextItem.rewriteSuggestions, fallbackSuggestions),
+        };
+      })
+      .filter(Boolean)
+      .slice(0, count);
+
+    if (structuredResults.length > 0) {
+      return structuredResults;
+    }
+  }
+
+  return rawValue
+    .split('---SPLIT---')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+    .slice(0, count)
+    .map((text) => ({
+      text: text.slice(0, 1200),
+      rewriteSuggestions: fallbackSuggestions,
+    }));
+}
+
 function getLengthNote(length) {
   if (length === 'Short') {
     return 'Keep each version short and punchy. Aim for one tight line or a very short 2-line post.';
@@ -191,6 +361,7 @@ function buildPrompt({
   count,
   avoidResults,
   rewriteAction,
+  rewriteInstruction,
   currentResult,
 }) {
   const langNote = hinglish
@@ -208,8 +379,9 @@ function buildPrompt({
     ? `Avoid sounding too similar to these existing options:\n- ${avoidResults.join('\n- ')}`
     : '';
   const rewriteConfig = rewriteAction ? REWRITE_ACTIONS[rewriteAction] : null;
+  const rewriteInstructionText = rewriteInstruction || rewriteConfig?.instruction || '';
 
-  if (rewriteConfig && currentResult) {
+  if (rewriteInstructionText && currentResult) {
     const rewriteLanguageNote = rewriteAction === 'moreHinglish'
       ? 'Write in natural Hinglish (a smooth Hindi-English mix that sounds like real Gen Z Indian conversation).'
       : langNote;
@@ -232,17 +404,26 @@ ${emojiNote}
 ${hashtagNote}
 
 Rewrite instruction:
-${rewriteConfig.instruction}
+${rewriteInstructionText}
 
 Rules:
-- Return exactly 1 rewritten version
+- Return valid JSON only
+- Use this exact shape:
+{"results":[{"text":"rewritten caption here","rewriteSuggestions":[{"label":"Suggestion label","instruction":"One sentence rewrite instruction"}]}]}
+- Return exactly 1 result object
 - Keep the core meaning, context, and posting intent of the current draft
 - Do not switch to a totally new angle
 - Keep it authentic, sharp, and natural
-- Do not add labels, quotation marks, numbering, or explanation
-- Write ONLY the rewritten content
+- Each result must include 2 or 3 rewrite suggestions based on the rewritten caption itself
+- Suggest realistic next edits, not generic repeat actions
+- Keep suggestion labels short: 2 to 4 words max
+- Do not suggest Hinglish unless Hinglish is enabled
+- Do not suggest emoji changes unless emojis are enabled
+- Do not suggest hashtag changes unless hashtags are enabled
+- Do not wrap the JSON in markdown fences
+- Return ONLY the JSON object
 
-Write the rewritten version now:`;
+Return the JSON now:`;
   }
 
   return `You are Likhle, an AI writing assistant made for Gen Z Indian creators.
@@ -263,16 +444,24 @@ ${hashtagNote}
 ${avoidNote}
 
 Rules:
-- Write ${count} version${count === 1 ? '' : 's'}
+- Return valid JSON only
+- Use this exact shape:
+{"results":[{"text":"caption here","rewriteSuggestions":[{"label":"Suggestion label","instruction":"One sentence rewrite instruction"}]}]}
+- Write exactly ${count} result object${count === 1 ? '' : 's'}
 - Each version must feel fresh and distinct
 - Understand the platform and formatting needs exactly
 - Keep it genuine, not corporate or AI-generated
 - Use Indian cultural references naturally when relevant
-- DO NOT number the versions or add labels
-- Separate each version with exactly: ---SPLIT---
-- Write ONLY the content, nothing else
+- Each result must include 2 or 3 rewrite suggestions based on that exact caption
+- Suggestions should feel like believable next edits for that caption, not generic defaults
+- Keep suggestion labels short: 2 to 4 words max
+- Do not suggest Hinglish unless Hinglish is enabled
+- Do not suggest emoji changes unless emojis are enabled
+- Do not suggest hashtag changes unless hashtags are enabled
+- Do not wrap the JSON in markdown fences
+- Return ONLY the JSON object
 
-Write the ${count} version${count === 1 ? '' : 's'} now:`;
+Return the JSON now:`;
 }
 
 export async function POST(req) {
@@ -303,6 +492,7 @@ export async function POST(req) {
     const count = parseGenerationCount(formData.get('count'));
     const avoidResults = parseAvoidResults(formData.get('avoidResults'));
     const rewriteAction = parseRewriteAction(formData.get('rewriteAction'));
+    const rewriteInstruction = parseRewriteInstruction(formData.get('rewriteInstruction'));
     const currentResult = parseCurrentResult(formData.get('currentResult'));
 
     if (!input?.trim()) {
@@ -367,6 +557,7 @@ export async function POST(req) {
       count,
       avoidResults,
       rewriteAction,
+      rewriteInstruction,
       currentResult,
     });
 
@@ -378,11 +569,13 @@ export async function POST(req) {
     });
 
     const raw = completion.choices[0]?.message?.content || '';
-    const results = raw
-      .split('---SPLIT---')
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0)
-      .slice(0, count);
+    const results = parseStructuredResults(raw, {
+      count,
+      tone,
+      hinglish,
+      emoji,
+      hashtags,
+    });
 
     if (results.length === 0) {
       return Response.json(

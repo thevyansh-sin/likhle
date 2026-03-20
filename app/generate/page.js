@@ -104,6 +104,67 @@ function getFavoriteSignature({ text, input, platform, length, tone }) {
   ]);
 }
 
+function createResultId() {
+  return `result-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function getResultText(result) {
+  if (typeof result === 'string') {
+    return result;
+  }
+
+  return typeof result?.text === 'string' ? result.text : '';
+}
+
+function normalizeRewriteSuggestions(rawSuggestions, fallbackActions) {
+  if (!Array.isArray(rawSuggestions) || rawSuggestions.length === 0) {
+    return fallbackActions;
+  }
+
+  return rawSuggestions
+    .map((item, index) => {
+      const label = typeof item?.label === 'string' ? item.label.trim() : '';
+      const instruction = typeof item?.instruction === 'string' ? item.instruction.trim() : '';
+
+      if (!label || !instruction) {
+        return null;
+      }
+
+      return {
+        key: typeof item?.key === 'string' ? item.key : `custom-${index}-${label.toLowerCase().replace(/\s+/g, '-')}`,
+        label,
+        instruction,
+        pendingLabel: typeof item?.pendingLabel === 'string' ? item.pendingLabel : 'Reworking...',
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 3);
+}
+
+function normalizeResultItem(result, fallbackActions) {
+  const text = getResultText(result).trim();
+
+  if (!text) {
+    return null;
+  }
+
+  return {
+    id: typeof result?.id === 'string' ? result.id : createResultId(),
+    text,
+    rewriteSuggestions: normalizeRewriteSuggestions(result?.rewriteSuggestions, fallbackActions),
+  };
+}
+
+function normalizeResultItems(results, fallbackActions) {
+  if (!Array.isArray(results)) {
+    return [];
+  }
+
+  return results
+    .map((result) => normalizeResultItem(result, fallbackActions))
+    .filter(Boolean);
+}
+
 function getRewriteActionsForContext({ tone, selectedOptions }) {
   const actions = [REWRITE_ACTIONS.shorter];
   const selectedToneAction = {
@@ -436,6 +497,13 @@ export default function GeneratePage() {
 
   const syncHistory = (nextResults, nextId) => {
     const historyId = nextId || sessionId || `likhle-${Date.now()}`;
+    const normalizedResults = normalizeResultItems(nextResults, visibleRewriteActions).map((item) => ({
+      text: item.text,
+      rewriteSuggestions: item.rewriteSuggestions.map((suggestion) => ({
+        label: suggestion.label,
+        instruction: suggestion.instruction,
+      })),
+    }));
     const entry = {
       id: historyId,
       input: input.trim(),
@@ -443,7 +511,7 @@ export default function GeneratePage() {
       platform,
       length,
       selectedOptions: [...selectedOptions],
-      results: [...nextResults],
+      results: normalizedResults,
       createdAt: Date.now(),
       hadImage: Boolean(attachment),
     };
@@ -454,10 +522,14 @@ export default function GeneratePage() {
     );
   };
 
-  const buildFavoriteEntry = (text) => ({
+  const buildFavoriteEntry = (resultItem) => ({
     id: `favorite-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    signature: getFavoriteSignature({ text, input, platform, length, tone }),
-    text,
+    signature: getFavoriteSignature({ text: getResultText(resultItem), input, platform, length, tone }),
+    text: getResultText(resultItem),
+    rewriteSuggestions: normalizeResultItem(resultItem, visibleRewriteActions)?.rewriteSuggestions.map((suggestion) => ({
+      label: suggestion.label,
+      instruction: suggestion.instruction,
+    })) || [],
     input: input.trim(),
     tone,
     platform,
@@ -467,15 +539,15 @@ export default function GeneratePage() {
     hadImage: Boolean(attachment),
   });
 
-  const findFavoriteForResult = (text) => (
+  const findFavoriteForResult = (resultItem) => (
     favorites.find(
       (entry) =>
-        entry.signature === getFavoriteSignature({ text, input, platform, length, tone })
+        entry.signature === getFavoriteSignature({ text: getResultText(resultItem), input, platform, length, tone })
     )
   );
 
-  const handleToggleFavorite = (text) => {
-    const existingFavorite = findFavoriteForResult(text);
+  const handleToggleFavorite = (resultItem) => {
+    const existingFavorite = findFavoriteForResult(resultItem);
 
     if (existingFavorite) {
       setFavorites((previousFavorites) =>
@@ -484,7 +556,7 @@ export default function GeneratePage() {
       return;
     }
 
-    const nextFavorite = buildFavoriteEntry(text);
+    const nextFavorite = buildFavoriteEntry(resultItem);
     setFavorites((previousFavorites) => [nextFavorite, ...previousFavorites].slice(0, MAX_FAVORITES_ITEMS));
   };
 
@@ -498,7 +570,20 @@ export default function GeneratePage() {
         ? entry.selectedOptions
         : DEFAULT_OPTIONS
     );
-    setResults(entry.text ? [entry.text] : []);
+    setResults(
+      entry.text
+        ? normalizeResultItems(
+            [{ text: entry.text, rewriteSuggestions: entry.rewriteSuggestions || [] }],
+            getRewriteActionsForContext({
+              tone: entry.tone || 'Aesthetic',
+              selectedOptions:
+                Array.isArray(entry.selectedOptions) && entry.selectedOptions.length > 0
+                  ? entry.selectedOptions
+                  : DEFAULT_OPTIONS,
+            })
+          )
+        : []
+    );
     setSessionId('');
     setAttachment(null);
     setError('');
@@ -509,6 +594,7 @@ export default function GeneratePage() {
     count = 4,
     avoidResults = [],
     rewriteAction = '',
+    rewriteInstruction = '',
     currentResult = '',
   } = {}) => {
     const hinglish = selectedOptions.includes('Hinglish 🇮🇳');
@@ -533,6 +619,10 @@ export default function GeneratePage() {
       formData.append('rewriteAction', rewriteAction);
     }
 
+    if (rewriteInstruction) {
+      formData.append('rewriteInstruction', rewriteInstruction);
+    }
+
     if (currentResult) {
       formData.append('currentResult', currentResult);
     }
@@ -549,6 +639,7 @@ export default function GeneratePage() {
     resultIndex = null,
     avoidResults = [],
     rewriteAction = '',
+    rewriteInstruction = '',
     currentResult = '',
     pendingLabel = 'Refreshing...',
   } = {}) => {
@@ -577,7 +668,7 @@ export default function GeneratePage() {
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
-        body: buildRequestFormData({ count, avoidResults, rewriteAction, currentResult }),
+        body: buildRequestFormData({ count, avoidResults, rewriteAction, rewriteInstruction, currentResult }),
       });
       const data = await response.json();
 
@@ -591,7 +682,7 @@ export default function GeneratePage() {
         return null;
       }
 
-      return data.results;
+      return normalizeResultItems(data.results, visibleRewriteActions);
     } catch {
       setError('Server se connection nahi hua. Try again!');
       return null;
@@ -648,7 +739,7 @@ export default function GeneratePage() {
     const freshResults = await requestGeneration({
       count: 1,
       resultIndex: index,
-      avoidResults: results,
+      avoidResults: results.map((item) => getResultText(item)),
       pendingLabel: 'Refreshing...',
     });
 
@@ -668,9 +759,10 @@ export default function GeneratePage() {
     const freshResults = await requestGeneration({
       count: 1,
       resultIndex: index,
-      rewriteAction: action.key,
-      currentResult,
-      pendingLabel: action.pendingLabel,
+      rewriteAction: action.key || '',
+      rewriteInstruction: action.instruction || '',
+      currentResult: getResultText(currentResult),
+      pendingLabel: action.pendingLabel || 'Reworking...',
     });
 
     if (!freshResults?.[0]) {
@@ -697,7 +789,7 @@ export default function GeneratePage() {
 
   const handleCopyAll = async () => {
     try {
-      await navigator.clipboard.writeText(results.join('\n\n'));
+      await navigator.clipboard.writeText(results.map((item) => getResultText(item)).join('\n\n'));
       setCopiedAll(true);
       setTimeout(() => setCopiedAll(false), 2000);
     } catch {
@@ -714,7 +806,7 @@ export default function GeneratePage() {
       `Options: ${selectedOptions.join(', ') || 'None'}`,
       attachment ? `Image: ${attachment.name}` : 'Image: None',
       '',
-      ...results.map((item, index) => `Option ${index + 1}\n${item}`),
+      ...results.map((item, index) => `Option ${index + 1}\n${getResultText(item)}`),
     ].join('\n\n');
 
     const blob = new Blob([textOutput], { type: 'text/plain;charset=utf-8' });
@@ -737,7 +829,18 @@ export default function GeneratePage() {
         ? entry.selectedOptions
         : DEFAULT_OPTIONS
     );
-    setResults(Array.isArray(entry.results) ? entry.results : []);
+    setResults(
+      normalizeResultItems(
+        Array.isArray(entry.results) ? entry.results : [],
+        getRewriteActionsForContext({
+          tone: entry.tone || 'Aesthetic',
+          selectedOptions:
+            Array.isArray(entry.selectedOptions) && entry.selectedOptions.length > 0
+              ? entry.selectedOptions
+              : DEFAULT_OPTIONS,
+        })
+      )
+    );
     setSessionId(entry.id || '');
     setAttachment(null);
     setError('');
@@ -1157,12 +1260,14 @@ export default function GeneratePage() {
             </div>
 
             {results.map((item, index) => {
+              const resultText = getResultText(item);
+              const rewriteSuggestions = normalizeRewriteSuggestions(item?.rewriteSuggestions, visibleRewriteActions);
               const favoriteEntry = findFavoriteForResult(item);
               const isFavorite = Boolean(favoriteEntry);
               const resultCopyKey = `result-${index}`;
 
               return (
-                <div key={`${item}-${index}`} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 14, padding: 20, position: 'relative' }}>
+                <div key={item.id || `${resultText}-${index}`} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 14, padding: 20, position: 'relative' }}>
                 {pendingResultAction?.index === index && (
                   <div style={{ fontSize: 12, color: '#CAFF00', fontWeight: 600, marginBottom: 12 }}>
                     {pendingResultAction.label}
@@ -1190,7 +1295,7 @@ export default function GeneratePage() {
                     <LuRefreshCw size={16} />
                   </button>
                   <button
-                    onClick={() => handleCopy(item, resultCopyKey)}
+                    onClick={() => handleCopy(resultText, resultCopyKey)}
                     aria-label={copied === resultCopyKey ? 'Copied' : 'Copy result'}
                     title={copied === resultCopyKey ? 'Copied' : 'Copy result'}
                     style={{ ...getResultIconButtonStyle({ active: copied === resultCopyKey }), fontSize: 0 }}
@@ -1201,7 +1306,7 @@ export default function GeneratePage() {
                     {copied === index ? '✓ Copied!' : 'Copy'}
                   </button>
                 </div>
-                <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 156 }}>{item}</p>
+                <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 156 }}>{resultText}</p>
                 <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${t.resultBorder}` }}>
                   <div style={{ fontSize: 12, color: t.muted, marginBottom: 10 }}>Quick rewrite</div>
                   <div
@@ -1216,7 +1321,7 @@ export default function GeneratePage() {
                       msOverflowStyle: 'none',
                     }}
                   >
-                    {visibleRewriteActions.map((action) => (
+                    {rewriteSuggestions.map((action) => (
                       <button
                         key={action.key}
                         onClick={() => handleRewriteOption(index, item, action)}
