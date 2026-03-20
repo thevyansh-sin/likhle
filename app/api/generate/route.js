@@ -10,8 +10,7 @@ function buildPrompt({ input, tone, hinglish, emoji, hashtags, imageDescription 
     : 'Write STRICTLY in English only. Do not use any Hindi words at all.';
   const emojiNote = emoji ? 'Include relevant emojis naturally.' : 'Do not use emojis.';
   const hashtagNote = hashtags ? 'Add 5-8 relevant hashtags at the end if it is a caption.' : 'Do not add hashtags.';
-  const imageNote = imageDescription ? `The user has also uploaded a photo. Here is what the photo shows: ${imageDescription}. Use this to make the content more relevant and personal.` : '';
-
+  const imageNote = imageDescription ? `IMPORTANT: The user has uploaded a photo. Here is exactly what the photo shows: ${imageDescription}. You MUST write captions that are specifically about THIS image. The captions should directly reference the mood, style, and elements visible in the photo. Do NOT write generic captions.` : '';
   return `You are Likhle, an AI writing assistant made for Gen Z Indian creators.
 
 The user will describe what they want in plain language. You must:
@@ -68,8 +67,7 @@ export async function POST(req) {
               mimeType: mimeType,
             },
           },
-          'Describe this image in 2-3 sentences. Focus on what is happening, the mood, setting, people, and any notable elements. Be specific and descriptive.',
-        ]);
+          'Describe this image in detail. What is the main subject? What is the overall mood and aesthetic? What colors, lighting, and style does it have? What would someone feel looking at this? Be very specific - mention the exact visual elements, artistic style, and emotional tone.',        ]);
         imageDescription = result.response.text();
       } catch (imgError) {
         console.error('Image analysis error:', imgError);
