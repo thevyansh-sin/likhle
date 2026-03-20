@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LuImage, LuPlus } from 'react-icons/lu';
+import { templateLibrary } from '../template-library';
 
 const PLACEHOLDERS = [
   'Make me an aesthetic Instagram caption for my Goa trip sunset photo 🌊',
@@ -260,6 +261,36 @@ export default function GeneratePage() {
         ? previousOptions.filter((item) => item !== option)
         : [...previousOptions, option]
     );
+  };
+
+  const getTemplateOptions = (template) => {
+    const nextOptions = [];
+
+    if (template.hinglish) {
+      nextOptions.push('Hinglish ðŸ‡®ðŸ‡³');
+    }
+
+    if (template.emoji) {
+      nextOptions.push('Add Emojis âœ¨');
+    }
+
+    if (template.hashtags) {
+      nextOptions.push('Add Hashtags #');
+    }
+
+    return nextOptions;
+  };
+
+  const handleApplyTemplate = (template) => {
+    setInput(template.prompt);
+    setPlatform(template.platform);
+    setTone(template.tone);
+    setLength(template.length);
+    setSelectedOptions(getTemplateOptions(template));
+    setResults([]);
+    setError('');
+    setSessionId('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const validateAttachment = (file) => {
@@ -662,6 +693,72 @@ export default function GeneratePage() {
               >
                 {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
               </button>
+            </div>
+          </div>
+
+          <div style={sectionCardStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div>
+                <div style={sectionLabelStyle}>Template Library</div>
+                <div style={sectionHelpStyle}>
+                  Start with ready-made prompt ideas for the most common posts, then tweak them your way.
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: t.muted }}>
+                Tap any card to fill the prompt and controls instantly.
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginTop: 16 }}>
+              {templateLibrary.map((template) => (
+                <button
+                  key={template.id}
+                  onClick={() => handleApplyTemplate(template)}
+                  style={{
+                    background: t.resultBg,
+                    border: `1px solid ${t.resultBorder}`,
+                    borderRadius: 16,
+                    padding: 16,
+                    textAlign: 'left',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 11, color: '#CAFF00', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                      {template.category}
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: t.text, marginTop: 8, letterSpacing: -0.4 }}>
+                      {template.title}
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: 13, color: t.muted, lineHeight: 1.6 }}>
+                    {template.prompt}
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 'auto' }}>
+                    {[template.platform, template.length, template.tone].map((item) => (
+                      <span
+                        key={`${template.id}-${item}`}
+                        style={{
+                          background: t.copyBg,
+                          border: `1px solid ${t.resultBorder}`,
+                          color: t.copyText,
+                          fontSize: 11,
+                          padding: '6px 10px',
+                          borderRadius: 999,
+                        }}
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 

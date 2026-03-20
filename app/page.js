@@ -8,6 +8,7 @@ const words = ['Captions', 'Bios', 'Hooks', 'Hashtags', 'Status'];
 const marqueeItems = [
   'Platform Selector ✦',
   'Length Control ✦',
+  'Quick Templates ✦',
   'Image Preview ✦',
   'Save History ✦',
   'Regenerate One ✦',
@@ -17,6 +18,11 @@ const marqueeItems = [
   'No Signup ✦',
 ];
 const featureCards = [
+  {
+    eyebrow: 'Templates',
+    title: 'Start from ready-made ideas',
+    desc: 'Use built-in templates like Goa sunset, birthday post, gym transformation, study hook, wedding dump, and more to fill the prompt instantly.',
+  },
   {
     eyebrow: 'Precision',
     title: 'Choose the exact format first',
@@ -65,7 +71,7 @@ const workflowSteps = [
     desc: 'Copy, download, regenerate one option, or reopen it later from recent history.',
   },
 ];
-const proofCards = ['Platform-aware output', 'Image-assisted prompts', 'Recent history saved', 'Copy or download fast'];
+const proofCards = ['Platform-aware output', 'Template starters built in', 'Recent history saved', 'Copy or download fast'];
 
 export default function Home() {
   const [wordIndex, setWordIndex] = useState(0);
