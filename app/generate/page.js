@@ -116,6 +116,18 @@ function getResultText(result) {
   return typeof result?.text === 'string' ? result.text : '';
 }
 
+function looksLikeRawModelPayload(value) {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  return (
+    /"results"\s*:/.test(value) ||
+    /"rewriteSuggestions"\s*:/.test(value) ||
+    /^\s*```json/.test(value)
+  );
+}
+
 function normalizeRewriteSuggestions(rawSuggestions, fallbackActions) {
   if (!Array.isArray(rawSuggestions) || rawSuggestions.length === 0) {
     return fallbackActions;
@@ -144,7 +156,7 @@ function normalizeRewriteSuggestions(rawSuggestions, fallbackActions) {
 function normalizeResultItem(result, fallbackActions) {
   const text = getResultText(result).trim();
 
-  if (!text) {
+  if (!text || looksLikeRawModelPayload(text)) {
     return null;
   }
 
@@ -198,7 +210,7 @@ function getRewriteActionsForContext({ tone, selectedOptions }) {
 
 export default function GeneratePage() {
   const [input, setInput] = useState('');
-  const [placeholder] = useState(() => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
+  const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
   const [tone, setTone] = useState('Aesthetic');
   const [platform, setPlatform] = useState('Auto Detect');
   const [length, setLength] = useState('Medium');
@@ -220,6 +232,10 @@ export default function GeneratePage() {
   const [sessionId, setSessionId] = useState('');
   const [pasteShortcutLabel, setPasteShortcutLabel] = useState('');
   const fileRef = useRef(null);
+
+  useEffect(() => {
+    setPlaceholder(PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
+  }, []);
 
   useEffect(() => {
     try {
@@ -682,7 +698,14 @@ export default function GeneratePage() {
         return null;
       }
 
-      return normalizeResultItems(data.results, visibleRewriteActions);
+      const normalizedResults = normalizeResultItems(data.results, visibleRewriteActions);
+
+      if (normalizedResults.length === 0) {
+        setError('AI response format broke for that try. Please run it once more.');
+        return null;
+      }
+
+      return normalizedResults;
     } catch {
       setError('Server se connection nahi hua. Try again!');
       return null;

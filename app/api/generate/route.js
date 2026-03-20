@@ -233,6 +233,35 @@ function sanitizeSuggestionInstruction(value) {
   return value.replace(/\s+/g, ' ').trim().slice(0, 220);
 }
 
+function decodeJsonStringValue(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  try {
+    return JSON.parse(`"${value}"`);
+  } catch {
+    return value
+      .replace(/\\\\/g, '\\')
+      .replace(/\\"/g, '"')
+      .replace(/\\n/g, '\n')
+      .replace(/\\r/g, '\r')
+      .replace(/\\t/g, '\t');
+  }
+}
+
+function looksLikeStructuredPayload(value) {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  return (
+    /"results"\s*:/.test(value) ||
+    /"rewriteSuggestions"\s*:/.test(value) ||
+    /^\s*[{[]/.test(value)
+  );
+}
+
 function extractJsonPayload(rawValue) {
   const firstBrace = rawValue.indexOf('{');
   const lastBrace = rawValue.lastIndexOf('}');
@@ -299,6 +328,38 @@ function unwrapNestedResult(item) {
   return nestedResult || item;
 }
 
+function salvageStructuredResults(rawValue, { count, fallbackSuggestions }) {
+  const textPattern = /"text"\s*:\s*"((?:\\.|[^"\\])*)"/g;
+  const salvagedResults = [];
+  const seenTexts = new Set();
+
+  for (const match of rawValue.matchAll(textPattern)) {
+    const text = decodeJsonStringValue(match[1]).trim().slice(0, 1200);
+
+    if (!text || looksLikeStructuredPayload(text)) {
+      continue;
+    }
+
+    const signature = text.toLowerCase();
+
+    if (seenTexts.has(signature)) {
+      continue;
+    }
+
+    seenTexts.add(signature);
+    salvagedResults.push({
+      text,
+      rewriteSuggestions: fallbackSuggestions,
+    });
+
+    if (salvagedResults.length >= count) {
+      break;
+    }
+  }
+
+  return salvagedResults;
+}
+
 function parseStructuredResults(rawValue, { count, tone, hinglish, emoji, hashtags }) {
   const fallbackSuggestions = getFallbackRewriteSuggestions({ tone, hinglish, emoji, hashtags });
   const payload = extractJsonPayload(rawValue);
@@ -326,6 +387,19 @@ function parseStructuredResults(rawValue, { count, tone, hinglish, emoji, hashta
     }
   }
 
+  const salvagedResults = salvageStructuredResults(rawValue, {
+    count,
+    fallbackSuggestions,
+  });
+
+  if (salvagedResults.length > 0) {
+    return salvagedResults;
+  }
+
+  if (looksLikeStructuredPayload(rawValue)) {
+    return [];
+  }
+
   return rawValue
     .split('---SPLIT---')
     .map((item) => item.trim())
@@ -347,6 +421,20 @@ function getLengthNote(length) {
   }
 
   return 'Keep each version medium-length and easy to post immediately.';
+}
+
+function getCompletionMaxTokens({ count, hashtags, rewriteInstruction, currentResult }) {
+  if (rewriteInstruction && currentResult) {
+    return 900;
+  }
+
+  let maxTokens = 1200 + count * 220;
+
+  if (hashtags) {
+    maxTokens += 220;
+  }
+
+  return Math.min(maxTokens, 2400);
 }
 
 function buildPrompt({
@@ -564,7 +652,12 @@ export async function POST(req) {
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 1500,
+      max_tokens: getCompletionMaxTokens({
+        count,
+        hashtags,
+        rewriteInstruction,
+        currentResult,
+      }),
       temperature: 0.9,
     });
 
