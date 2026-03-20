@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash';
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 6;
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -301,7 +302,7 @@ export async function POST(req) {
         const base64Image = Buffer.from(imageBytes).toString('base64');
         const mimeType = imageFile.type || 'image/jpeg';
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: GEMINI_IMAGE_MODEL });
         const result = await model.generateContent([
           {
             inlineData: {
@@ -314,6 +315,15 @@ export async function POST(req) {
         imageDescription = result.response.text();
       } catch (imgError) {
         console.error('Image analysis error:', imgError);
+        const imageErrorMessage = String(imgError?.message || '');
+
+        if (imageErrorMessage.includes('API key not valid')) {
+          return Response.json(
+            { error: 'Image captions are not configured correctly right now. Please try again later.' },
+            { status: 503 }
+          );
+        }
+
         return Response.json(
           { error: 'Could not read that image. Try a smaller JPG, PNG, or WEBP.' },
           { status: 400 }
