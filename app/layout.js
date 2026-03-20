@@ -2,6 +2,7 @@ import { DM_Sans, Syne } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 import { PWAProvider } from './components/pwa-provider';
+import ScrollToTop from './components/scroll-to-top';
 import { SiteThemeProvider } from './components/site-theme-provider';
 import {
   absoluteUrl,
@@ -147,7 +148,10 @@ export default function RootLayout({ children }) {
           />
         ))}
         <PWAProvider />
-        <SiteThemeProvider>{children}</SiteThemeProvider>
+        <SiteThemeProvider>
+          {children}
+          <ScrollToTop />
+        </SiteThemeProvider>
       </body>
     </html>
   );
