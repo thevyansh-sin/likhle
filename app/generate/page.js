@@ -840,21 +840,49 @@ export default function GeneratePage() {
         {template.prompt}
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 'auto' }}>
-        {[template.platform, template.length, template.tone].map((item) => (
-          <span
-            key={`${template.id}-${item}`}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, marginTop: 'auto' }}>
+        {[
+          { key: 'platform', label: 'Format', value: template.platform, wide: true },
+          { key: 'length', label: 'Length', value: template.length },
+          { key: 'tone', label: 'Vibe', value: template.tone },
+        ].map((item) => (
+          <div
+            key={`${template.id}-${item.key}`}
             style={{
-              background: t.copyBg,
+              background: dark
+                ? 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
+                : 'linear-gradient(180deg, rgba(17,17,17,0.03) 0%, rgba(17,17,17,0.01) 100%)',
               border: `1px solid ${t.resultBorder}`,
-              color: t.copyText,
-              fontSize: 11,
-              padding: '6px 10px',
-              borderRadius: 999,
+              borderRadius: 14,
+              padding: compact ? '10px 12px' : '12px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 5,
+              gridColumn: item.wide ? '1 / -1' : 'auto',
             }}
           >
-            {item}
-          </span>
+            <span
+              style={{
+                fontSize: 10,
+                color: t.muted,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                fontWeight: 700,
+              }}
+            >
+              {item.label}
+            </span>
+            <span
+              style={{
+                fontSize: compact ? 12 : 13,
+                color: t.text,
+                fontWeight: 600,
+                lineHeight: 1.4,
+              }}
+            >
+              {item.value}
+            </span>
+          </div>
         ))}
       </div>
     </button>
