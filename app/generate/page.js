@@ -98,7 +98,6 @@ export default function GeneratePage() {
   const [history, setHistory] = useState([]);
   const [historyReady, setHistoryReady] = useState(false);
   const [sessionId, setSessionId] = useState('');
-  const [isWideLayout, setIsWideLayout] = useState(false);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -185,16 +184,6 @@ export default function GeneratePage() {
 
       setSelectedOptions(nextOptions);
     }
-  }, []);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(min-width: 1180px)');
-    const syncLayoutMode = () => setIsWideLayout(mediaQuery.matches);
-
-    syncLayoutMode();
-    mediaQuery.addEventListener('change', syncLayoutMode);
-
-    return () => mediaQuery.removeEventListener('change', syncLayoutMode);
   }, []);
 
   const t = {
@@ -599,11 +588,6 @@ export default function GeneratePage() {
   });
 
   const controlsDisabled = loading || pendingResultAction !== null;
-  const templateSplitIndex = Math.ceil(templateLibrary.length / 2);
-  const templateColumns = [
-    templateLibrary.slice(0, templateSplitIndex),
-    templateLibrary.slice(templateSplitIndex),
-  ];
 
   const renderTemplateCard = (template, compact = false) => (
     <button
@@ -773,30 +757,13 @@ export default function GeneratePage() {
     </div>
   );
 
-  const renderTemplateRail = (templates, railLabel, railHelp) => (
-    <div
-      style={{
-        ...sectionCardStyle,
-        padding: 16,
-        maxHeight: 520,
-        overflowY: 'auto',
-      }}
-    >
-      <div style={sectionLabelStyle}>{railLabel}</div>
-      <div style={{ ...sectionHelpStyle, marginBottom: 14 }}>{railHelp}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {templates.map((template) => renderTemplateCard(template, true))}
-      </div>
-    </div>
-  );
-
   const mobileTemplateLibrary = (
     <div style={sectionCardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div>
-          <div style={sectionLabelStyle}>Template Library</div>
+          <div style={sectionLabelStyle}>Quick Start Templates</div>
           <div style={sectionHelpStyle}>
-            Use a ready-made prompt without pushing the main controls too far down.
+            Use one if you want a head start, but keep the main controls right above for fast edits.
           </div>
         </div>
         <div style={{ fontSize: 12, color: t.muted }}>
@@ -824,125 +791,14 @@ export default function GeneratePage() {
         </button>
       </nav>
 
-      <div style={{ maxWidth: isWideLayout ? 1180 : 760, margin: '0 auto', padding: '60px 20px' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '60px 20px' }}>
         <div style={{ marginBottom: 48 }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 800, letterSpacing: -2, color: t.text, marginBottom: 8 }}>Kya likhna hai? ✍️</h1>
           <p style={{ fontSize: 16, color: t.muted }}>Describe karo — AI sab samajh leta hai.</p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {isWideLayout ? (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(220px, 0.82fr) minmax(0, 1.2fr) minmax(220px, 0.82fr)',
-                gap: 16,
-                alignItems: 'start',
-              }}
-            >
-              {renderTemplateRail(
-                templateColumns[0],
-                'Template Library',
-                'Quick starts on the left so the main controls stay close.'
-              )}
-              {composerPanel}
-              {renderTemplateRail(
-                templateColumns[1],
-                'More Ideas',
-                'Extra starters without pushing the platform and tone controls down.'
-              )}
-            </div>
-          ) : (
-            <>
-          {attachment && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: 14, background: t.attBg, border: `1px solid ${t.attBorder}`, borderRadius: 16, padding: 14 }}>
-              {attachmentPreview && (
-                <Image
-                  src={attachmentPreview}
-                  alt="Uploaded preview"
-                  width={116}
-                  height={116}
-                  unoptimized
-                  style={{ width: 116, height: 116, objectFit: 'cover', borderRadius: 12, border: `1px solid ${t.border}` }}
-                />
-              )}
-              <div style={{ display: 'flex', flex: 1, minWidth: 180, justifyContent: 'space-between', gap: 12 }}>
-                <div>
-                  <div style={{ fontSize: 13, color: t.text, fontWeight: 600 }}>{attachment.name}</div>
-                  <div style={{ fontSize: 12, color: t.muted, marginTop: 6 }}>
-                    {(attachment.size / 1024).toFixed(1)} KB · JPG/PNG/WEBP only
-                  </div>
-                  <div style={{ fontSize: 12, color: t.muted, marginTop: 10 }}>
-                    Preview ready. AI will use this image while generating.
-                  </div>
-                </div>
-                <button onClick={() => setAttachment(null)} style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', fontSize: 16, alignSelf: 'flex-start' }}>✕</button>
-              </div>
-            </div>
-          )}
-
-          <div style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 16, padding: '18px 20px 14px' }}>
-            <textarea
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault();
-                  handleGenerate();
-                }
-              }}
-              style={{ background: 'transparent', border: 'none', color: t.inputText, fontFamily: 'var(--font-body)', fontSize: 16, resize: 'none', minHeight: 100, outline: 'none', width: '100%', lineHeight: 1.7 }}
-              placeholder={placeholder}
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              rows={3}
-            />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', borderTop: `1px solid ${t.border}`, paddingTop: 12, marginTop: 8 }}>
-              <div style={{ position: 'relative' }} onClick={(event) => event.stopPropagation()}>
-                <button
-                  onClick={() => setShowMenu(!showMenu)}
-                  aria-label="Add image"
-                  style={{ width: 40, height: 40, background: t.toggleBg, border: `1px solid ${t.border}`, color: t.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, transition: 'all 0.15s' }}
-                >
-                  <LuPlus size={22} />
-                </button>
-                {showMenu && (
-                  <div style={{ position: 'absolute', bottom: 40, left: 0, background: t.menuBg, border: `1px solid ${t.border}`, borderRadius: 14, padding: 6, width: 190, zIndex: 200, display: 'flex', flexDirection: 'column', gap: 2, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
-                    <div
-                      onClick={() => {
-                        fileRef.current.accept = IMAGE_ACCEPT;
-                        fileRef.current.click();
-                      }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: t.muted, transition: 'background 0.1s' }}
-                      onMouseEnter={(event) => {
-                        event.currentTarget.style.background = dark ? '#252525' : '#f0f0f0';
-                      }}
-                      onMouseLeave={(event) => {
-                        event.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      <LuImage size={15} /> Add photo
-                    </div>
-                  </div>
-                )}
-                <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} style={{ display: 'none' }} onChange={handleFile} />
-              </div>
-
-              <div style={{ fontSize: 12, color: t.muted, flex: 1, minWidth: 180 }}>
-                Tap + to add a reference image. Supports JPG, PNG, WEBP up to 5 MB.
-              </div>
-
-              <button
-                onClick={handleGenerate}
-                disabled={controlsDisabled || !input.trim()}
-                style={{ background: '#CAFF00', color: '#000', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, padding: '8px 24px', border: 'none', borderRadius: 10, cursor: controlsDisabled || !input.trim() ? 'not-allowed' : 'pointer', opacity: controlsDisabled || !input.trim() ? 0.5 : 1, transition: 'all 0.2s' }}
-              >
-                {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
-              </button>
-            </div>
-          </div>
-
-          {mobileTemplateLibrary}
-            </>
-          )}
+          {composerPanel}
 
           <div style={sectionCardStyle}>
             <div style={sectionLabelStyle}>Platform / Format</div>
@@ -993,6 +849,8 @@ export default function GeneratePage() {
               ))}
             </div>
           </div>
+
+          {mobileTemplateLibrary}
         </div>
 
         {loading && (
