@@ -395,29 +395,39 @@ export default function GeneratePage() {
   }, []);
 
   const t = {
-    bg: dark ? '#080808' : '#F5F5F0',
-    navBg: dark ? 'rgba(8,8,8,0.85)' : 'rgba(245,245,240,0.85)',
+    bg: dark ? '#080808' : '#F5F3EC',
+    pageBg: dark
+      ? 'radial-gradient(circle at top right, rgba(202,255,0,0.08) 0%, rgba(202,255,0,0) 24%), radial-gradient(circle at top left, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 28%), #080808'
+      : 'radial-gradient(circle at top right, rgba(112,137,0,0.10) 0%, rgba(112,137,0,0) 28%), radial-gradient(circle at top left, rgba(255,255,255,0.86) 0%, rgba(255,255,255,0) 30%), #F5F3EC',
+    navBg: dark ? 'rgba(8,8,8,0.82)' : 'rgba(245,243,236,0.84)',
     text: dark ? '#f0f0f0' : '#111111',
-    muted: dark ? '#888888' : '#666666',
+    muted: dark ? '#888888' : '#5F5A52',
     border: dark ? '#222222' : '#E0DED8',
+    accent: dark ? '#CAFF00' : '#C2E200',
+    accentInk: dark ? '#CAFF00' : '#6F8500',
     toneBg: dark ? '#1a1a1a' : '#EFEFEB',
     toneBorder: dark ? '#333333' : '#D8D6D0',
     toneText: dark ? '#888888' : '#555555',
-    inputBg: dark ? '#1a1a1a' : '#FAFAF8',
+    inputBg: dark ? '#111111' : '#FFFEFA',
     inputBorder: dark ? '#333333' : '#D8D6D0',
     inputText: dark ? '#f0f0f0' : '#111111',
     toggleBg: dark ? '#1a1a1a' : '#E8E6E0',
     toggleText: dark ? '#f0f0f0' : '#111111',
-    resultBg: dark ? '#111111' : '#FFFFFF',
+    resultBg: dark
+      ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%), #111111'
+      : 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,252,244,0.85) 100%), #FFFFFF',
     resultBorder: dark ? '#222222' : '#E8E6E0',
     copyBg: dark ? '#1a1a1a' : '#F0EEE8',
     copyText: dark ? '#888888' : '#666666',
     attBg: dark ? '#111111' : '#FFFFFF',
     attBorder: dark ? '#2a2a2a' : '#D8D6D0',
     menuBg: dark ? '#1e1e1e' : '#ffffff',
-    sectionBg: dark ? '#0F0F0F' : '#FFFEFA',
+    sectionBg: dark
+      ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%), #0F0F0F'
+      : 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,252,244,0.82) 100%), #FFFEFA',
     sectionBorder: dark ? '#1D1D1D' : '#E3DFD7',
     chipShadow: dark ? '0 10px 24px rgba(0,0,0,0.22)' : '0 10px 24px rgba(0,0,0,0.05)',
+    sectionShadow: dark ? '0 18px 44px rgba(0,0,0,0.18)' : '0 18px 44px rgba(35,27,10,0.08)',
   };
 
   const sectionCardStyle = {
@@ -425,6 +435,7 @@ export default function GeneratePage() {
     border: `1px solid ${t.sectionBorder}`,
     borderRadius: 18,
     padding: 18,
+    boxShadow: t.sectionShadow,
   };
 
   const sectionLabelStyle = {
@@ -450,8 +461,8 @@ export default function GeneratePage() {
   };
 
   const getPillStyle = (isActive) => ({
-    background: isActive ? '#CAFF00' : t.toneBg,
-    border: `1px solid ${isActive ? '#CAFF00' : t.toneBorder}`,
+    background: isActive ? t.accent : t.toneBg,
+    border: `1px solid ${isActive ? t.accent : t.toneBorder}`,
     color: isActive ? '#000' : t.toneText,
     fontFamily: 'var(--font-body)',
     fontSize: 13,
@@ -962,8 +973,8 @@ export default function GeneratePage() {
     background: active
       ? (dark ? 'rgba(202,255,0,0.08)' : 'rgba(147,181,0,0.10)')
       : t.copyBg,
-    border: `1px solid ${active ? '#CAFF00' : t.resultBorder}`,
-    color: active ? '#CAFF00' : t.copyText,
+    border: `1px solid ${active ? t.accentInk : t.resultBorder}`,
+    color: active ? t.accentInk : t.copyText,
     borderRadius: 12,
     display: 'inline-flex',
     alignItems: 'center',
@@ -992,14 +1003,15 @@ export default function GeneratePage() {
         gap: 10,
         cursor: 'pointer',
         transition: 'all 0.15s ease',
-        minWidth: compact ? 'auto' : 240,
+        minWidth: compact ? 'min(78vw, 260px)' : 'min(82vw, 280px)',
+        boxShadow: t.sectionShadow,
       }}
     >
       <div>
         <div
           style={{
             fontSize: 11,
-            color: '#CAFF00',
+            color: t.accentInk,
             fontWeight: 700,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
@@ -1070,7 +1082,7 @@ export default function GeneratePage() {
           }}
         >
           <span>{template.length}</span>
-          <span style={{ color: dark ? 'rgba(202,255,0,0.55)' : '#93b500' }}>•</span>
+          <span style={{ color: dark ? 'rgba(202,255,0,0.55)' : 'rgba(111,133,0,0.75)' }}>•</span>
           <span>{template.tone}</span>
         </div>
       </div>
@@ -1080,7 +1092,7 @@ export default function GeneratePage() {
   const composerPanel = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {attachment && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: 14, background: t.attBg, border: `1px solid ${t.attBorder}`, borderRadius: 16, padding: 14 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: 14, background: t.attBg, border: `1px solid ${t.attBorder}`, borderRadius: 16, padding: 14, boxShadow: t.sectionShadow }}>
           {attachmentPreview && (
             <Image
               src={attachmentPreview}
@@ -1106,7 +1118,7 @@ export default function GeneratePage() {
         </div>
       )}
 
-      <div style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 16, padding: '18px 20px 14px' }}>
+      <div style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 16, padding: '18px 20px 14px', boxShadow: t.sectionShadow }}>
         <textarea
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -1161,7 +1173,7 @@ export default function GeneratePage() {
           <button
             onClick={handleGenerate}
             disabled={controlsDisabled || !input.trim()}
-            style={{ background: '#CAFF00', color: '#000', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, padding: '8px 24px', border: 'none', borderRadius: 10, cursor: controlsDisabled || !input.trim() ? 'not-allowed' : 'pointer', opacity: controlsDisabled || !input.trim() ? 0.5 : 1, transition: 'all 0.2s' }}
+            style={{ background: t.accent, color: '#000', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, padding: '8px 24px', border: 'none', borderRadius: 12, cursor: controlsDisabled || !input.trim() ? 'not-allowed' : 'pointer', opacity: controlsDisabled || !input.trim() ? 0.5 : 1, transition: 'all 0.2s', boxShadow: controlsDisabled || !input.trim() ? 'none' : t.sectionShadow }}
           >
             {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
           </button>
@@ -1193,11 +1205,11 @@ export default function GeneratePage() {
           overflowY: 'hidden',
           paddingBottom: 6,
           marginTop: 16,
-          scrollbarColor: `${dark ? '#CAFF00' : '#93b500'} ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(17,17,17,0.08)'}`,
+          scrollbarColor: `${t.accentInk} ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(17,17,17,0.08)'}`,
           scrollbarWidth: 'thin',
           ['--template-scroll-track']: dark ? 'rgba(255,255,255,0.06)' : 'rgba(17,17,17,0.08)',
-          ['--template-scroll-thumb']: dark ? '#CAFF00' : '#93b500',
-          ['--template-scroll-thumb-hover']: dark ? '#d8ff4d' : '#7f9900',
+          ['--template-scroll-thumb']: t.accentInk,
+          ['--template-scroll-thumb-hover']: dark ? '#d8ff4d' : '#5f7500',
         }}
       >
         {templateLibrary.map((template) => renderTemplateCard(template))}
@@ -1207,19 +1219,19 @@ export default function GeneratePage() {
 
   return (
     <div
-      style={{ minHeight: '100vh', background: t.bg, transition: 'all 0.3s', fontFamily: 'var(--font-body)' }}
+      style={{ minHeight: '100vh', background: t.pageBg, transition: 'all 0.3s', fontFamily: 'var(--font-body)' }}
       onClick={() => setShowMenu(false)}
     >
-      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 40px', borderBottom: `1px solid ${t.border}`, position: 'sticky', top: 0, zIndex: 100, background: t.navBg, backdropFilter: 'blur(12px)' }}>
+      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', padding: 'clamp(18px, 2.6vw, 20px) clamp(20px, 4vw, 40px)', borderBottom: `1px solid ${t.border}`, position: 'sticky', top: 0, zIndex: 100, background: t.navBg, backdropFilter: 'blur(12px)' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, lineHeight: 1 }}>likhle<span style={{ color: '#CAFF00' }}>.</span></div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, lineHeight: 1 }}>likhle<span style={{ color: t.accentInk }}>.</span></div>
         </Link>
-        <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '7px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s' }}>
+        <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '8px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s', boxShadow: t.sectionShadow }}>
           {dark ? '☀️ Light' : '🌙 Dark'}
         </button>
       </nav>
 
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '60px 20px' }}>
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: 'clamp(40px, 6vw, 60px) clamp(16px, 4vw, 20px)' }}>
         <div style={{ marginBottom: 48 }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 800, letterSpacing: -2, color: t.text, marginBottom: 8 }}>Kya likhna hai? ✍️</h1>
           <p style={{ fontSize: 16, color: t.muted }}>Describe karo — AI sab samajh leta hai.</p>
@@ -1285,7 +1297,7 @@ export default function GeneratePage() {
           <div style={{ textAlign: 'center', padding: '48px 0', color: t.muted, fontSize: 15 }}>
             <div>AI likh raha hai... ✨</div>
             <div style={{ display: 'inline-flex', gap: 6, marginTop: 12 }}>
-              {[0, 1, 2].map((index) => <div key={index} style={{ width: 8, height: 8, background: '#CAFF00', borderRadius: '50%', animation: `bounce 1s infinite ${index * 0.15}s` }} />)}
+              {[0, 1, 2].map((index) => <div key={index} style={{ width: 8, height: 8, background: t.accent, borderRadius: '50%', animation: `bounce 1s infinite ${index * 0.15}s` }} />)}
             </div>
           </div>
         )}
@@ -1302,7 +1314,7 @@ export default function GeneratePage() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button onClick={handleCopyAll} style={{ ...actionButtonStyle, color: copiedAll ? '#CAFF00' : actionButtonStyle.color, border: copiedAll ? '1px solid #CAFF00' : actionButtonStyle.border }}>
+                <button onClick={handleCopyAll} style={{ ...actionButtonStyle, color: copiedAll ? t.accentInk : actionButtonStyle.color, border: copiedAll ? `1px solid ${t.accentInk}` : actionButtonStyle.border }}>
                   {copiedAll ? '✓ Copied all' : 'Copy all'}
                 </button>
                 <button onClick={handleDownload} style={actionButtonStyle}>
@@ -1319,13 +1331,20 @@ export default function GeneratePage() {
               const resultCopyKey = `result-${index}`;
 
               return (
-                <div key={item.id || `${resultText}-${index}`} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 14, padding: 20, position: 'relative' }}>
-                {pendingResultAction?.index === index && (
-                  <div style={{ fontSize: 12, color: '#CAFF00', fontWeight: 600, marginBottom: 12 }}>
-                    {pendingResultAction.label}
+                <div key={item.id || `${resultText}-${index}`} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 18, padding: 20, boxShadow: t.sectionShadow }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+                  <div style={{ minHeight: 18 }}>
+                    {pendingResultAction?.index === index ? (
+                      <div style={{ fontSize: 12, color: t.accentInk, fontWeight: 600 }}>
+                        {pendingResultAction.label}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 12, color: t.muted, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                        Option {index + 1}
+                      </div>
+                    )}
                   </div>
-                )}
-                <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
                   <button
                     onClick={() => handleToggleFavorite(item)}
                     aria-label={isFavorite ? 'Saved to favorites' : 'Save to favorites'}
@@ -1358,7 +1377,8 @@ export default function GeneratePage() {
                     {copied === index ? '✓ Copied!' : 'Copy'}
                   </button>
                 </div>
-                <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 156 }}>{resultText}</p>
+                </div>
+                <p style={{ fontSize: 15, lineHeight: 1.75, color: t.text, whiteSpace: 'pre-wrap' }}>{resultText}</p>
                 <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${t.resultBorder}` }}>
                   <div style={{ fontSize: 12, color: t.muted, marginBottom: 10 }}>Quick rewrite</div>
                   <div
@@ -1381,7 +1401,7 @@ export default function GeneratePage() {
                         style={rewriteButtonStyle(loading || pendingResultAction !== null)}
                       >
                         <span>{action.label}</span>
-                        <span style={{ color: '#CAFF00', fontSize: 12 }}>↗</span>
+                        <span style={{ color: t.accentInk, fontSize: 12 }}>↗</span>
                       </button>
                     ))}
                   </div>
@@ -1422,11 +1442,12 @@ export default function GeneratePage() {
                       display: 'flex',
                       flexDirection: 'column',
                       gap: 12,
+                      boxShadow: t.sectionShadow,
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                       <div>
-                        <div style={{ fontSize: 11, color: '#CAFF00', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                        <div style={{ fontSize: 11, color: t.accentInk, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                           Favorite pick
                         </div>
                         <div style={{ fontSize: 12, color: t.muted, marginTop: 8 }}>
@@ -1450,7 +1471,7 @@ export default function GeneratePage() {
                       <button onClick={() => handleUseFavorite(entry)} style={actionButtonStyle}>
                         Use again
                       </button>
-                      <button onClick={() => handleCopy(entry.text, favoriteCopyKey)} style={{ ...actionButtonStyle, color: copied === favoriteCopyKey ? '#CAFF00' : actionButtonStyle.color, border: copied === favoriteCopyKey ? '1px solid #CAFF00' : actionButtonStyle.border }}>
+                      <button onClick={() => handleCopy(entry.text, favoriteCopyKey)} style={{ ...actionButtonStyle, color: copied === favoriteCopyKey ? t.accentInk : actionButtonStyle.color, border: copied === favoriteCopyKey ? `1px solid ${t.accentInk}` : actionButtonStyle.border }}>
                         {copied === favoriteCopyKey ? '✓ Copied!' : 'Copy'}
                       </button>
                     </div>
@@ -1475,7 +1496,7 @@ export default function GeneratePage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
               {history.map((entry) => (
-                <div key={entry.id} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 14, padding: 16 }}>
+                <div key={entry.id} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 16, padding: 16, boxShadow: t.sectionShadow }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                     <div style={{ flex: 1, minWidth: 220 }}>
                       <div style={{ fontSize: 14, color: t.text, lineHeight: 1.6, fontWeight: 600 }}>{entry.input}</div>
