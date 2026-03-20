@@ -746,20 +746,22 @@ export default function GeneratePage() {
       : 'linear-gradient(180deg, rgba(17,17,17,0.03) 0%, rgba(17,17,17,0.01) 100%)',
     border: `1px solid ${t.resultBorder}`,
     color: t.copyText,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 600,
-    padding: '12px 14px',
+    padding: '10px 12px',
     borderRadius: 14,
     cursor: disabled ? 'not-allowed' : 'pointer',
     transition: 'all 0.15s ease',
     opacity: disabled ? 0.55 : 1,
-    width: '100%',
-    minHeight: 46,
+    minHeight: 40,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     textAlign: 'left',
     letterSpacing: '0.01em',
+    whiteSpace: 'nowrap',
+    flex: '0 0 auto',
+    minWidth: 0,
   });
 
   const getResultIconButtonStyle = ({ active = false, disabled = false } = {}) => ({
@@ -1164,7 +1166,18 @@ export default function GeneratePage() {
                 <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 156 }}>{item}</p>
                 <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${t.resultBorder}` }}>
                   <div style={{ fontSize: 12, color: t.muted, marginBottom: 10 }}>Quick rewrite</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      flexWrap: 'nowrap',
+                      overflowX: 'auto',
+                      overflowY: 'hidden',
+                      paddingBottom: 2,
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none',
+                    }}
+                  >
                     {REWRITE_ACTIONS.map((action) => (
                       <button
                         key={action.key}
