@@ -1,3 +1,4 @@
+import { ideaPages } from './idea-pages-data';
 import { absoluteUrl } from './lib/site';
 import { seoPages } from './seo-pages-data';
 
@@ -19,6 +20,13 @@ export default function sitemap() {
     priority: 0.8,
   }));
 
+  const ideaEntries = ideaPages.map((page) => ({
+    url: absoluteUrl(`/${page.slug}`),
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.72,
+  }));
+
   return [
     ...staticPages.map((page) => ({
       url: absoluteUrl(page.path),
@@ -27,5 +35,6 @@ export default function sitemap() {
       priority: page.priority,
     })),
     ...seoEntries,
+    ...ideaEntries,
   ];
 }

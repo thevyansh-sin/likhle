@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { ideaPages } from './idea-pages-data';
 import { seoPages } from './seo-pages-data';
 
 const words = ['Captions', 'Bios', 'Hooks', 'Hashtags', 'Status'];
@@ -231,6 +232,26 @@ export default function Home() {
               <span className="seo-link-kicker">{page.eyebrow}</span>
               <h3 className="seo-link-title">{page.shortTitle}</h3>
               <p className="seo-link-desc">{page.description}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="idea-links-section">
+        <div className="section-header">
+          <span className="section-kicker">Idea Guides</span>
+          <h2 className="section-title">Static pages for people who search with a very specific mood in mind</h2>
+          <p className="section-copy">
+            These pages are packed with real examples first, then push people into the right generator setup when they want fresh options.
+          </p>
+        </div>
+
+        <div className="seo-related-grid">
+          {ideaPages.slice(0, 4).map((page) => (
+            <Link key={page.slug} href={`/${page.slug}`} className="seo-related-card">
+              <span className="seo-card-kicker">{page.eyebrow}</span>
+              <h3 className="seo-card-title">{page.shortTitle}</h3>
+              <p className="seo-card-text">{page.description}</p>
             </Link>
           ))}
         </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ideaPages } from '../idea-pages-data';
 import { seoPages } from '../seo-pages-data';
 
 function buildFaqSchema(page) {
@@ -18,6 +19,9 @@ function buildFaqSchema(page) {
 
 export default function SEOLandingPage({ page }) {
   const relatedPages = seoPages.filter((item) => item.slug !== page.slug).slice(0, 4);
+  const relatedIdeaPages = ideaPages
+    .filter((item) => item.relatedGeneratorSlugs?.includes(page.slug))
+    .slice(0, 4);
   const faqSchema = buildFaqSchema(page);
 
   return (
@@ -166,6 +170,28 @@ export default function SEOLandingPage({ page }) {
             ))}
           </div>
         </section>
+
+        {relatedIdeaPages.length > 0 ? (
+          <section className="seo-section">
+            <div className="seo-section-head">
+              <span className="section-kicker">Idea guides</span>
+              <h2 className="section-title">Need inspiration before generating?</h2>
+              <p className="section-copy">
+                These pages are more example-heavy, so they work well when someone wants a head start before opening the tool.
+              </p>
+            </div>
+
+            <div className="seo-related-grid">
+              {relatedIdeaPages.map((item) => (
+                <Link key={item.slug} href={`/${item.slug}`} className="seo-related-card">
+                  <span className="seo-card-kicker">Idea guide</span>
+                  <h3 className="seo-card-title">{item.shortTitle}</h3>
+                  <p className="seo-card-text">{item.description}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="seo-cta">
           <h2 className="cta-title">Ready to try {page.shortTitle.toLowerCase()} for real?</h2>
