@@ -14,6 +14,10 @@ const REWRITE_ACTIONS = {
     instruction:
       'Rewrite the current draft into a shorter, tighter version while keeping the same core meaning and post-ready vibe.',
   },
+  moreFunny: {
+    instruction:
+      'Rewrite the current draft so it lands funnier, lighter, and more naturally witty without sounding forced or cringe.',
+  },
   moreSavage: {
     instruction:
       'Rewrite the current draft so it feels sharper, bolder, and more savage while still sounding smart and natural.',
@@ -22,13 +26,33 @@ const REWRITE_ACTIONS = {
     instruction:
       'Rewrite the current draft so it feels more aesthetic, polished, and visually expressive without becoming fake or overdramatic.',
   },
+  moreMotivational: {
+    instruction:
+      'Rewrite the current draft so it feels more motivational, uplifting, and energizing while still sounding genuine and post-ready.',
+  },
+  moreRomantic: {
+    instruction:
+      'Rewrite the current draft so it feels softer, warmer, and more romantic while still sounding natural and sincere.',
+  },
   moreProfessional: {
     instruction:
       'Rewrite the current draft so it sounds more professional, clean, and credible while still feeling human and easy to post.',
   },
+  moreDesi: {
+    instruction:
+      'Rewrite the current draft so it feels more desi, culturally rooted, and naturally Indian without becoming caricatured or forced.',
+  },
   moreHinglish: {
     instruction:
       'Rewrite the current draft in natural Hinglish with a smooth Hindi-English mix that feels modern and authentic for Indian users.',
+  },
+  moreEmoji: {
+    instruction:
+      'Rewrite the current draft with a few more relevant emojis placed naturally so it feels expressive without looking spammy.',
+  },
+  betterHashtags: {
+    instruction:
+      'Rewrite the current draft with a stronger, more relevant hashtag finish. Keep the main line intact in spirit, but improve the hashtags so they feel more useful and post-ready.',
   },
 };
 const rateLimitStore = globalThis.__likhleRateLimitStore || new Map();

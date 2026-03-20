@@ -60,13 +60,19 @@ const PLATFORM_OPTIONS = [
   'Twitter/X Bio',
 ];
 const LENGTH_OPTIONS = ['Short', 'Medium', 'Long'];
-const REWRITE_ACTIONS = [
-  { key: 'shorter', label: 'Shorter', pendingLabel: 'Shortening...' },
-  { key: 'moreSavage', label: 'More savage', pendingLabel: 'Sharpening...' },
-  { key: 'moreAesthetic', label: 'More aesthetic', pendingLabel: 'Polishing...' },
-  { key: 'moreProfessional', label: 'More professional', pendingLabel: 'Refining...' },
-  { key: 'moreHinglish', label: 'More Hinglish', pendingLabel: 'Mixing...' },
-];
+const REWRITE_ACTIONS = {
+  shorter: { key: 'shorter', label: 'Shorter', pendingLabel: 'Shortening...' },
+  moreAesthetic: { key: 'moreAesthetic', label: 'More aesthetic', pendingLabel: 'Polishing...' },
+  moreFunny: { key: 'moreFunny', label: 'Funnier', pendingLabel: 'Punching up...' },
+  moreSavage: { key: 'moreSavage', label: 'More savage', pendingLabel: 'Sharpening...' },
+  moreMotivational: { key: 'moreMotivational', label: 'More motivational', pendingLabel: 'Boosting...' },
+  moreRomantic: { key: 'moreRomantic', label: 'More romantic', pendingLabel: 'Softening...' },
+  moreProfessional: { key: 'moreProfessional', label: 'More professional', pendingLabel: 'Refining...' },
+  moreDesi: { key: 'moreDesi', label: 'More desi', pendingLabel: 'Localizing...' },
+  moreHinglish: { key: 'moreHinglish', label: 'More Hinglish', pendingLabel: 'Mixing...' },
+  moreEmoji: { key: 'moreEmoji', label: 'More emojis', pendingLabel: 'Decorating...' },
+  betterHashtags: { key: 'betterHashtags', label: 'Better hashtags', pendingLabel: 'Tagging...' },
+};
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const IMAGE_ACCEPT = SUPPORTED_IMAGE_TYPES.join(',');
@@ -96,6 +102,37 @@ function getFavoriteSignature({ text, input, platform, length, tone }) {
     length || 'Medium',
     tone || 'Aesthetic',
   ]);
+}
+
+function getRewriteActionsForContext({ tone, selectedOptions }) {
+  const actions = [REWRITE_ACTIONS.shorter];
+  const selectedToneAction = {
+    Aesthetic: REWRITE_ACTIONS.moreAesthetic,
+    Funny: REWRITE_ACTIONS.moreFunny,
+    Savage: REWRITE_ACTIONS.moreSavage,
+    Motivational: REWRITE_ACTIONS.moreMotivational,
+    Romantic: REWRITE_ACTIONS.moreRomantic,
+    Professional: REWRITE_ACTIONS.moreProfessional,
+    Desi: REWRITE_ACTIONS.moreDesi,
+  }[tone];
+
+  if (selectedToneAction) {
+    actions.push(selectedToneAction);
+  }
+
+  if (selectedOptions.includes('Hinglish 🇮🇳')) {
+    actions.push(REWRITE_ACTIONS.moreHinglish);
+  }
+
+  if (selectedOptions.includes('Add Emojis ✨')) {
+    actions.push(REWRITE_ACTIONS.moreEmoji);
+  }
+
+  if (selectedOptions.includes('Add Hashtags #')) {
+    actions.push(REWRITE_ACTIONS.betterHashtags);
+  }
+
+  return actions;
 }
 
 export default function GeneratePage() {
@@ -783,6 +820,7 @@ export default function GeneratePage() {
   });
 
   const controlsDisabled = loading || pendingResultAction !== null;
+  const visibleRewriteActions = getRewriteActionsForContext({ tone, selectedOptions });
 
   const renderTemplateCard = (template, compact = false) => (
     <button
@@ -1178,7 +1216,7 @@ export default function GeneratePage() {
                       msOverflowStyle: 'none',
                     }}
                   >
-                    {REWRITE_ACTIONS.map((action) => (
+                    {visibleRewriteActions.map((action) => (
                       <button
                         key={action.key}
                         onClick={() => handleRewriteOption(index, item, action)}
