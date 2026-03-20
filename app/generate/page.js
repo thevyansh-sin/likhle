@@ -63,7 +63,9 @@ const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const IMAGE_ACCEPT = SUPPORTED_IMAGE_TYPES.join(',');
 const HISTORY_STORAGE_KEY = 'likhle-generation-history';
+const FAVORITES_STORAGE_KEY = 'likhle-favorite-results';
 const MAX_HISTORY_ITEMS = 10;
+const MAX_FAVORITES_ITEMS = 24;
 
 function formatHistoryTime(value) {
   try {
@@ -76,6 +78,16 @@ function formatHistoryTime(value) {
   } catch {
     return '';
   }
+}
+
+function getFavoriteSignature({ text, input, platform, length, tone }) {
+  return JSON.stringify([
+    text?.trim() || '',
+    input?.trim() || '',
+    platform || 'Auto Detect',
+    length || 'Medium',
+    tone || 'Aesthetic',
+  ]);
 }
 
 export default function GeneratePage() {
@@ -97,6 +109,8 @@ export default function GeneratePage() {
   const [showMenu, setShowMenu] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyReady, setHistoryReady] = useState(false);
+  const [favorites, setFavorites] = useState([]);
+  const [favoritesReady, setFavoritesReady] = useState(false);
   const [sessionId, setSessionId] = useState('');
   const [pasteShortcutLabel, setPasteShortcutLabel] = useState('');
   const fileRef = useRef(null);
@@ -120,6 +134,24 @@ export default function GeneratePage() {
   }, []);
 
   useEffect(() => {
+    try {
+      const storedFavorites = window.localStorage.getItem(FAVORITES_STORAGE_KEY);
+
+      if (storedFavorites) {
+        const parsedFavorites = JSON.parse(storedFavorites);
+
+        if (Array.isArray(parsedFavorites)) {
+          setFavorites(parsedFavorites);
+        }
+      }
+    } catch (favoritesError) {
+      console.error('Favorites load failed:', favoritesError);
+    } finally {
+      setFavoritesReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!historyReady) {
       return;
     }
@@ -129,6 +161,17 @@ export default function GeneratePage() {
       JSON.stringify(history.slice(0, MAX_HISTORY_ITEMS))
     );
   }, [history, historyReady]);
+
+  useEffect(() => {
+    if (!favoritesReady) {
+      return;
+    }
+
+    window.localStorage.setItem(
+      FAVORITES_STORAGE_KEY,
+      JSON.stringify(favorites.slice(0, MAX_FAVORITES_ITEMS))
+    );
+  }, [favorites, favoritesReady]);
 
   useEffect(() => {
     if (!attachment) {
@@ -366,6 +409,57 @@ export default function GeneratePage() {
     );
   };
 
+  const buildFavoriteEntry = (text) => ({
+    id: `favorite-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    signature: getFavoriteSignature({ text, input, platform, length, tone }),
+    text,
+    input: input.trim(),
+    tone,
+    platform,
+    length,
+    selectedOptions: [...selectedOptions],
+    createdAt: Date.now(),
+    hadImage: Boolean(attachment),
+  });
+
+  const findFavoriteForResult = (text) => (
+    favorites.find(
+      (entry) =>
+        entry.signature === getFavoriteSignature({ text, input, platform, length, tone })
+    )
+  );
+
+  const handleToggleFavorite = (text) => {
+    const existingFavorite = findFavoriteForResult(text);
+
+    if (existingFavorite) {
+      setFavorites((previousFavorites) =>
+        previousFavorites.filter((entry) => entry.id !== existingFavorite.id)
+      );
+      return;
+    }
+
+    const nextFavorite = buildFavoriteEntry(text);
+    setFavorites((previousFavorites) => [nextFavorite, ...previousFavorites].slice(0, MAX_FAVORITES_ITEMS));
+  };
+
+  const handleUseFavorite = (entry) => {
+    setInput(entry.input || '');
+    setTone(entry.tone || 'Aesthetic');
+    setPlatform(entry.platform || 'Auto Detect');
+    setLength(entry.length || 'Medium');
+    setSelectedOptions(
+      Array.isArray(entry.selectedOptions) && entry.selectedOptions.length > 0
+        ? entry.selectedOptions
+        : DEFAULT_OPTIONS
+    );
+    setResults(entry.text ? [entry.text] : []);
+    setSessionId('');
+    setAttachment(null);
+    setError('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const buildRequestFormData = ({
     count = 4,
     avoidResults = [],
@@ -546,10 +640,10 @@ export default function GeneratePage() {
     syncHistory(nextResults, sessionId || `likhle-${Date.now()}`);
   };
 
-  const handleCopy = async (text, index) => {
+  const handleCopy = async (text, copyKey) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(index);
+      setCopied(copyKey);
       setTimeout(() => setCopied(null), 2000);
     } catch {
       setError('Copy nahi hua. Ek baar aur try karo.');
@@ -605,10 +699,19 @@ export default function GeneratePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleRemoveFavorite = (id) => {
+    setFavorites((previousFavorites) => previousFavorites.filter((entry) => entry.id !== id));
+  };
+
   const handleClearHistory = () => {
     setHistory([]);
     setSessionId('');
     window.localStorage.removeItem(HISTORY_STORAGE_KEY);
+  };
+
+  const handleClearFavorites = () => {
+    setFavorites([]);
+    window.localStorage.removeItem(FAVORITES_STORAGE_KEY);
   };
 
   const actionButtonStyle = {
@@ -948,14 +1051,30 @@ export default function GeneratePage() {
               </div>
             </div>
 
-            {results.map((item, index) => (
-              <div key={`${item}-${index}`} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 14, padding: 20, position: 'relative' }}>
+            {results.map((item, index) => {
+              const favoriteEntry = findFavoriteForResult(item);
+              const isFavorite = Boolean(favoriteEntry);
+              const resultCopyKey = `result-${index}`;
+
+              return (
+                <div key={`${item}-${index}`} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 14, padding: 20, position: 'relative' }}>
                 {pendingResultAction?.index === index && (
                   <div style={{ fontSize: 12, color: '#CAFF00', fontWeight: 600, marginBottom: 12 }}>
                     {pendingResultAction.label}
                   </div>
                 )}
                 <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => handleToggleFavorite(item)}
+                    style={{
+                      ...actionButtonStyle,
+                      color: isFavorite ? '#CAFF00' : actionButtonStyle.color,
+                      border: isFavorite ? '1px solid #CAFF00' : actionButtonStyle.border,
+                      background: isFavorite ? (dark ? 'rgba(202,255,0,0.08)' : 'rgba(147,181,0,0.10)') : actionButtonStyle.background,
+                    }}
+                  >
+                    {isFavorite ? 'Saved' : 'Save'}
+                  </button>
                   <button onClick={() => handleRegenerateOption(index)} disabled={controlsDisabled} style={{ ...actionButtonStyle, opacity: controlsDisabled ? 0.6 : 1, cursor: controlsDisabled ? 'not-allowed' : 'pointer' }}>
                     {pendingResultAction?.index === index && pendingResultAction.label === 'Refreshing...' ? 'Refreshing...' : 'Regenerate'}
                   </button>
@@ -963,7 +1082,7 @@ export default function GeneratePage() {
                     {copied === index ? '✓ Copied!' : 'Copy'}
                   </button>
                 </div>
-                <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 170 }}>{item}</p>
+                <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 250 }}>{item}</p>
                 <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${t.resultBorder}` }}>
                   <div style={{ fontSize: 12, color: t.muted, marginBottom: 10 }}>Quick rewrite</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -979,8 +1098,78 @@ export default function GeneratePage() {
                     ))}
                   </div>
                 </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {favorites.length > 0 && (
+          <div style={{ marginTop: 56, borderTop: `1px solid ${t.border}`, paddingTop: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Favorites</div>
+                <div style={{ fontSize: 13, color: t.muted, marginTop: 6 }}>
+                  Your best saved lines, kept only in this browser.
+                </div>
               </div>
-            ))}
+              <button onClick={handleClearFavorites} style={actionButtonStyle}>Clear favorites</button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginTop: 16 }}>
+              {favorites.map((entry) => {
+                const favoriteCopyKey = `favorite-${entry.id}`;
+
+                return (
+                  <div
+                    key={entry.id}
+                    style={{
+                      background:
+                        dark
+                          ? 'linear-gradient(180deg, rgba(202,255,0,0.06) 0%, rgba(202,255,0,0) 100%), #111111'
+                          : 'linear-gradient(180deg, rgba(147,181,0,0.10) 0%, rgba(147,181,0,0) 100%), #FFFFFF',
+                      border: `1px solid ${dark ? 'rgba(202,255,0,0.14)' : '#D8D6D0'}`,
+                      borderRadius: 16,
+                      padding: 18,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 11, color: '#CAFF00', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                          Favorite pick
+                        </div>
+                        <div style={{ fontSize: 12, color: t.muted, marginTop: 8 }}>
+                          {formatHistoryTime(entry.createdAt)} · {entry.platform || 'Auto Detect'} · {entry.tone || 'Aesthetic'}
+                        </div>
+                      </div>
+                      <button onClick={() => handleRemoveFavorite(entry.id)} style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>
+                        ×
+                      </button>
+                    </div>
+
+                    <div style={{ fontSize: 15, color: t.text, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+                      {entry.text}
+                    </div>
+
+                    <div style={{ fontSize: 12, color: t.muted, lineHeight: 1.6 }}>
+                      From: {entry.input || 'Saved result'}{entry.hadImage ? ' · Image-based' : ''}
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 'auto' }}>
+                      <button onClick={() => handleUseFavorite(entry)} style={actionButtonStyle}>
+                        Use again
+                      </button>
+                      <button onClick={() => handleCopy(entry.text, favoriteCopyKey)} style={{ ...actionButtonStyle, color: copied === favoriteCopyKey ? '#CAFF00' : actionButtonStyle.color, border: copied === favoriteCopyKey ? '1px solid #CAFF00' : actionButtonStyle.border }}>
+                        {copied === favoriteCopyKey ? '✓ Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
