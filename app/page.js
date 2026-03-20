@@ -49,6 +49,11 @@ const featureCards = [
     desc: 'Upload a photo, preview it first, and let the AI understand the mood, setting, and vibe before writing.',
   },
   {
+    eyebrow: 'Desktop',
+    title: 'Paste screenshots straight in',
+    desc: 'On desktop, copy a screenshot and press Ctrl+V inside the prompt box to attach it instantly without opening the upload menu.',
+  },
+  {
     eyebrow: 'Output',
     title: 'Copy everything or download it',
     desc: 'Take one caption, all captions, or save the full result as a text file without juggling tabs or notes.',
