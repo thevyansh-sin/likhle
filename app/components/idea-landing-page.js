@@ -52,6 +52,7 @@ function buildIdeaPrompt(page, idea) {
 export default function IdeaLandingPage({ page }) {
   const faqSchema = buildFaqSchema(page);
   const itemListSchema = buildItemListSchema(page);
+  const ideaCount = page.ideaGroups.reduce((count, group) => count + group.items.length, 0);
   const relatedIdeaPages = ideaPages.filter((item) => item.slug !== page.slug).slice(0, 4);
   const relatedGenerators = (page.relatedGeneratorSlugs || [])
     .map((slug) => seoPagesBySlug[slug])
@@ -87,6 +88,7 @@ export default function IdeaLandingPage({ page }) {
             <p className="seo-description">{page.description}</p>
 
             <div className="seo-chip-row">
+              <span className="seo-chip">{ideaCount} ideas</span>
               <span className="seo-chip seo-chip-accent">{page.platform}</span>
               <span className="seo-chip">{page.defaultLength}</span>
               <span className="seo-chip">{page.defaultTone}</span>
@@ -141,7 +143,7 @@ export default function IdeaLandingPage({ page }) {
         <section className="seo-section" id="ideas">
           <div className="seo-section-head">
             <span className="section-kicker">Idea list</span>
-            <h2 className="section-title">Useful starting lines, grouped by vibe</h2>
+            <h2 className="section-title">{ideaCount} starting lines, grouped by vibe</h2>
             <p className="section-copy">
               Each one opens directly in Likhle, so you can turn a rough idea into fresher options instead of copying the exact same sentence.
             </p>

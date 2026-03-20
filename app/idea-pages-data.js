@@ -1,5 +1,509 @@
 export const ideaPages = [
   {
+    slug: '100-whatsapp-status-ideas',
+    shortTitle: '100 WhatsApp Status Ideas',
+    metaDescription:
+      '100 WhatsApp status ideas for funny moods, savage one-liners, late-night thoughts, student life, and real-life updates.',
+    keywords: [
+      '100 WhatsApp status ideas',
+      'WhatsApp status ideas',
+      'short WhatsApp status',
+      'funny WhatsApp status',
+    ],
+    eyebrow: 'Status Ideas',
+    title: '100 WhatsApp status ideas for funny moods, savage one-liners, and real-life chaos',
+    description:
+      'Use these when you want short WhatsApp statuses that feel current, sharp, funny, relatable, or low-key emotional without sounding copied.',
+    intro:
+      'A good status usually works because it says just enough. These lines are grouped by mood so you can find one fast, then make it more personal inside the generator if you want.',
+    platform: 'WhatsApp Status',
+    defaultTone: 'Funny',
+    defaultLength: 'Short',
+    options: {
+      hinglish: false,
+      emoji: false,
+      hashtags: false,
+    },
+    promptIdeas: [
+      'Give me 4 short WhatsApp status ideas for a funny but tired mood.',
+      'Write WhatsApp status options for late-night overthinking energy that feel real, not dramatic.',
+      'Create savage but clean WhatsApp statuses for someone protecting their peace.',
+    ],
+    highlights: [
+      {
+        title: 'Actually built for status-length posting',
+        description:
+          'These are short enough for WhatsApp, stories, or one-line mood drops, so you do not need to trim a long AI paragraph every time.',
+      },
+      {
+        title: 'Covers different daily moods',
+        description:
+          'Some days need humor, some need distance, some need softness, and some need one accurate line about surviving the week.',
+      },
+      {
+        title: 'Easy to personalize after browsing',
+        description:
+          'Use one of these as the base, then open it in Likhle and make it more Hinglish, more savage, more soft, or more specific to your own situation.',
+      },
+    ],
+    ideaGroups: [
+      {
+        title: 'Funny everyday status ideas',
+        description: 'For random mood drops, lazy replies, and days that feel mildly unserious.',
+        items: [
+          'Alive, online, and still not answering quickly.',
+          'Doing my best. My best is just very dramatic today.',
+          'Current mood: functioning, but with low enthusiasm.',
+          'Busy pretending I have everything under control.',
+          'Mentally on a break, physically in the chat.',
+          'Too many tasks, zero cinematic background music.',
+          'Online for entertainment, not responsibility.',
+          'If I replied late, assume I was processing life.',
+          'Productive in theory, horizontal in practice.',
+          'No updates, only vibes and pending work.',
+        ],
+      },
+      {
+        title: 'Savage boundary lines',
+        description: 'For quiet attitude, limited access, and a little distance without full drama.',
+        items: [
+          'Calm face, limited access.',
+          'Not rude, just done forcing things.',
+          'Less explaining. More distance.',
+          'If the vibe is off, so am I.',
+          'Some doors close better from my side.',
+          'Soft heart, strict boundaries.',
+          'Peace looks good when you protect it.',
+          'Still kind. Still not available for nonsense.',
+          'You can miss me without reaching me.',
+          'Silence is also a response.',
+        ],
+      },
+      {
+        title: 'Late-night overthinking',
+        description: 'For sleepy hours, heavy thoughts, and brain tabs that refuse to close.',
+        items: [
+          'Night gets quiet and the thoughts get loud.',
+          'Too sleepy to function, too awake to relax.',
+          'One more overthink and I deserve a medal.',
+          'Brain on full brightness, room on low light.',
+          'Low battery, high thoughts.',
+          'Replying tomorrow. Tonight is just for processing.',
+          'The moon is out and so are my unresolved tabs.',
+          'Sleep is near. My thoughts are not.',
+          'Late-night honesty hits harder.',
+          'Mentally stuck between let it go and explain everything.',
+        ],
+      },
+      {
+        title: 'Motivational comeback energy',
+        description: 'For resets, soft comebacks, and low-noise progress updates.',
+        items: [
+          'Slow progress still counts.',
+          'Not behind, just building differently.',
+          'I survived days I thought would finish me.',
+          'Small comeback. Big lesson.',
+          'Quiet work leaves loud proof.',
+          'Still healing, still moving.',
+          'Starting again is still a flex.',
+          'Every soft reset taught me something.',
+          'Not perfect, just consistent enough to keep going.',
+          'Peace first. Progress next.',
+        ],
+      },
+      {
+        title: 'Soft and romantic moods',
+        description: 'For warm feelings, gentle thoughts, and subtle affection.',
+        items: [
+          'Soft heart, selective energy.',
+          'Some days feel better when one person is there.',
+          'A little love makes the whole day lighter.',
+          'Missing someone in low volume.',
+          'Gentle mood. Good music. One person on my mind.',
+          'Not every feeling needs a long explanation.',
+          'If it feels peaceful, I stay.',
+          'Love looks better when it feels safe.',
+          'Quiet affection still counts.',
+          'Today feels like a warm message and slow music.',
+        ],
+      },
+      {
+        title: 'Student life and exam season',
+        description: 'For classes, deadlines, caffeine, and academic damage control.',
+        items: [
+          'Studying hard, remembering nothing, staying brave.',
+          'Exam season turned me into a caffeine project.',
+          'Notes everywhere, peace nowhere.',
+          'Attendance weak. Stress strong.',
+          'Surviving on chai, screenshots, and luck.',
+          'The syllabus is long and my patience is decorative.',
+          'If I vanish, I am probably in a deadline.',
+          'Academic comeback loading.',
+          'Too much pressure for one cute notebook.',
+          'College life is just chaos with Wi-Fi.',
+        ],
+      },
+      {
+        title: 'Work, hustle, and adulting',
+        description: 'For the tired grown-up phase where life is mostly calendar management.',
+        items: [
+          'Working on things I once only talked about.',
+          'Bills build character, apparently.',
+          'Half ambition, half exhaustion.',
+          'Trying to be grown without becoming boring.',
+          'Calendar full, brain full, heart still trying.',
+          'Late reply. Real-life responsibilities attacked.',
+          'Building slowly so it lasts longer.',
+          'Adulting is just problem-solving in better clothes.',
+          'Deadlines outside, overthinking inside.',
+          'One win at a time.',
+        ],
+      },
+      {
+        title: 'Hinglish mood lines',
+        description: 'For a more local, natural, and conversational status vibe.',
+        items: [
+          'Scene simple hai, mood thoda filmy.',
+          'Dil ko shanti chahiye, drama nahi.',
+          'Aaj bas low-key rehna hai.',
+          'Sab theek hai, bas energy selective hai.',
+          'Thoda calm, thoda chaos, full main.',
+          'Reply late aayega, mood pe depend karta hai.',
+          'Aaj ka vibe bas apna sa hai.',
+          'Dimag overloaded hai, smile auto pe hai.',
+          'Jo feel ho raha hai, wahi status hai.',
+          'Zyada explain nahi karna, bas feel karna hai.',
+        ],
+      },
+      {
+        title: 'Weekend and travel vibes',
+        description: 'For better moods, quick resets, and small escapes from routine.',
+        items: [
+          'Weekend energy looks better on airplane mode.',
+          'Sunset, slow songs, and no urgent plans.',
+          'Out of routine and happier already.',
+          'Some trips fix more than rest ever does.',
+          'New place, better mood, same face.',
+          'Outside more. Overthinking less.',
+          'A little break does wonders.',
+          'Good weather, better company, no complaints.',
+          'Needed a reset. Took the scenic route.',
+          'Peace feels closer away from the usual noise.',
+        ],
+      },
+      {
+        title: 'Minimal one-liners',
+        description: 'For when the cleanest status is also the strongest.',
+        items: [
+          'Here, not available.',
+          'Seen enough.',
+          'Low-key winning.',
+          'Soft, not simple.',
+          'Mood: protected.',
+          'Still becoming.',
+          'More peace.',
+          'Less access.',
+          'Quiet upgrade.',
+          'Energy matters.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: 'Are these only for WhatsApp statuses?',
+        answer:
+          'They are written for status-style posting first, but a lot of them also work for Instagram stories, notes, or quick caption-style updates.',
+      },
+      {
+        question: 'Should I still use the generator if there are already 100 ideas here?',
+        answer:
+          'Yes, if you want something more personal. These lists are useful starting points, while the generator helps you adapt the mood to your exact situation.',
+      },
+      {
+        question: 'Can I make these more Hinglish or more savage?',
+        answer:
+          'Yes. Open any line in Likhle and push it more Hinglish, more savage, softer, funnier, or more romantic depending on the mood you want.',
+      },
+    ],
+    relatedGeneratorSlugs: ['whatsapp-status-generator', 'hinglish-caption-generator'],
+  },
+  {
+    slug: '50-savage-instagram-caption-ideas',
+    shortTitle: '50 Savage Instagram Captions',
+    metaDescription:
+      '50 savage Instagram caption ideas for selfies, dumps, glow-ups, classy attitude posts, and sharp one-liners.',
+    keywords: [
+      '50 savage Instagram captions',
+      'savage caption ideas',
+      'classy savage captions',
+      'attitude Instagram captions',
+    ],
+    eyebrow: 'Caption Ideas',
+    title: '50 savage Instagram caption ideas that feel sharp, classy, and actually postable',
+    description:
+      'Use these when you want savage captions with confidence and edge, but without sounding loud, fake, or painfully over-rehearsed.',
+    intro:
+      'A strong savage caption usually works because it feels controlled. These lines are meant to sound sharp, stylish, and easy to adapt to your own photo.',
+    platform: 'Instagram Caption',
+    defaultTone: 'Savage',
+    defaultLength: 'Short',
+    options: {
+      hinglish: false,
+      emoji: false,
+      hashtags: false,
+    },
+    promptIdeas: [
+      'Write 4 short savage Instagram captions for my mirror selfie that feel sharp and classy.',
+      'Give me savage dump-caption ideas that sound calm, expensive, and not childish.',
+      'Create comeback-style savage captions for a selfie after a long glow-up phase.',
+    ],
+    highlights: [
+      {
+        title: 'Better than loud throwaway savage lists',
+        description:
+          'The point here is attitude with control. These lines aim for clean confidence instead of forced aggression or generic one-liners.',
+      },
+      {
+        title: 'Useful for selfies, dumps, and glow-up posts',
+        description:
+          'You can use these across mirror selfies, carousel dumps, comeback photos, and quiet flex posts where the mood matters more than the speech.',
+      },
+      {
+        title: 'Easy to push more soft or more brutal',
+        description:
+          'If one line is almost right, open it in Likhle and make it prettier, colder, shorter, or more cinematic instead of starting over.',
+      },
+    ],
+    ideaGroups: [
+      {
+        title: 'Mirror selfies and close-ups',
+        description: 'For when the face is calm but the standards are very much alive.',
+        items: [
+          'Soft glam, hard boundaries.',
+          'Pretty face, expensive energy.',
+          'Not everyone gets this version of me.',
+          'Confidence did more than the filter.',
+          'The face is calm. The standards are not.',
+          'Looked good, said less, moved on.',
+          'Difficult to replace, easy to misunderstand.',
+          'Cute enough to be watched, sharp enough to be respected.',
+          'I do not chase attention. It still finds me.',
+          'Smiling like I already know more.',
+        ],
+      },
+      {
+        title: 'Pretty but still savage',
+        description: 'For softer visuals that still need a clean edge underneath.',
+        items: [
+          'Sweet voice, savage memory.',
+          'Pretty does not mean easy.',
+          'Soft look, sharp mind, no confusion.',
+          'Grace first, distance if needed.',
+          'Nice until I have a reason not to be.',
+          'A little too calm to argue with.',
+          'Classy enough to leave quietly.',
+          'Polite, not available.',
+          'I make quiet look expensive.',
+          'Still kind. Still not the one.',
+        ],
+      },
+      {
+        title: 'Photo dumps and carousel attitude',
+        description: 'For random shots, blurred moments, and low-effort high-value posting.',
+        items: [
+          'Random shots, intentional energy.',
+          'Posted the mood, not the explanation.',
+          'This dump says enough.',
+          'No full story, just elite fragments.',
+          'If it looks effortless, good.',
+          'Just enough chaos to stay interesting.',
+          'Collected moments, not opinions.',
+          'Every slide minding its own business.',
+          'No caption could fully explain the aura.',
+          'Proof that low effort can still look high value.',
+        ],
+      },
+      {
+        title: 'Comeback and glow-up energy',
+        description: 'For returns, leveling up, and looking better after saying less.',
+        items: [
+          'Built a better version in silence.',
+          'The glow-up was mostly mindset.',
+          'I stopped explaining and started improving.',
+          'What looked like distance was discipline.',
+          'Came back softer, smarter, and harder to play with.',
+          'Private growth hits different.',
+          'Not new. Just leveled up.',
+          'I outgrew the version that kept settling.',
+          'Less reaction, more results.',
+          'The comeback was quiet on purpose.',
+        ],
+      },
+      {
+        title: 'Classy one-liners',
+        description: 'For a clean, premium kind of savage instead of obvious attitude lines.',
+        items: [
+          'Luxury is not a label, it is a standard.',
+          'I keep it clean and still make the point.',
+          'No noise, just presence.',
+          'Selective with access, generous with peace.',
+          'Not cold, just well edited.',
+          'My energy has standards now.',
+          'Composed, not convinced.',
+          'I leave room before I lower myself.',
+          'Calm is the flex.',
+          'Some people talk loud. I just look expensive.',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: 'Are these better for short captions?',
+        answer:
+          'Yes. Savage captions usually land better when they stay clean and direct instead of becoming a full paragraph.',
+      },
+      {
+        question: 'Can I make these more feminine or softer?',
+        answer:
+          'Yes. Open any line in the generator and ask for a prettier, softer, or more cinematic version without losing the edge.',
+      },
+      {
+        question: 'Will these work for dumps too?',
+        answer:
+          'Yes. The dump section is especially useful when you want attitude in a carousel without making every slide feel overexplained.',
+      },
+    ],
+    relatedGeneratorSlugs: ['instagram-caption-generator', 'hinglish-caption-generator'],
+  },
+  {
+    slug: '30-hinglish-bio-ideas',
+    shortTitle: '30 Hinglish Bio Ideas',
+    metaDescription:
+      '30 Hinglish Instagram bio ideas for aesthetic, creator, savage, romantic, and student-style profiles that sound natural.',
+    keywords: [
+      '30 Hinglish bio ideas',
+      'Hinglish Instagram bio',
+      'desi bio ideas',
+      'Instagram bio ideas in Hinglish',
+    ],
+    eyebrow: 'Bio Ideas',
+    title: '30 Hinglish Instagram bio ideas that sound natural, social, and very you',
+    description:
+      'Use these when a plain English bio feels too flat and a full Hindi bio feels too formal for the way you actually show up online.',
+    intro:
+      'A good Hinglish bio should sound like a real person, not a translation exercise. These are short profile lines you can use as-is or remix into something more personal.',
+    platform: 'Instagram Bio',
+    defaultTone: 'Desi',
+    defaultLength: 'Short',
+    options: {
+      hinglish: true,
+      emoji: false,
+      hashtags: false,
+    },
+    promptIdeas: [
+      'Write 4 Hinglish Instagram bio options that feel aesthetic, short, and natural.',
+      'Give me Hinglish bio ideas for a creator page that sound modern and confident.',
+      'Create Hinglish Instagram bios for a student who wants a soft but ambitious vibe.',
+    ],
+    highlights: [
+      {
+        title: 'Built for actual bio length',
+        description:
+          'These are short enough for profile bios, not captions pretending to be bios, so they feel cleaner and easier to use.',
+      },
+      {
+        title: 'Natural Hinglish, not forced Hinglish',
+        description:
+          'The tone stays conversational and social, with the kind of Hindi-English mix that feels normal on Indian profiles.',
+      },
+      {
+        title: 'Easy to reshape for your own vibe',
+        description:
+          'Take one idea and make it more aesthetic, more savage, more romantic, more creator-focused, or more minimal inside Likhle.',
+      },
+    ],
+    ideaGroups: [
+      {
+        title: 'Soft aesthetic bios',
+        description: 'For calm, pretty, and low-noise profile energy.',
+        items: [
+          'thoda sa chaos, thoda sa calm',
+          'soft heart | late nights | pretty thoughts',
+          'chai, sunsets, aur apni si vibes',
+          'slow mornings aur cinematic evenings',
+          'feeling everything, posting selectively',
+          'just a little art, music, aur main',
+        ],
+      },
+      {
+        title: 'Creator and content bios',
+        description: 'For reels pages, personal brands, and profile identities with intent.',
+        items: [
+          'create karte karte khud bhi ban raha hoon',
+          'reels, ideas, aur caffeine pe chal raha hai',
+          'camera roll full, dil aur bhi full',
+          'posting moods, edits, aur thoda sa magic',
+          'creator mode on | overthinking mode also on',
+          'building a page, a vibe, aur apni audience',
+        ],
+      },
+      {
+        title: 'Savage and attitude bios',
+        description: 'For selective energy, cleaner boundaries, and a little edge.',
+        items: [
+          'seedha dil ka nahi, standards ka scene hai',
+          'soft dikhta hoon, easy bilkul nahi',
+          'kam access, zyada peace',
+          'smile calm hai, boundaries stronger',
+          'thoda classy, thoda savage, full original',
+          'meri vibe sabke liye available nahi',
+        ],
+      },
+      {
+        title: 'Romantic and warm bios',
+        description: 'For filmy, affectionate, and quietly soft profile vibes.',
+        items: [
+          'ishq, indie songs, aur slow replies',
+          'thoda pyaar, thoda poetry, thoda main',
+          'heart full of filmy thoughts',
+          'gentle soul with a desi playlist',
+          'soft feelings, warm chai, good intentions',
+          'pyaar se bolo, ya bilkul mat bolo',
+        ],
+      },
+      {
+        title: 'Student and dreamer bios',
+        description: 'For college life, ambition, side projects, and future-building energy.',
+        items: [
+          'student by schedule, dreamer full-time',
+          'assignments alag, ambitions alag level pe',
+          'building quietly, dreaming loudly',
+          'classes, coffee, aur future plans',
+          'small town heart, big plan energy',
+          'work in progress, but worth the wait',
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: 'Are these only for Instagram bios?',
+        answer:
+          'They fit Instagram best, but a lot of them can also work for Threads, alternate profile bios, or other short social profile sections.',
+      },
+      {
+        question: 'Can I make these more aesthetic or more savage?',
+        answer:
+          'Yes. Open any bio idea in the generator and push the tone in the direction you want without losing the Hinglish feel.',
+      },
+      {
+        question: 'Will these sound natural to Indian users?',
+        answer:
+          'That is the whole point. These are written to feel conversational and social, not like literal translated bios.',
+      },
+    ],
+    relatedGeneratorSlugs: ['hinglish-caption-generator', 'instagram-caption-generator'],
+  },
+  {
     slug: 'savage-instagram-caption-ideas',
     shortTitle: 'Savage Instagram Caption Ideas',
     metaDescription:
