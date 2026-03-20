@@ -133,6 +133,51 @@ export default function GeneratePage() {
     return () => URL.revokeObjectURL(nextPreviewUrl);
   }, [attachment]);
 
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const prompt = searchParams.get('prompt');
+    const nextPlatform = searchParams.get('platform');
+    const nextLength = searchParams.get('length');
+    const nextTone = searchParams.get('tone');
+    const nextHinglish = searchParams.get('hinglish');
+    const nextEmoji = searchParams.get('emoji');
+    const nextHashtags = searchParams.get('hashtags');
+
+    if (prompt) {
+      setInput(prompt);
+    }
+
+    if (nextPlatform && PLATFORM_OPTIONS.includes(nextPlatform)) {
+      setPlatform(nextPlatform);
+    }
+
+    if (nextLength && LENGTH_OPTIONS.includes(nextLength)) {
+      setLength(nextLength);
+    }
+
+    if (nextTone && TONES.includes(nextTone)) {
+      setTone(nextTone);
+    }
+
+    if (nextHinglish || nextEmoji || nextHashtags) {
+      const nextOptions = [];
+
+      if (nextHinglish === 'true') {
+        nextOptions.push('Hinglish 🇮🇳');
+      }
+
+      if (nextEmoji !== 'false') {
+        nextOptions.push('Add Emojis ✨');
+      }
+
+      if (nextHashtags !== 'false') {
+        nextOptions.push('Add Hashtags #');
+      }
+
+      setSelectedOptions(nextOptions);
+    }
+  }, []);
+
   const t = {
     bg: dark ? '#080808' : '#F5F5F0',
     navBg: dark ? 'rgba(8,8,8,0.85)' : 'rgba(245,245,240,0.85)',

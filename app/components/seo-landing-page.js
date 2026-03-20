@@ -1,0 +1,205 @@
+import Link from 'next/link';
+import { seoPages } from '../seo-pages-data';
+
+function buildFaqSchema(page) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: page.faqs.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  };
+}
+
+export default function SEOLandingPage({ page }) {
+  const relatedPages = seoPages.filter((item) => item.slug !== page.slug).slice(0, 4);
+  const faqSchema = buildFaqSchema(page);
+
+  return (
+    <main className="seo-page">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+
+      <nav className="info-nav">
+        <Link href="/" className="info-logo">likhle<span className="logo-dot">.</span></Link>
+        <div className="info-nav-links">
+          <Link href="/" className="info-nav-link">Home</Link>
+          <Link href="/generate" className="info-nav-link">Generate</Link>
+          <Link href="/faq" className="info-nav-link">FAQ</Link>
+          <Link href="/contact" className="info-nav-link">Contact</Link>
+        </div>
+      </nav>
+
+      <section className="seo-hero">
+        <div className="seo-hero-shell">
+          <div className="seo-hero-copy">
+            <div className="seo-kicker">{page.eyebrow}</div>
+            <h1 className="seo-title">{page.title}</h1>
+            <p className="seo-description">{page.description}</p>
+
+            <div className="seo-chip-row">
+              <span className="seo-chip seo-chip-accent">{page.platform}</span>
+              <span className="seo-chip">{page.defaultLength}</span>
+              <span className="seo-chip">{page.defaultTone}</span>
+              <span className="seo-chip">Free</span>
+            </div>
+
+            <div className="hero-actions">
+              <Link
+                href={{
+                  pathname: '/generate',
+                  query: {
+                    platform: page.platform,
+                    length: page.defaultLength,
+                    tone: page.defaultTone,
+                    prompt: page.promptIdeas[0],
+                  },
+                }}
+                className="btn-primary"
+              >
+                Try This Generator
+              </Link>
+              <a href="#prompt-ideas" className="btn-ghost">See prompt ideas</a>
+            </div>
+          </div>
+
+          <div className="seo-preview-card">
+            <div className="seo-preview-head">Quick setup</div>
+            <div className="seo-preview-stack">
+              <div className="seo-preview-item">
+                <span className="seo-preview-label">Format</span>
+                <span className="seo-preview-value">{page.platform}</span>
+              </div>
+              <div className="seo-preview-item">
+                <span className="seo-preview-label">Recommended tone</span>
+                <span className="seo-preview-value">{page.defaultTone}</span>
+              </div>
+              <div className="seo-preview-item">
+                <span className="seo-preview-label">Best length</span>
+                <span className="seo-preview-value">{page.defaultLength}</span>
+              </div>
+            </div>
+            <p className="seo-preview-note">
+              Use one of the sample prompts below, then tweak tone, length, or Hinglish inside the main generator.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className="seo-shell">
+        <section className="seo-highlight-grid">
+          {page.highlights.map((item) => (
+            <div key={item.title} className="seo-highlight-card">
+              <h2 className="seo-card-title">{item.title}</h2>
+              <p className="seo-card-text">{item.description}</p>
+            </div>
+          ))}
+        </section>
+
+        <section className="seo-section" id="prompt-ideas">
+          <div className="seo-section-head">
+            <span className="section-kicker">Prompt ideas</span>
+            <h2 className="section-title">Start faster with prompts that already fit this use case</h2>
+            <p className="section-copy">
+              Click any idea below to open the generator with the right format already selected.
+            </p>
+          </div>
+
+          <div className="seo-prompt-grid">
+            {page.promptIdeas.map((prompt) => (
+              <Link
+                key={prompt}
+                href={{
+                  pathname: '/generate',
+                  query: {
+                    platform: page.platform,
+                    length: page.defaultLength,
+                    tone: page.defaultTone,
+                    prompt,
+                  },
+                }}
+                className="seo-prompt-card"
+              >
+                <span className="seo-card-kicker">Open in generator</span>
+                <span className="seo-prompt-text">{prompt}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="seo-section">
+          <div className="seo-section-head">
+            <span className="section-kicker">FAQ</span>
+            <h2 className="section-title">Common questions about this generator</h2>
+          </div>
+
+          <div className="seo-faq-list">
+            {page.faqs.map((item) => (
+              <div key={item.question} className="seo-faq-card">
+                <h3 className="seo-card-title">{item.question}</h3>
+                <p className="seo-card-text">{item.answer}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="seo-section">
+          <div className="seo-section-head">
+            <span className="section-kicker">Related pages</span>
+            <h2 className="section-title">Explore other generator pages</h2>
+          </div>
+
+          <div className="seo-related-grid">
+            {relatedPages.map((item) => (
+              <Link key={item.slug} href={`/${item.slug}`} className="seo-related-card">
+                <span className="seo-card-kicker">Explore</span>
+                <h3 className="seo-card-title">{item.shortTitle}</h3>
+                <p className="seo-card-text">{item.description}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="seo-cta">
+          <h2 className="cta-title">Ready to try {page.shortTitle.toLowerCase()} for real?</h2>
+          <p className="cta-sub">
+            Open the main generator with the right format already selected, then adjust tone, length, and extras however you want.
+          </p>
+          <Link
+            href={{
+              pathname: '/generate',
+              query: {
+                platform: page.platform,
+                length: page.defaultLength,
+                tone: page.defaultTone,
+                prompt: page.promptIdeas[0],
+              },
+            }}
+            className="btn-primary btn-lg"
+          >
+            Start with this setup
+          </Link>
+        </section>
+      </div>
+
+      <footer className="info-footer">
+        <div className="info-footer-links">
+          <Link href="/" className="info-footer-link">Home</Link>
+          <Link href="/generate" className="info-footer-link">Generate</Link>
+          <Link href="/privacy" className="info-footer-link">Privacy</Link>
+          <Link href="/terms" className="info-footer-link">Terms</Link>
+          <Link href="/contact" className="info-footer-link">Contact</Link>
+          <Link href="/faq" className="info-footer-link">FAQ</Link>
+        </div>
+        <div className="info-footer-note">Each page targets a real generator use case and links directly into the working product.</div>
+      </footer>
+    </main>
+  );
+}

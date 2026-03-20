@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { seoPages } from './seo-pages-data';
 
 const words = ['Captions', 'Bios', 'Hooks', 'Hashtags', 'Status'];
 const marqueeItems = [
@@ -195,6 +196,26 @@ export default function Home() {
               <h3 className="feature-title">{feature.title}</h3>
               <p className="feature-desc">{feature.desc}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="seo-links-section">
+        <div className="section-header">
+          <span className="section-kicker">Popular Generators</span>
+          <h2 className="section-title">Browse focused pages for the main use cases</h2>
+          <p className="section-copy">
+            These landing pages target real search intent and drop people into the right generator flow faster.
+          </p>
+        </div>
+
+        <div className="seo-link-grid">
+          {seoPages.map((page) => (
+            <Link key={page.slug} href={`/${page.slug}`} className="seo-link-card">
+              <span className="seo-link-kicker">{page.eyebrow}</span>
+              <h3 className="seo-link-title">{page.shortTitle}</h3>
+              <p className="seo-link-desc">{page.description}</p>
+            </Link>
           ))}
         </div>
       </section>
