@@ -154,7 +154,53 @@ export default function GeneratePage() {
     attBg: dark ? '#111111' : '#FFFFFF',
     attBorder: dark ? '#2a2a2a' : '#D8D6D0',
     menuBg: dark ? '#1e1e1e' : '#ffffff',
+    sectionBg: dark ? '#0F0F0F' : '#FFFEFA',
+    sectionBorder: dark ? '#1D1D1D' : '#E3DFD7',
+    chipShadow: dark ? '0 10px 24px rgba(0,0,0,0.22)' : '0 10px 24px rgba(0,0,0,0.05)',
   };
+
+  const sectionCardStyle = {
+    background: t.sectionBg,
+    border: `1px solid ${t.sectionBorder}`,
+    borderRadius: 18,
+    padding: 18,
+  };
+
+  const sectionLabelStyle = {
+    fontSize: 12,
+    fontWeight: 600,
+    color: t.muted,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  };
+
+  const sectionHelpStyle = {
+    fontSize: 13,
+    color: t.muted,
+    lineHeight: 1.5,
+    marginTop: 6,
+  };
+
+  const pillRowStyle = {
+    display: 'flex',
+    gap: 10,
+    flexWrap: 'wrap',
+    marginTop: 14,
+  };
+
+  const getPillStyle = (isActive) => ({
+    background: isActive ? '#CAFF00' : t.toneBg,
+    border: `1px solid ${isActive ? '#CAFF00' : t.toneBorder}`,
+    color: isActive ? '#000' : t.toneText,
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13,
+    padding: '10px 18px',
+    borderRadius: 999,
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+    fontWeight: isActive ? 700 : 500,
+    boxShadow: isActive ? t.chipShadow : 'none',
+  });
 
   const toggleOption = (option) => {
     setSelectedOptions((previousOptions) =>
@@ -470,10 +516,10 @@ export default function GeneratePage() {
               <div style={{ position: 'relative' }} onClick={(event) => event.stopPropagation()}>
                 <button
                   onClick={() => setShowMenu(!showMenu)}
-                  style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: '2px 4px', transition: 'color 0.15s', fontSize: 13 }}
+                  aria-label="Add image"
+                  style={{ width: 40, height: 40, background: t.toggleBg, border: `1px solid ${t.border}`, color: t.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, transition: 'all 0.15s' }}
                 >
                   <LuPlus size={22} />
-                  Add image
                 </button>
                 {showMenu && (
                   <div style={{ position: 'absolute', bottom: 40, left: 0, background: t.menuBg, border: `1px solid ${t.border}`, borderRadius: 14, padding: 6, width: 190, zIndex: 200, display: 'flex', flexDirection: 'column', gap: 2, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
@@ -498,7 +544,7 @@ export default function GeneratePage() {
               </div>
 
               <div style={{ fontSize: 12, color: t.muted, flex: 1, minWidth: 180 }}>
-                Supports JPG, PNG, WEBP up to 5 MB
+                Tap + to add a reference image. Supports JPG, PNG, WEBP up to 5 MB.
               </div>
 
               <button
@@ -511,44 +557,50 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Platform / Format</label>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={sectionCardStyle}>
+            <div style={sectionLabelStyle}>Platform / Format</div>
+            <div style={sectionHelpStyle}>Choose exactly where this text will be used so the output fits better.</div>
+            <div style={pillRowStyle}>
               {PLATFORM_OPTIONS.map((option) => (
-                <button key={option} onClick={() => setPlatform(option)} style={{ background: platform === option ? '#CAFF00' : t.toneBg, border: `1px solid ${platform === option ? '#CAFF00' : t.toneBorder}`, color: platform === option ? '#000' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '8px 16px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontWeight: platform === option ? 700 : 400 }}>
+                <button key={option} onClick={() => setPlatform(option)} style={getPillStyle(platform === option)}>
                   {option}
                 </button>
               ))}
             </div>
           </div>
 
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Length</label>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {LENGTH_OPTIONS.map((option) => (
-                <button key={option} onClick={() => setLength(option)} style={{ background: length === option ? '#CAFF00' : t.toneBg, border: `1px solid ${length === option ? '#CAFF00' : t.toneBorder}`, color: length === option ? '#000' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '8px 16px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontWeight: length === option ? 700 : 400 }}>
-                  {option}
-                </button>
-              ))}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
+            <div style={sectionCardStyle}>
+              <div style={sectionLabelStyle}>Length</div>
+              <div style={sectionHelpStyle}>Pick how short or detailed each result should feel.</div>
+              <div style={pillRowStyle}>
+                {LENGTH_OPTIONS.map((option) => (
+                  <button key={option} onClick={() => setLength(option)} style={getPillStyle(length === option)}>
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={sectionCardStyle}>
+              <div style={sectionLabelStyle}>Options</div>
+              <div style={sectionHelpStyle}>Turn on extras like Hinglish, emojis, or hashtags.</div>
+              <div style={pillRowStyle}>
+                {OPTIONS.map((option) => (
+                  <button key={option} onClick={() => toggleOption(option)} style={getPillStyle(selectedOptions.includes(option))}>
+                    {option}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Tone / Vibe</label>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={sectionCardStyle}>
+            <div style={sectionLabelStyle}>Tone / Vibe</div>
+            <div style={sectionHelpStyle}>Choose the mood first, then let the AI shape the language around it.</div>
+            <div style={pillRowStyle}>
               {TONES.map((option) => (
-                <button key={option} onClick={() => setTone(option)} style={{ background: tone === option ? '#CAFF00' : t.toneBg, border: `1px solid ${tone === option ? '#CAFF00' : t.toneBorder}`, color: tone === option ? '#000' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '8px 16px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontWeight: tone === option ? 700 : 400 }}>
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Options</label>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {OPTIONS.map((option) => (
-                <button key={option} onClick={() => toggleOption(option)} style={{ background: selectedOptions.includes(option) ? '#CAFF00' : t.toneBg, border: `1px solid ${selectedOptions.includes(option) ? '#CAFF00' : t.toneBorder}`, color: selectedOptions.includes(option) ? '#000' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '8px 16px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontWeight: selectedOptions.includes(option) ? 700 : 400 }}>
+                <button key={option} onClick={() => setTone(option)} style={getPillStyle(tone === option)}>
                   {option}
                 </button>
               ))}
