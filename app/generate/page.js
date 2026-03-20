@@ -163,7 +163,8 @@ export default function GeneratePage() {
 
           <div style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 16, padding: '18px 20px 14px' }}>
             <textarea
-              style={{ background: 'transparent', border: 'none', color: t.inputText, fontFamily: "'DM Sans', sans-serif", fontSize: 16, resize: 'none', minHeight: 100, outline: 'none', width: '100%', lineHeight: 1.7 }}
+               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleGenerate(); } }}
+               style={{ background: 'transparent', border: 'none', color: t.inputText, fontFamily: "'DM Sans', sans-serif", fontSize: 16, resize: 'none', minHeight: 100, outline: 'none', width: '100%', lineHeight: 1.7 }}
               placeholder={placeholder}
               value={input}
               onChange={(e) => setInput(e.target.value)}
