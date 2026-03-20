@@ -723,26 +723,43 @@ export default function GeneratePage() {
   };
 
   const actionButtonStyle = {
-    background: t.copyBg,
+    background: dark
+      ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)'
+      : 'linear-gradient(180deg, rgba(17,17,17,0.03) 0%, rgba(17,17,17,0.01) 100%)',
     border: `1px solid ${t.resultBorder}`,
     color: t.copyText,
     fontSize: 12,
-    padding: '6px 12px',
-    borderRadius: 100,
+    fontWeight: 600,
+    padding: '9px 14px',
+    borderRadius: 14,
     cursor: 'pointer',
-    transition: 'all 0.15s',
+    transition: 'all 0.15s ease',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    letterSpacing: '0.01em',
   };
 
   const rewriteButtonStyle = (disabled) => ({
-    background: t.copyBg,
+    background: dark
+      ? 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)'
+      : 'linear-gradient(180deg, rgba(17,17,17,0.03) 0%, rgba(17,17,17,0.01) 100%)',
     border: `1px solid ${t.resultBorder}`,
     color: t.copyText,
     fontSize: 12,
-    padding: '7px 12px',
-    borderRadius: 999,
+    fontWeight: 600,
+    padding: '12px 14px',
+    borderRadius: 14,
     cursor: disabled ? 'not-allowed' : 'pointer',
-    transition: 'all 0.15s',
+    transition: 'all 0.15s ease',
     opacity: disabled ? 0.55 : 1,
+    width: '100%',
+    minHeight: 46,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    textAlign: 'left',
+    letterSpacing: '0.01em',
   });
 
   const getResultIconButtonStyle = ({ active = false, disabled = false } = {}) => ({
@@ -1125,7 +1142,7 @@ export default function GeneratePage() {
                 <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 156 }}>{item}</p>
                 <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${t.resultBorder}` }}>
                   <div style={{ fontSize: 12, color: t.muted, marginBottom: 10 }}>Quick rewrite</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
                     {REWRITE_ACTIONS.map((action) => (
                       <button
                         key={action.key}
@@ -1133,7 +1150,8 @@ export default function GeneratePage() {
                         disabled={loading || pendingResultAction !== null}
                         style={rewriteButtonStyle(loading || pendingResultAction !== null)}
                       >
-                        {action.label}
+                        <span>{action.label}</span>
+                        <span style={{ color: '#CAFF00', fontSize: 12 }}>↗</span>
                       </button>
                     ))}
                   </div>
