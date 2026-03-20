@@ -51,6 +51,13 @@ const PLATFORM_OPTIONS = [
   'Twitter/X Bio',
 ];
 const LENGTH_OPTIONS = ['Short', 'Medium', 'Long'];
+const REWRITE_ACTIONS = [
+  { key: 'shorter', label: 'Shorter', pendingLabel: 'Shortening...' },
+  { key: 'moreSavage', label: 'More savage', pendingLabel: 'Sharpening...' },
+  { key: 'moreAesthetic', label: 'More aesthetic', pendingLabel: 'Polishing...' },
+  { key: 'moreProfessional', label: 'More professional', pendingLabel: 'Refining...' },
+  { key: 'moreHinglish', label: 'More Hinglish', pendingLabel: 'Mixing...' },
+];
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const IMAGE_ACCEPT = SUPPORTED_IMAGE_TYPES.join(',');
@@ -79,7 +86,7 @@ export default function GeneratePage() {
   const [selectedOptions, setSelectedOptions] = useState(DEFAULT_OPTIONS);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [refreshingIndex, setRefreshingIndex] = useState(null);
+  const [pendingResultAction, setPendingResultAction] = useState(null);
   const [copied, setCopied] = useState(null);
   const [copiedAll, setCopiedAll] = useState(false);
   const [dark, setDark] = useState(true);
@@ -287,7 +294,12 @@ export default function GeneratePage() {
     );
   };
 
-  const buildRequestFormData = ({ count = 4, avoidResults = [] } = {}) => {
+  const buildRequestFormData = ({
+    count = 4,
+    avoidResults = [],
+    rewriteAction = '',
+    currentResult = '',
+  } = {}) => {
     const hinglish = selectedOptions.includes('Hinglish 🇮🇳');
     const emoji = selectedOptions.includes('Add Emojis ✨');
     const hashtags = selectedOptions.includes('Add Hashtags #');
@@ -306,6 +318,14 @@ export default function GeneratePage() {
       formData.append('avoidResults', JSON.stringify(avoidResults));
     }
 
+    if (rewriteAction) {
+      formData.append('rewriteAction', rewriteAction);
+    }
+
+    if (currentResult) {
+      formData.append('currentResult', currentResult);
+    }
+
     if (attachment) {
       formData.append('image', attachment);
     }
@@ -313,7 +333,14 @@ export default function GeneratePage() {
     return formData;
   };
 
-  const requestGeneration = async ({ count = 4, resultIndex = null, avoidResults = [] } = {}) => {
+  const requestGeneration = async ({
+    count = 4,
+    resultIndex = null,
+    avoidResults = [],
+    rewriteAction = '',
+    currentResult = '',
+    pendingLabel = 'Refreshing...',
+  } = {}) => {
     if (!input.trim()) {
       return null;
     }
@@ -331,7 +358,7 @@ export default function GeneratePage() {
       setLoading(true);
       setResults([]);
     } else {
-      setRefreshingIndex(resultIndex);
+      setPendingResultAction({ index: resultIndex, label: pendingLabel });
     }
 
     setError('');
@@ -339,7 +366,7 @@ export default function GeneratePage() {
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
-        body: buildRequestFormData({ count, avoidResults }),
+        body: buildRequestFormData({ count, avoidResults, rewriteAction, currentResult }),
       });
       const data = await response.json();
 
@@ -361,7 +388,7 @@ export default function GeneratePage() {
       if (resultIndex === null) {
         setLoading(false);
       } else {
-        setRefreshingIndex(null);
+        setPendingResultAction(null);
       }
     }
   };
@@ -405,6 +432,28 @@ export default function GeneratePage() {
       count: 1,
       resultIndex: index,
       avoidResults: results,
+      pendingLabel: 'Refreshing...',
+    });
+
+    if (!freshResults?.[0]) {
+      return;
+    }
+
+    const nextResults = results.map((item, itemIndex) =>
+      itemIndex === index ? freshResults[0] : item
+    );
+
+    setResults(nextResults);
+    syncHistory(nextResults, sessionId || `likhle-${Date.now()}`);
+  };
+
+  const handleRewriteOption = async (index, currentResult, action) => {
+    const freshResults = await requestGeneration({
+      count: 1,
+      resultIndex: index,
+      rewriteAction: action.key,
+      currentResult,
+      pendingLabel: action.pendingLabel,
     });
 
     if (!freshResults?.[0]) {
@@ -494,6 +543,20 @@ export default function GeneratePage() {
     cursor: 'pointer',
     transition: 'all 0.15s',
   };
+
+  const rewriteButtonStyle = (disabled) => ({
+    background: t.copyBg,
+    border: `1px solid ${t.resultBorder}`,
+    color: t.copyText,
+    fontSize: 12,
+    padding: '7px 12px',
+    borderRadius: 999,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    transition: 'all 0.15s',
+    opacity: disabled ? 0.55 : 1,
+  });
+
+  const controlsDisabled = loading || pendingResultAction !== null;
 
   return (
     <div
@@ -594,8 +657,8 @@ export default function GeneratePage() {
 
               <button
                 onClick={handleGenerate}
-                disabled={loading || refreshingIndex !== null || !input.trim()}
-                style={{ background: '#CAFF00', color: '#000', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, padding: '8px 24px', border: 'none', borderRadius: 10, cursor: loading || refreshingIndex !== null || !input.trim() ? 'not-allowed' : 'pointer', opacity: loading || refreshingIndex !== null || !input.trim() ? 0.5 : 1, transition: 'all 0.2s' }}
+                disabled={controlsDisabled || !input.trim()}
+                style={{ background: '#CAFF00', color: '#000', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, padding: '8px 24px', border: 'none', borderRadius: 10, cursor: controlsDisabled || !input.trim() ? 'not-allowed' : 'pointer', opacity: controlsDisabled || !input.trim() ? 0.5 : 1, transition: 'all 0.2s' }}
               >
                 {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
               </button>
@@ -685,15 +748,35 @@ export default function GeneratePage() {
 
             {results.map((item, index) => (
               <div key={`${item}-${index}`} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 14, padding: 20, position: 'relative' }}>
+                {pendingResultAction?.index === index && (
+                  <div style={{ fontSize: 12, color: '#CAFF00', fontWeight: 600, marginBottom: 12 }}>
+                    {pendingResultAction.label}
+                  </div>
+                )}
                 <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  <button onClick={() => handleRegenerateOption(index)} disabled={refreshingIndex === index || loading} style={{ ...actionButtonStyle, opacity: refreshingIndex === index || loading ? 0.6 : 1, cursor: refreshingIndex === index || loading ? 'not-allowed' : 'pointer' }}>
-                    {refreshingIndex === index ? 'Refreshing...' : 'Regenerate'}
+                  <button onClick={() => handleRegenerateOption(index)} disabled={controlsDisabled} style={{ ...actionButtonStyle, opacity: controlsDisabled ? 0.6 : 1, cursor: controlsDisabled ? 'not-allowed' : 'pointer' }}>
+                    {pendingResultAction?.index === index && pendingResultAction.label === 'Refreshing...' ? 'Refreshing...' : 'Regenerate'}
                   </button>
                   <button onClick={() => handleCopy(item, index)} style={{ ...actionButtonStyle, color: copied === index ? '#CAFF00' : actionButtonStyle.color, border: copied === index ? '1px solid #CAFF00' : actionButtonStyle.border }}>
                     {copied === index ? '✓ Copied!' : 'Copy'}
                   </button>
                 </div>
                 <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 170 }}>{item}</p>
+                <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${t.resultBorder}` }}>
+                  <div style={{ fontSize: 12, color: t.muted, marginBottom: 10 }}>Quick rewrite</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {REWRITE_ACTIONS.map((action) => (
+                      <button
+                        key={action.key}
+                        onClick={() => handleRewriteOption(index, item, action)}
+                        disabled={loading || pendingResultAction !== null}
+                        style={rewriteButtonStyle(loading || pendingResultAction !== null)}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             ))}
           </div>

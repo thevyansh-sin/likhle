@@ -8,6 +8,28 @@ const RATE_LIMIT_MAX_REQUESTS = 6;
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_GENERATION_COUNT = 4;
+const REWRITE_ACTIONS = {
+  shorter: {
+    instruction:
+      'Rewrite the current draft into a shorter, tighter version while keeping the same core meaning and post-ready vibe.',
+  },
+  moreSavage: {
+    instruction:
+      'Rewrite the current draft so it feels sharper, bolder, and more savage while still sounding smart and natural.',
+  },
+  moreAesthetic: {
+    instruction:
+      'Rewrite the current draft so it feels more aesthetic, polished, and visually expressive without becoming fake or overdramatic.',
+  },
+  moreProfessional: {
+    instruction:
+      'Rewrite the current draft so it sounds more professional, clean, and credible while still feeling human and easy to post.',
+  },
+  moreHinglish: {
+    instruction:
+      'Rewrite the current draft in natural Hinglish with a smooth Hindi-English mix that feels modern and authentic for Indian users.',
+  },
+};
 const rateLimitStore = globalThis.__likhleRateLimitStore || new Map();
 
 if (!globalThis.__likhleRateLimitStore) {
@@ -104,6 +126,22 @@ function parseAvoidResults(rawValue) {
   }
 }
 
+function parseRewriteAction(rawValue) {
+  if (typeof rawValue !== 'string') {
+    return null;
+  }
+
+  return REWRITE_ACTIONS[rawValue] ? rawValue : null;
+}
+
+function parseCurrentResult(rawValue) {
+  if (typeof rawValue !== 'string') {
+    return '';
+  }
+
+  return rawValue.trim().slice(0, 1200);
+}
+
 function getLengthNote(length) {
   if (length === 'Short') {
     return 'Keep each version short and punchy. Aim for one tight line or a very short 2-line post.';
@@ -127,6 +165,8 @@ function buildPrompt({
   length,
   count,
   avoidResults,
+  rewriteAction,
+  currentResult,
 }) {
   const langNote = hinglish
     ? 'Write in Hinglish (natural mix of Hindi and English, like how Gen Z Indians actually talk).'
@@ -142,6 +182,43 @@ function buildPrompt({
   const avoidNote = avoidResults.length > 0
     ? `Avoid sounding too similar to these existing options:\n- ${avoidResults.join('\n- ')}`
     : '';
+  const rewriteConfig = rewriteAction ? REWRITE_ACTIONS[rewriteAction] : null;
+
+  if (rewriteConfig && currentResult) {
+    const rewriteLanguageNote = rewriteAction === 'moreHinglish'
+      ? 'Write in natural Hinglish (a smooth Hindi-English mix that sounds like real Gen Z Indian conversation).'
+      : langNote;
+    const rewriteLengthNote = rewriteAction === 'shorter'
+      ? 'Make the rewritten version noticeably shorter than the current draft while keeping it complete and punchy.'
+      : getLengthNote(length);
+
+    return `You are Likhle, an AI writing assistant made for Gen Z Indian creators.
+
+The user already has a draft and wants it rewritten in one specific direction.
+
+Original user request: ${input}
+Current draft to rewrite: ${currentResult}
+${imageNote}
+
+${platformNote}
+${rewriteLengthNote}
+${rewriteLanguageNote}
+${emojiNote}
+${hashtagNote}
+
+Rewrite instruction:
+${rewriteConfig.instruction}
+
+Rules:
+- Return exactly 1 rewritten version
+- Keep the core meaning, context, and posting intent of the current draft
+- Do not switch to a totally new angle
+- Keep it authentic, sharp, and natural
+- Do not add labels, quotation marks, numbering, or explanation
+- Write ONLY the rewritten content
+
+Write the rewritten version now:`;
+  }
 
   return `You are Likhle, an AI writing assistant made for Gen Z Indian creators.
 
@@ -200,9 +277,15 @@ export async function POST(req) {
     const length = formData.get('length') || 'Medium';
     const count = parseGenerationCount(formData.get('count'));
     const avoidResults = parseAvoidResults(formData.get('avoidResults'));
+    const rewriteAction = parseRewriteAction(formData.get('rewriteAction'));
+    const currentResult = parseCurrentResult(formData.get('currentResult'));
 
     if (!input?.trim()) {
       return Response.json({ error: 'Input required' }, { status: 400 });
+    }
+
+    if (rewriteAction && !currentResult) {
+      return Response.json({ error: 'Current result required for rewrite.' }, { status: 400 });
     }
 
     let imageDescription = null;
@@ -249,6 +332,8 @@ export async function POST(req) {
       length,
       count,
       avoidResults,
+      rewriteAction,
+      currentResult,
     });
 
     const completion = await groq.chat.completions.create({
