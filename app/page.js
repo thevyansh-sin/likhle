@@ -231,7 +231,15 @@ export default function Home() {
 
       <footer className="footer">
         <span className="logo">likhle<span className="logo-dot">.</span></span>
-        <span className="footer-text">Built in India for creators who need better words, faster.</span>
+        <div className="footer-stack">
+          <span className="footer-text">Built in India for creators who need better words, faster.</span>
+          <div className="footer-links">
+            <Link href="/privacy" className="footer-link">Privacy</Link>
+            <Link href="/terms" className="footer-link">Terms</Link>
+            <Link href="/contact" className="footer-link">Contact</Link>
+            <Link href="/faq" className="footer-link">FAQ</Link>
+          </div>
+        </div>
       </footer>
     </main>
   );

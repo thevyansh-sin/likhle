@@ -685,6 +685,16 @@ export default function GeneratePage() {
             </div>
           </div>
         )}
+
+        <footer style={{ marginTop: 56, paddingTop: 24, borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ fontSize: 13, color: t.muted }}>Use Likhle thoughtfully and review AI output before posting.</div>
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+            <Link href="/privacy" style={{ fontSize: 13, color: t.muted, textDecoration: 'none' }}>Privacy</Link>
+            <Link href="/terms" style={{ fontSize: 13, color: t.muted, textDecoration: 'none' }}>Terms</Link>
+            <Link href="/contact" style={{ fontSize: 13, color: t.muted, textDecoration: 'none' }}>Contact</Link>
+            <Link href="/faq" style={{ fontSize: 13, color: t.muted, textDecoration: 'none' }}>FAQ</Link>
+          </div>
+        </footer>
       </div>
 
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap'); @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:0.4}40%{transform:translateY(-8px);opacity:1}}`}</style>
