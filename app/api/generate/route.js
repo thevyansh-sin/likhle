@@ -10,6 +10,8 @@ const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_GENERATION_COUNT = 4;
 const MAX_REWRITE_SUGGESTIONS = 3;
+const QUALITY_REVIEW_MIN_CANDIDATES = 4;
+const QUALITY_REVIEW_MAX_CANDIDATES = 8;
 const REWRITE_ACTIONS = {
   shorter: {
     instruction:
@@ -423,6 +425,17 @@ function getLengthNote(length) {
   return 'Keep each version medium-length and easy to post immediately.';
 }
 
+function getQualityCandidateCount({ count, rewriteInstruction, currentResult }) {
+  if (rewriteInstruction && currentResult) {
+    return count;
+  }
+
+  return Math.min(
+    QUALITY_REVIEW_MAX_CANDIDATES,
+    Math.max(QUALITY_REVIEW_MIN_CANDIDATES, count * 2)
+  );
+}
+
 function getCompletionMaxTokens({ count, hashtags, rewriteInstruction, currentResult }) {
   if (rewriteInstruction && currentResult) {
     return 900;
@@ -435,6 +448,10 @@ function getCompletionMaxTokens({ count, hashtags, rewriteInstruction, currentRe
   }
 
   return Math.min(maxTokens, 2400);
+}
+
+function getQualityReviewMaxTokens({ count }) {
+  return Math.min(1800, 700 + count * 260);
 }
 
 function buildPrompt({
@@ -552,6 +569,102 @@ Rules:
 Return the JSON now:`;
 }
 
+function buildQualityReviewPrompt({
+  input,
+  tone,
+  hinglish,
+  emoji,
+  hashtags,
+  imageDescription,
+  platform,
+  length,
+  count,
+  avoidResults,
+  candidates,
+}) {
+  const langNote = hinglish
+    ? 'Keep the writing in natural Hinglish, with a smooth Hindi-English mix that sounds like real Gen Z Indian conversation.'
+    : 'Keep the writing strictly in English only. Do not add Hindi words.';
+  const emojiNote = emoji
+    ? 'Emojis are allowed, but only when they feel natural and help the post.'
+    : 'Do not add emojis.';
+  const hashtagNote = hashtags
+    ? 'If the result is a caption, adding a clean 5-8 hashtag finish is allowed when it truly helps.'
+    : 'Do not add hashtags.';
+  const imageNote = imageDescription
+    ? `The final captions must stay faithful to this uploaded image context: ${imageDescription}`
+    : 'No uploaded image context is available.';
+  const platformNote = platform && platform !== 'Auto Detect'
+    ? `The final outputs must fit this exact format: ${platform}.`
+    : 'Choose the format that best matches the original request, but keep it consistent across the final outputs.';
+  const avoidNote = avoidResults.length > 0
+    ? `Avoid sounding too similar to these existing options:\n- ${avoidResults.join('\n- ')}`
+    : '';
+  const candidateList = candidates
+    .map(
+      (candidate, index) =>
+        `${index + 1}. ${candidate.text}${
+          Array.isArray(candidate.rewriteSuggestions) && candidate.rewriteSuggestions.length > 0
+            ? `\n   Existing rewrite ideas: ${candidate.rewriteSuggestions
+                .map((suggestion) => suggestion.label)
+                .join(', ')}`
+            : ''
+        }`
+    )
+    .join('\n\n');
+
+  return `You are the final quality editor for Likhle.
+
+The app already generated multiple caption candidates. Your job is to choose and polish only the strongest ones so the final result feels more accurate, more natural, and less generic.
+
+Original user request: ${input}
+${imageNote}
+${platformNote}
+${getLengthNote(length)}
+${langNote}
+${emojiNote}
+${hashtagNote}
+${avoidNote}
+
+Candidate drafts:
+${candidateList}
+
+Selection rules:
+- Return exactly ${count} final result object${count === 1 ? '' : 's'}
+- Prefer the candidates that best match the user request, platform, tone, and image context
+- Penalize anything generic, repetitive, stiff, off-vibe, or too AI-sounding
+- Penalize anything that misses the image mood or the stated prompt intent
+- Keep the final set distinct from each other
+- Lightly refine wording when needed, but stay close to the strongest candidate angles instead of inventing unrelated new directions
+- If short was requested, keep the result tight and punchy
+- If long was requested, add enough substance while staying readable
+- If the platform is a bio, keep it bio-like and concise
+- Each final result must include 2 or 3 rewrite suggestions based on that exact caption
+- Suggest realistic next edits, not generic repeated actions
+- Keep suggestion labels short: 2 to 4 words max
+- Do not suggest Hinglish unless Hinglish is enabled
+- Do not suggest emoji changes unless emojis are enabled
+- Do not suggest hashtag changes unless hashtags are enabled
+- Return valid JSON only
+- Use this exact shape:
+{"results":[{"text":"caption here","rewriteSuggestions":[{"label":"Suggestion label","instruction":"One sentence rewrite instruction"}]}]}
+- Do not wrap the JSON in markdown fences
+- Return ONLY the JSON object
+
+Return the JSON now:`;
+}
+
+async function requestGroqJson({ prompt, maxTokens, temperature }) {
+  const completion = await groq.chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: maxTokens,
+    temperature,
+  });
+
+  return completion.choices[0]?.message?.content || '';
+}
+
 export async function POST(req) {
   try {
     const retryAfterSeconds = consumeRateLimit(req);
@@ -633,6 +746,12 @@ export async function POST(req) {
       }
     }
 
+    const qualityCandidateCount = getQualityCandidateCount({
+      count,
+      rewriteInstruction,
+      currentResult,
+    });
+
     const prompt = buildPrompt({
       input,
       tone,
@@ -642,33 +761,68 @@ export async function POST(req) {
       imageDescription,
       platform,
       length,
-      count,
+      count: qualityCandidateCount,
       avoidResults,
       rewriteAction,
       rewriteInstruction,
       currentResult,
     });
 
-    const completion = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: getCompletionMaxTokens({
-        count,
+    const raw = await requestGroqJson({
+      prompt,
+      maxTokens: getCompletionMaxTokens({
+        count: qualityCandidateCount,
         hashtags,
         rewriteInstruction,
         currentResult,
       }),
-      temperature: 0.9,
+      temperature: rewriteInstruction && currentResult ? 0.72 : 0.82,
     });
 
-    const raw = completion.choices[0]?.message?.content || '';
-    const results = parseStructuredResults(raw, {
-      count,
+    let results = parseStructuredResults(raw, {
+      count: qualityCandidateCount,
       tone,
       hinglish,
       emoji,
       hashtags,
     });
+
+    if (!rewriteInstruction && !currentResult && results.length > count) {
+      const qualityReviewPrompt = buildQualityReviewPrompt({
+        input,
+        tone,
+        hinglish,
+        emoji,
+        hashtags,
+        imageDescription,
+        platform,
+        length,
+        count,
+        avoidResults,
+        candidates: results,
+      });
+
+      const reviewedRaw = await requestGroqJson({
+        prompt: qualityReviewPrompt,
+        maxTokens: getQualityReviewMaxTokens({ count }),
+        temperature: 0.35,
+      });
+      const reviewedResults = parseStructuredResults(reviewedRaw, {
+        count,
+        tone,
+        hinglish,
+        emoji,
+        hashtags,
+      });
+
+      if (reviewedResults.length > 0) {
+        results = reviewedResults;
+      } else {
+        results = results.slice(0, count);
+      }
+    } else {
+      results = results.slice(0, count);
+    }
 
     if (results.length === 0) {
       return Response.json(
