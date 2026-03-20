@@ -436,15 +436,16 @@ body {
 
 /* Homepage SEO Links */
 .seo-links-section {
-  max-width: 1100px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 40px 100px;
 }
 
 .seo-link-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 18px;
+  align-items: stretch;
 }
 
 .seo-link-card {
@@ -453,9 +454,10 @@ body {
     var(--bg2);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 20px;
-  padding: 24px;
+  padding: 22px;
   text-decoration: none;
   transition: transform 0.2s, border-color 0.2s;
+  min-height: 100%;
 }
 .seo-link-card:hover {
   transform: translateY(-4px);
@@ -473,7 +475,7 @@ body {
 
 .seo-link-title {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: clamp(18px, 1.7vw, 22px);
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.5px;
@@ -481,9 +483,9 @@ body {
 }
 
 .seo-link-desc {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--muted);
-  line-height: 1.7;
+  line-height: 1.65;
 }
 
 /* Workflow */
@@ -1177,6 +1179,14 @@ body {
   40% { transform: translateY(-8px); opacity: 1; }
 }
 
+@media (max-width: 1180px) {
+  .seo-link-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .seo-link-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 /* Mobile */
 @media (max-width: 640px) {
   .nav { padding: 16px 20px; }
@@ -1190,6 +1200,7 @@ body {
   .hero-panel { justify-content: center; }
   .features { padding: 60px 20px; }
   .seo-links-section { padding: 0 20px 60px; }
+  .seo-link-grid { grid-template-columns: 1fr; }
   .workflow { padding: 0 20px 60px; }
   .footer { flex-direction: column; gap: 8px; text-align: center; }
   .footer-stack { align-items: center; }
