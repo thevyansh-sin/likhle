@@ -12,6 +12,7 @@ import {
   LuPlus,
   LuRefreshCw,
 } from 'react-icons/lu';
+import { SITE_THEME_DEFAULT, SITE_THEME_STORAGE_KEY } from '../lib/theme';
 import { templateLibrary } from '../template-library';
 
 const PLACEHOLDERS = [
@@ -231,11 +232,39 @@ export default function GeneratePage() {
   const [favoritesReady, setFavoritesReady] = useState(false);
   const [sessionId, setSessionId] = useState('');
   const [pasteShortcutLabel, setPasteShortcutLabel] = useState('');
+  const [themeReady, setThemeReady] = useState(false);
   const fileRef = useRef(null);
 
   useEffect(() => {
     setPlaceholder(PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
   }, []);
+
+  useEffect(() => {
+    try {
+      const storedTheme = window.localStorage.getItem(SITE_THEME_STORAGE_KEY);
+
+      if (storedTheme === 'light') {
+        setDark(false);
+      } else if (storedTheme === 'dark') {
+        setDark(true);
+      } else {
+        setDark(SITE_THEME_DEFAULT !== 'light');
+      }
+    } finally {
+      setThemeReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!themeReady) {
+      return;
+    }
+
+    const nextTheme = dark ? 'dark' : 'light';
+    window.localStorage.setItem(SITE_THEME_STORAGE_KEY, nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    document.documentElement.style.colorScheme = nextTheme;
+  }, [dark, themeReady]);
 
   useEffect(() => {
     try {

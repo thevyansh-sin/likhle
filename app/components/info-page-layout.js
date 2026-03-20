@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ThemeToggle from './theme-toggle';
 
 const footerLinks = [
   { href: '/', label: 'Home' },
@@ -20,6 +21,7 @@ export default function InfoPageLayout({ eyebrow, title, description, updatedLab
               {link.label}
             </Link>
           ))}
+          <ThemeToggle />
         </div>
       </nav>
 

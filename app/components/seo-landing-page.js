@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ideaPages } from '../idea-pages-data';
 import { seoPages } from '../seo-pages-data';
+import ThemeToggle from './theme-toggle';
 
 function buildFaqSchema(page) {
   return {
@@ -38,6 +39,7 @@ export default function SEOLandingPage({ page }) {
           <Link href="/generate" className="info-nav-link">Generate</Link>
           <Link href="/faq" className="info-nav-link">FAQ</Link>
           <Link href="/contact" className="info-nav-link">Contact</Link>
+          <ThemeToggle />
         </div>
       </nav>
 

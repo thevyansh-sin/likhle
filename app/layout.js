@@ -1,6 +1,7 @@
 import { DM_Sans, Syne } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
+import { SiteThemeProvider } from './components/site-theme-provider';
 import {
   absoluteUrl,
   instagramHandle,
@@ -12,6 +13,7 @@ import {
   siteUrl,
   supportEmail,
 } from './lib/site';
+import { getThemeInitScript } from './lib/theme';
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
@@ -109,8 +111,13 @@ const structuredData = [
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en-IN" className={`${syne.variable} ${dmSans.variable}`}>
+    <html lang="en-IN" className={`${syne.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <body>
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: getThemeInitScript() }}
+        />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-EBEXGB44Y4"
           strategy="afterInteractive"
@@ -134,7 +141,7 @@ export default function RootLayout({ children }) {
             dangerouslySetInnerHTML={{ __html: JSON.stringify(item) }}
           />
         ))}
-        {children}
+        <SiteThemeProvider>{children}</SiteThemeProvider>
       </body>
     </html>
   );

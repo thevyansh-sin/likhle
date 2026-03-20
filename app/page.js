@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import ThemeToggle from './components/theme-toggle';
 import { ideaPages } from './idea-pages-data';
 import { seoPages } from './seo-pages-data';
 
@@ -114,6 +115,7 @@ export default function Home() {
         <div className="nav-links">
           <a href="#features" className="nav-link">Features</a>
           <a href="#workflow" className="nav-link">How it works</a>
+          <ThemeToggle />
           <Link href="/generate" className="nav-cta">Try it free →</Link>
         </div>
       </nav>
