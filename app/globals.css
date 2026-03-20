@@ -397,7 +397,7 @@ body {
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
 
@@ -1184,6 +1184,7 @@ body {
 }
 
 @media (max-width: 900px) {
+  .features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .seo-link-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
@@ -1199,6 +1200,7 @@ body {
   .hero-proof-grid { grid-template-columns: 1fr; }
   .hero-panel { justify-content: center; }
   .features { padding: 60px 20px; }
+  .features-grid { grid-template-columns: 1fr; }
   .seo-links-section { padding: 0 20px 60px; }
   .seo-link-grid { grid-template-columns: 1fr; }
   .workflow { padding: 0 20px 60px; }

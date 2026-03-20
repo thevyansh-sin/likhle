@@ -54,6 +54,11 @@ const featureCards = [
     desc: 'On desktop, copy a screenshot and press Ctrl+V inside the prompt box to attach it instantly without opening the upload menu.',
   },
   {
+    eyebrow: 'Rewrite',
+    title: 'Refine one result instantly',
+    desc: 'Make one option shorter, more savage, more aesthetic, more professional, or more Hinglish without regenerating the whole set.',
+  },
+  {
     eyebrow: 'Output',
     title: 'Copy everything or download it',
     desc: 'Take one caption, all captions, or save the full result as a text file without juggling tabs or notes.',
