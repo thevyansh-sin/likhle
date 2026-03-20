@@ -1,7 +1,7 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
-import { LuImage, LuFileText, LuFile, LuLink, LuCamera, LuPlus } from 'react-icons/lu';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
+import { LuImage, LuFileText, LuFile, LuCamera, LuPlus } from 'react-icons/lu';
 
 const PLACEHOLDERS = [
   "Make me an aesthetic Instagram caption for my Goa trip sunset photo 🌊",
@@ -73,6 +73,7 @@ export default function GeneratePage() {
     copyText: dark ? '#888888' : '#666666',
     attBg: dark ? '#1a1a1a' : '#F0EEE8',
     attBorder: dark ? '#2a2a2a' : '#D8D6D0',
+    menuBg: dark ? '#1e1e1e' : '#ffffff',
   };
 
   const toggleOption = (opt) => {
@@ -83,7 +84,7 @@ export default function GeneratePage() {
 
   const handleFile = (e) => {
     const file = e.target.files[0];
-    if (file) setAttachment(file);
+    if (file) { setAttachment(file); setShowMenu(false); }
   };
 
   const handleGenerate = async () => {
@@ -99,9 +100,9 @@ export default function GeneratePage() {
       const formData = new FormData();
       formData.append('input', input);
       formData.append('tone', tone);
-      formData.append('hinglish', hinglish);
-      formData.append('emoji', emoji);
-      formData.append('hashtags', hashtags);
+      formData.append('hinglish', String(hinglish));
+      formData.append('emoji', String(emoji));
+      formData.append('hashtags', String(hashtags));
       if (attachment) formData.append('image', attachment);
 
       const res = await fetch('/api/generate', {
@@ -124,12 +125,17 @@ export default function GeneratePage() {
     setTimeout(() => setCopied(null), 2000);
   };
 
+  const menuItems = [
+    { icon: <LuImage size={15}/>, label: 'Add photo', accept: 'image/*' },
+    { icon: <LuFileText size={15}/>, label: 'Add document', accept: '.pdf,.doc,.docx' },
+    { icon: <LuFile size={15}/>, label: 'Add file', accept: '*' },
+  ];
+
   return (
-    <div style={{ minHeight: '100vh', background: t.bg, transition: 'all 0.3s', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: t.bg, transition: 'all 0.3s', fontFamily: "'DM Sans', sans-serif" }} onClick={() => setShowMenu(false)}>
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 40px', borderBottom: `1px solid ${t.border}`, position: 'sticky', top: 0, zIndex: 100, background: t.navBg, backdropFilter: 'blur(12px)' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
           <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, lineHeight: 1 }}>likhle<span style={{ color: '#CAFF00' }}>.</span></div>
-          <div style={{ fontSize: 11, color: t.muted, letterSpacing: '0.05em', marginTop: 3, display: 'none' }} className="mobile-hide">AI Caption Generator</div>
         </Link>
         <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '7px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s' }}>
           {dark ? '☀️ Light' : '🌙 Dark'}
@@ -144,7 +150,6 @@ export default function GeneratePage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* Attachment preview */}
           {attachment && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: t.attBg, border: `1px solid ${t.attBorder}`, borderRadius: 10, padding: '10px 14px', width: 'fit-content' }}>
               <span style={{ fontSize: 20 }}>📎</span>
@@ -156,7 +161,6 @@ export default function GeneratePage() {
             </div>
           )}
 
-          {/* Input */}
           <div style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 16, padding: '18px 20px 14px' }}>
             <textarea
               style={{ background: 'transparent', border: 'none', color: t.inputText, fontFamily: "'DM Sans', sans-serif", fontSize: 16, resize: 'none', minHeight: 100, outline: 'none', width: '100%', lineHeight: 1.7 }}
@@ -166,25 +170,32 @@ export default function GeneratePage() {
               rows={3}
             />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${t.border}`, paddingTop: 12, marginTop: 8 }}>
-              <div style={{ position: 'relative' }}>
-  <button onClick={() => setShowMenu(!showMenu)} style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', transition: 'color 0.15s' }}>
-    <LuPlus size={22} />
-  </button>
-  {showMenu && (
-    <div style={{ position: 'absolute', bottom: 40, left: 0, background: dark ? '#1e1e1e' : '#fff', border: `1px solid ${t.border}`, borderRadius: 14, padding: 6, width: 200, zIndex: 100, display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {[
-        { icon: <LuImage size={16}/>, label: 'Add photo', accept: 'image/*' },
-        { icon: <LuFileText size={16}/>, label: 'Add document', accept: '.pdf,.doc,.docx' },
-        { icon: <LuFile size={16}/>, label: 'Add file', accept: '*' },
-      ].map((item) => (
-        <div key={item.label} onClick={() => { if(item.accept) { fileRef.current.accept = item.accept; fileRef.current.click(); } setShowMenu(false); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: t.muted, transition: 'background 0.1s' }} onMouseEnter={e => e.currentTarget.style.background = dark ? '#252525' : '#f0f0f0'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-          {item.icon}{item.label}
-        </div>
-      ))}
-    </div>
-  )}
-  <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={handleFile} />
-</div>
+
+              <div style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px 4px', transition: 'color 0.15s' }}
+                >
+                  <LuPlus size={22} />
+                </button>
+                {showMenu && (
+                  <div style={{ position: 'absolute', bottom: 40, left: 0, background: t.menuBg, border: `1px solid ${t.border}`, borderRadius: 14, padding: 6, width: 190, zIndex: 200, display: 'flex', flexDirection: 'column', gap: 2, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
+                    {menuItems.map((item) => (
+                      <div
+                        key={item.label}
+                        onClick={() => { fileRef.current.accept = item.accept; fileRef.current.click(); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: t.muted, transition: 'background 0.1s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = dark ? '#252525' : '#f0f0f0'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        {item.icon} {item.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={handleFile} />
+              </div>
+
               <button
                 onClick={handleGenerate}
                 disabled={loading || !input.trim()}
@@ -195,7 +206,6 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          {/* Tone */}
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Tone / Vibe</label>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -207,7 +217,6 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          {/* Options as pills */}
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Options</label>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -220,7 +229,6 @@ export default function GeneratePage() {
           </div>
         </div>
 
-        {/* Loading */}
         {loading && (
           <div style={{ textAlign: 'center', padding: '48px 0', color: t.muted, fontSize: 15 }}>
             <div>AI likh raha hai... ✨</div>
@@ -232,7 +240,6 @@ export default function GeneratePage() {
 
         {error && <div style={{ marginTop: 24, color: '#FF2D78', fontSize: 14, textAlign: 'center' }}>{error}</div>}
 
-        {/* Results */}
         {results.length > 0 && (
           <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text, marginBottom: 8 }}>Yeh lo {results.length} options 🔥</div>
