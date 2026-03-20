@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { LuImage, LuFileText, LuFile, LuCamera, LuPlus } from 'react-icons/lu';
+import { LuImage, LuPlus } from 'react-icons/lu';
 
 const PLACEHOLDERS = [
   "Make me an aesthetic Instagram caption for my Goa trip sunset photo 🌊",
@@ -38,6 +38,9 @@ const PLACEHOLDERS = [
 
 const TONES = ['Aesthetic', 'Funny', 'Savage', 'Motivational', 'Romantic', 'Professional', 'Desi'];
 const OPTIONS = ['Hinglish 🇮🇳', 'Add Emojis ✨', 'Add Hashtags #'];
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const IMAGE_ACCEPT = SUPPORTED_IMAGE_TYPES.join(',');
 
 export default function GeneratePage() {
   const [input, setInput] = useState('');
@@ -82,13 +85,53 @@ export default function GeneratePage() {
     );
   };
 
+  const validateAttachment = (file) => {
+    if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+      return 'Only JPG, PNG, or WEBP images are supported right now.';
+    }
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      return 'Image too large. Please keep it under 5 MB.';
+    }
+
+    return '';
+  };
+
   const handleFile = (e) => {
     const file = e.target.files[0];
-    if (file) { setAttachment(file); setShowMenu(false); }
+
+    if (!file) {
+      return;
+    }
+
+    const validationError = validateAttachment(file);
+
+    if (validationError) {
+      setAttachment(null);
+      setError(validationError);
+      setShowMenu(false);
+      e.target.value = '';
+      return;
+    }
+
+    setAttachment(file);
+    setError('');
+    setShowMenu(false);
+    e.target.value = '';
   };
 
   const handleGenerate = async () => {
     if (!input.trim()) return;
+
+    if (attachment) {
+      const validationError = validateAttachment(attachment);
+
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+    }
+
     setLoading(true);
     setResults([]);
     setError('');
@@ -110,8 +153,17 @@ export default function GeneratePage() {
         body: formData,
       });
       const data = await res.json();
-      if (data.results) setResults(data.results);
-      else setError('Kuch gadbad ho gayi 😅 Try again!');
+
+      if (!res.ok) {
+        setError(data.error || 'Kuch gadbad ho gayi 😅 Try again!');
+        return;
+      }
+
+      if (Array.isArray(data.results) && data.results.length > 0) {
+        setResults(data.results);
+      } else {
+        setError('AI ne abhi kuch nahi likha. Please try again!');
+      }
     } catch {
       setError('Server se connection nahi hua. Try again!');
     } finally {
@@ -126,9 +178,7 @@ export default function GeneratePage() {
   };
 
   const menuItems = [
-    { icon: <LuImage size={15}/>, label: 'Add photo', accept: 'image/*' },
-    { icon: <LuFileText size={15}/>, label: 'Add document', accept: '.pdf,.doc,.docx' },
-    { icon: <LuFile size={15}/>, label: 'Add file', accept: '*' },
+    { icon: <LuImage size={15}/>, label: 'Add photo', accept: IMAGE_ACCEPT },
   ];
 
   return (
@@ -155,7 +205,9 @@ export default function GeneratePage() {
               <span style={{ fontSize: 20 }}>📎</span>
               <div>
                 <div style={{ fontSize: 13, color: t.text }}>{attachment.name}</div>
-                <div style={{ fontSize: 11, color: t.muted }}>{(attachment.size / 1024).toFixed(1)} KB</div>
+                <div style={{ fontSize: 11, color: t.muted }}>
+                  {(attachment.size / 1024).toFixed(1)} KB · JPG/PNG/WEBP only
+                </div>
               </div>
               <button onClick={() => setAttachment(null)} style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', fontSize: 16, marginLeft: 6 }}>✕</button>
             </div>
@@ -194,7 +246,7 @@ export default function GeneratePage() {
                     ))}
                   </div>
                 )}
-                <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={handleFile} />
+                <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} style={{ display: 'none' }} onChange={handleFile} />
               </div>
 
               <button
