@@ -1,6 +1,7 @@
 import { DM_Sans, Syne } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
+import { PWAProvider } from './components/pwa-provider';
 import { SiteThemeProvider } from './components/site-theme-provider';
 import {
   absoluteUrl,
@@ -29,13 +30,17 @@ export const metadata = {
   publisher: siteName,
   category: 'AI writing tool',
   referrer: 'origin-when-cross-origin',
+  manifest: '/manifest.webmanifest',
   alternates: {
     canonical: '/',
   },
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
+    icon: [
+      { url: '/icons/icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    shortcut: '/icons/icon-32.png',
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   openGraph: {
     title: `${siteName} | ${siteTitle}`,
@@ -141,6 +146,7 @@ export default function RootLayout({ children }) {
             dangerouslySetInnerHTML={{ __html: JSON.stringify(item) }}
           />
         ))}
+        <PWAProvider />
         <SiteThemeProvider>{children}</SiteThemeProvider>
       </body>
     </html>
