@@ -1,60 +1,137 @@
 'use client';
-import { useState, useRef } from 'react';
+
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { LuImage, LuPlus } from 'react-icons/lu';
 
 const PLACEHOLDERS = [
-  "Make me an aesthetic Instagram caption for my Goa trip sunset photo 🌊",
-  "Write a funny WhatsApp status for Monday morning mood 😂",
-  "Create a savage Twitter bio for a student who codes 🔥",
-  "LinkedIn bio for a fresher engineer, cool but professional 💼",
-  "Hinglish Instagram caption for my gym transformation photo 💪",
-  "POV caption for a late night drive with bestie 🌃",
-  "Motivational Instagram bio for a fitness page 🏋️",
-  "Romantic WhatsApp status in Hinglish for anniversary 💕",
-  "Funny caption for a group photo at a desi wedding 🎉",
-  "Reels hook for a cooking video, make it catchy 🍳",
-  "Aesthetic caption for a rainy day window seat photo 🌧️",
-  "Instagram caption for Diwali night, lights and family vibes 🪔",
-  "POV caption for first day of college, nervous but excited 🎓",
-  "Caption for my first salary celebration post 🥳",
-  "Funny reels hook about being broke after the weekend 💸",
-  "Aesthetic Instagram bio for a photography page 📸",
+  'Make me an aesthetic Instagram caption for my Goa trip sunset photo 🌊',
+  'Write a funny WhatsApp status for Monday morning mood 😂',
+  'Create a savage Twitter bio for a student who codes 🔥',
+  'LinkedIn bio for a fresher engineer, cool but professional 💼',
+  'Hinglish Instagram caption for my gym transformation photo 💪',
+  'POV caption for a late night drive with bestie 🌃',
+  'Motivational Instagram bio for a fitness page 🏋️',
+  'Romantic WhatsApp status in Hinglish for anniversary 💕',
+  'Funny caption for a group photo at a desi wedding 🎉',
+  'Reels hook for a cooking video, make it catchy 🍳',
+  'Aesthetic caption for a rainy day window seat photo 🌧️',
+  'Instagram caption for Diwali night, lights and family vibes 🪔',
+  'POV caption for first day of college, nervous but excited 🎓',
+  'Caption for my first salary celebration post 🥳',
+  'Funny reels hook about being broke after the weekend 💸',
+  'Aesthetic Instagram bio for a photography page 📸',
   "Hinglish caption for best friend's birthday post 🎂",
-  "Savage WhatsApp status after exam season is over 😤",
-  "Caption for a solo cafe date photo, me time vibes ☕",
-  "Motivational caption for posting after a long break on Instagram 💫",
-  "Funny caption for a gym selfie when you skipped leg day 😅",
-  "Instagram bio for a Gen Z fashion blogger from Delhi 👗",
-  "Reels hook for a study with me video at 2am ⏰",
-  "Caption for a road trip photo, windows down, music loud 🚗",
-  "Hinglish caption for a cricket match watching night 🏏",
-  "Twitter bio for a music producer still in school 🎵",
-  "Funny LinkedIn bio for a marketing intern who loves chai ☕",
-  "Caption for mountains trip, cold wind aur hot maggi ⛰️",
-  "Aesthetic caption for Holi with the gang 🎨",
-  "Instagram bio for a startup founder in Class 12 🚀",
+  'Savage WhatsApp status after exam season is over 😤',
+  'Caption for a solo cafe date photo, me time vibes ☕',
+  'Motivational caption for posting after a long break on Instagram 💫',
+  'Funny caption for a gym selfie when you skipped leg day 😅',
+  'Instagram bio for a Gen Z fashion blogger from Delhi 👗',
+  'Reels hook for a study with me video at 2am ⏰',
+  'Caption for a road trip photo, windows down, music loud 🚗',
+  'Hinglish caption for a cricket match watching night 🏏',
+  'Twitter bio for a music producer still in school 🎵',
+  'Funny LinkedIn bio for a marketing intern who loves chai ☕',
+  'Caption for mountains trip, cold wind aur hot maggi ⛰️',
+  'Aesthetic caption for Holi with the gang 🎨',
+  'Instagram bio for a startup founder in Class 12 🚀',
 ];
 
 const TONES = ['Aesthetic', 'Funny', 'Savage', 'Motivational', 'Romantic', 'Professional', 'Desi'];
 const OPTIONS = ['Hinglish 🇮🇳', 'Add Emojis ✨', 'Add Hashtags #'];
+const DEFAULT_OPTIONS = ['Add Emojis ✨', 'Add Hashtags #'];
+const PLATFORM_OPTIONS = [
+  'Auto Detect',
+  'Instagram Caption',
+  'Instagram Bio',
+  'Reels Hook',
+  'WhatsApp Status',
+  'LinkedIn Bio',
+  'Twitter/X Bio',
+];
+const LENGTH_OPTIONS = ['Short', 'Medium', 'Long'];
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const IMAGE_ACCEPT = SUPPORTED_IMAGE_TYPES.join(',');
+const HISTORY_STORAGE_KEY = 'likhle-generation-history';
+const MAX_HISTORY_ITEMS = 10;
+
+function formatHistoryTime(value) {
+  try {
+    return new Intl.DateTimeFormat('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(value));
+  } catch {
+    return '';
+  }
+}
 
 export default function GeneratePage() {
   const [input, setInput] = useState('');
   const [placeholder] = useState(() => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
   const [tone, setTone] = useState('Aesthetic');
-  const [selectedOptions, setSelectedOptions] = useState(['Add Emojis ✨', 'Add Hashtags #']);
+  const [platform, setPlatform] = useState('Auto Detect');
+  const [length, setLength] = useState('Medium');
+  const [selectedOptions, setSelectedOptions] = useState(DEFAULT_OPTIONS);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [refreshingIndex, setRefreshingIndex] = useState(null);
   const [copied, setCopied] = useState(null);
+  const [copiedAll, setCopiedAll] = useState(false);
   const [dark, setDark] = useState(true);
   const [error, setError] = useState('');
   const [attachment, setAttachment] = useState(null);
+  const [attachmentPreview, setAttachmentPreview] = useState('');
   const [showMenu, setShowMenu] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [historyReady, setHistoryReady] = useState(false);
+  const [sessionId, setSessionId] = useState('');
   const fileRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      const storedHistory = window.localStorage.getItem(HISTORY_STORAGE_KEY);
+
+      if (storedHistory) {
+        const parsedHistory = JSON.parse(storedHistory);
+
+        if (Array.isArray(parsedHistory)) {
+          setHistory(parsedHistory);
+        }
+      }
+    } catch (historyError) {
+      console.error('History load failed:', historyError);
+    } finally {
+      setHistoryReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!historyReady) {
+      return;
+    }
+
+    window.localStorage.setItem(
+      HISTORY_STORAGE_KEY,
+      JSON.stringify(history.slice(0, MAX_HISTORY_ITEMS))
+    );
+  }, [history, historyReady]);
+
+  useEffect(() => {
+    if (!attachment) {
+      setAttachmentPreview('');
+      return undefined;
+    }
+
+    const nextPreviewUrl = URL.createObjectURL(attachment);
+    setAttachmentPreview(nextPreviewUrl);
+
+    return () => URL.revokeObjectURL(nextPreviewUrl);
+  }, [attachment]);
 
   const t = {
     bg: dark ? '#080808' : '#F5F5F0',
@@ -74,14 +151,16 @@ export default function GeneratePage() {
     resultBorder: dark ? '#222222' : '#E8E6E0',
     copyBg: dark ? '#1a1a1a' : '#F0EEE8',
     copyText: dark ? '#888888' : '#666666',
-    attBg: dark ? '#1a1a1a' : '#F0EEE8',
+    attBg: dark ? '#111111' : '#FFFFFF',
     attBorder: dark ? '#2a2a2a' : '#D8D6D0',
     menuBg: dark ? '#1e1e1e' : '#ffffff',
   };
 
-  const toggleOption = (opt) => {
-    setSelectedOptions(prev =>
-      prev.includes(opt) ? prev.filter(o => o !== opt) : [...prev, opt]
+  const toggleOption = (option) => {
+    setSelectedOptions((previousOptions) =>
+      previousOptions.includes(option)
+        ? previousOptions.filter((item) => item !== option)
+        : [...previousOptions, option]
     );
   };
 
@@ -97,8 +176,107 @@ export default function GeneratePage() {
     return '';
   };
 
-  const handleFile = (e) => {
-    const file = e.target.files[0];
+  const syncHistory = (nextResults, nextId) => {
+    const historyId = nextId || sessionId || `likhle-${Date.now()}`;
+    const entry = {
+      id: historyId,
+      input: input.trim(),
+      tone,
+      platform,
+      length,
+      selectedOptions: [...selectedOptions],
+      results: [...nextResults],
+      createdAt: Date.now(),
+      hadImage: Boolean(attachment),
+    };
+
+    setSessionId(historyId);
+    setHistory((previousHistory) =>
+      [entry, ...previousHistory.filter((item) => item.id !== historyId)].slice(0, MAX_HISTORY_ITEMS)
+    );
+  };
+
+  const buildRequestFormData = ({ count = 4, avoidResults = [] } = {}) => {
+    const hinglish = selectedOptions.includes('Hinglish 🇮🇳');
+    const emoji = selectedOptions.includes('Add Emojis ✨');
+    const hashtags = selectedOptions.includes('Add Hashtags #');
+    const formData = new FormData();
+
+    formData.append('input', input.trim());
+    formData.append('tone', tone);
+    formData.append('platform', platform);
+    formData.append('length', length);
+    formData.append('count', String(count));
+    formData.append('hinglish', String(hinglish));
+    formData.append('emoji', String(emoji));
+    formData.append('hashtags', String(hashtags));
+
+    if (avoidResults.length > 0) {
+      formData.append('avoidResults', JSON.stringify(avoidResults));
+    }
+
+    if (attachment) {
+      formData.append('image', attachment);
+    }
+
+    return formData;
+  };
+
+  const requestGeneration = async ({ count = 4, resultIndex = null, avoidResults = [] } = {}) => {
+    if (!input.trim()) {
+      return null;
+    }
+
+    if (attachment) {
+      const validationError = validateAttachment(attachment);
+
+      if (validationError) {
+        setError(validationError);
+        return null;
+      }
+    }
+
+    if (resultIndex === null) {
+      setLoading(true);
+      setResults([]);
+    } else {
+      setRefreshingIndex(resultIndex);
+    }
+
+    setError('');
+
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        body: buildRequestFormData({ count, avoidResults }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Kuch gadbad ho gayi 😅 Try again!');
+        return null;
+      }
+
+      if (!Array.isArray(data.results) || data.results.length === 0) {
+        setError('AI ne abhi kuch nahi likha. Please try again!');
+        return null;
+      }
+
+      return data.results;
+    } catch {
+      setError('Server se connection nahi hua. Try again!');
+      return null;
+    } finally {
+      if (resultIndex === null) {
+        setLoading(false);
+      } else {
+        setRefreshingIndex(null);
+      }
+    }
+  };
+
+  const handleFile = (event) => {
+    const file = event.target.files[0];
 
     if (!file) {
       return;
@@ -110,79 +288,127 @@ export default function GeneratePage() {
       setAttachment(null);
       setError(validationError);
       setShowMenu(false);
-      e.target.value = '';
+      event.target.value = '';
       return;
     }
 
     setAttachment(file);
     setError('');
     setShowMenu(false);
-    e.target.value = '';
+    event.target.value = '';
   };
 
   const handleGenerate = async () => {
-    if (!input.trim()) return;
+    const nextResults = await requestGeneration({ count: 4 });
 
-    if (attachment) {
-      const validationError = validateAttachment(attachment);
-
-      if (validationError) {
-        setError(validationError);
-        return;
-      }
+    if (!nextResults) {
+      return;
     }
 
-    setLoading(true);
-    setResults([]);
-    setError('');
+    setResults(nextResults);
+    syncHistory(nextResults, `likhle-${Date.now()}`);
+  };
+
+  const handleRegenerateOption = async (index) => {
+    const freshResults = await requestGeneration({
+      count: 1,
+      resultIndex: index,
+      avoidResults: results,
+    });
+
+    if (!freshResults?.[0]) {
+      return;
+    }
+
+    const nextResults = results.map((item, itemIndex) =>
+      itemIndex === index ? freshResults[0] : item
+    );
+
+    setResults(nextResults);
+    syncHistory(nextResults, sessionId || `likhle-${Date.now()}`);
+  };
+
+  const handleCopy = async (text, index) => {
     try {
-      const hinglish = selectedOptions.includes('Hinglish 🇮🇳');
-      const emoji = selectedOptions.includes('Add Emojis ✨');
-      const hashtags = selectedOptions.includes('Add Hashtags #');
-
-      const formData = new FormData();
-      formData.append('input', input);
-      formData.append('tone', tone);
-      formData.append('hinglish', String(hinglish));
-      formData.append('emoji', String(emoji));
-      formData.append('hashtags', String(hashtags));
-      if (attachment) formData.append('image', attachment);
-
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Kuch gadbad ho gayi 😅 Try again!');
-        return;
-      }
-
-      if (Array.isArray(data.results) && data.results.length > 0) {
-        setResults(data.results);
-      } else {
-        setError('AI ne abhi kuch nahi likha. Please try again!');
-      }
+      await navigator.clipboard.writeText(text);
+      setCopied(index);
+      setTimeout(() => setCopied(null), 2000);
     } catch {
-      setError('Server se connection nahi hua. Try again!');
-    } finally {
-      setLoading(false);
+      setError('Copy nahi hua. Ek baar aur try karo.');
     }
   };
 
-  const handleCopy = (text, i) => {
-    navigator.clipboard.writeText(text);
-    setCopied(i);
-    setTimeout(() => setCopied(null), 2000);
+  const handleCopyAll = async () => {
+    try {
+      await navigator.clipboard.writeText(results.join('\n\n'));
+      setCopiedAll(true);
+      setTimeout(() => setCopiedAll(false), 2000);
+    } catch {
+      setError('Copy nahi hua. Ek baar aur try karo.');
+    }
   };
 
-  const menuItems = [
-    { icon: <LuImage size={15}/>, label: 'Add photo', accept: IMAGE_ACCEPT },
-  ];
+  const handleDownload = () => {
+    const textOutput = [
+      `Prompt: ${input}`,
+      `Platform: ${platform}`,
+      `Length: ${length}`,
+      `Tone: ${tone}`,
+      `Options: ${selectedOptions.join(', ') || 'None'}`,
+      attachment ? `Image: ${attachment.name}` : 'Image: None',
+      '',
+      ...results.map((item, index) => `Option ${index + 1}\n${item}`),
+    ].join('\n\n');
+
+    const blob = new Blob([textOutput], { type: 'text/plain;charset=utf-8' });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = downloadUrl;
+    link.download = `likhle-${Date.now()}.txt`;
+    link.click();
+    URL.revokeObjectURL(downloadUrl);
+  };
+
+  const handleRestoreHistory = (entry) => {
+    setInput(entry.input || '');
+    setTone(entry.tone || 'Aesthetic');
+    setPlatform(entry.platform || 'Auto Detect');
+    setLength(entry.length || 'Medium');
+    setSelectedOptions(
+      Array.isArray(entry.selectedOptions) && entry.selectedOptions.length > 0
+        ? entry.selectedOptions
+        : DEFAULT_OPTIONS
+    );
+    setResults(Array.isArray(entry.results) ? entry.results : []);
+    setSessionId(entry.id || '');
+    setAttachment(null);
+    setError('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleClearHistory = () => {
+    setHistory([]);
+    setSessionId('');
+    window.localStorage.removeItem(HISTORY_STORAGE_KEY);
+  };
+
+  const actionButtonStyle = {
+    background: t.copyBg,
+    border: `1px solid ${t.resultBorder}`,
+    color: t.copyText,
+    fontSize: 12,
+    padding: '6px 12px',
+    borderRadius: 100,
+    cursor: 'pointer',
+    transition: 'all 0.15s',
+  };
 
   return (
-    <div style={{ minHeight: '100vh', background: t.bg, transition: 'all 0.3s', fontFamily: "'DM Sans', sans-serif" }} onClick={() => setShowMenu(false)}>
+    <div
+      style={{ minHeight: '100vh', background: t.bg, transition: 'all 0.3s', fontFamily: "'DM Sans', sans-serif" }}
+      onClick={() => setShowMenu(false)}
+    >
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 40px', borderBottom: `1px solid ${t.border}`, position: 'sticky', top: 0, zIndex: 100, background: t.navBg, backdropFilter: 'blur(12px)' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
           <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, lineHeight: 1 }}>likhle<span style={{ color: '#CAFF00' }}>.</span></div>
@@ -199,60 +425,86 @@ export default function GeneratePage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-
           {attachment && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: t.attBg, border: `1px solid ${t.attBorder}`, borderRadius: 10, padding: '10px 14px', width: 'fit-content' }}>
-              <span style={{ fontSize: 20 }}>📎</span>
-              <div>
-                <div style={{ fontSize: 13, color: t.text }}>{attachment.name}</div>
-                <div style={{ fontSize: 11, color: t.muted }}>
-                  {(attachment.size / 1024).toFixed(1)} KB · JPG/PNG/WEBP only
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: 14, background: t.attBg, border: `1px solid ${t.attBorder}`, borderRadius: 16, padding: 14 }}>
+              {attachmentPreview && (
+                <Image
+                  src={attachmentPreview}
+                  alt="Uploaded preview"
+                  width={116}
+                  height={116}
+                  unoptimized
+                  style={{ width: 116, height: 116, objectFit: 'cover', borderRadius: 12, border: `1px solid ${t.border}` }}
+                />
+              )}
+              <div style={{ display: 'flex', flex: 1, minWidth: 180, justifyContent: 'space-between', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 13, color: t.text, fontWeight: 600 }}>{attachment.name}</div>
+                  <div style={{ fontSize: 12, color: t.muted, marginTop: 6 }}>
+                    {(attachment.size / 1024).toFixed(1)} KB · JPG/PNG/WEBP only
+                  </div>
+                  <div style={{ fontSize: 12, color: t.muted, marginTop: 10 }}>
+                    Preview ready. AI will use this image while generating.
+                  </div>
                 </div>
+                <button onClick={() => setAttachment(null)} style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', fontSize: 16, alignSelf: 'flex-start' }}>✕</button>
               </div>
-              <button onClick={() => setAttachment(null)} style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', fontSize: 16, marginLeft: 6 }}>✕</button>
             </div>
           )}
 
           <div style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 16, padding: '18px 20px 14px' }}>
             <textarea
-               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleGenerate(); } }}
-               style={{ background: 'transparent', border: 'none', color: t.inputText, fontFamily: "'DM Sans', sans-serif", fontSize: 16, resize: 'none', minHeight: 100, outline: 'none', width: '100%', lineHeight: 1.7 }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault();
+                  handleGenerate();
+                }
+              }}
+              style={{ background: 'transparent', border: 'none', color: t.inputText, fontFamily: "'DM Sans', sans-serif", fontSize: 16, resize: 'none', minHeight: 100, outline: 'none', width: '100%', lineHeight: 1.7 }}
               placeholder={placeholder}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(event) => setInput(event.target.value)}
               rows={3}
             />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${t.border}`, paddingTop: 12, marginTop: 8 }}>
-
-              <div style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', borderTop: `1px solid ${t.border}`, paddingTop: 12, marginTop: 8 }}>
+              <div style={{ position: 'relative' }} onClick={(event) => event.stopPropagation()}>
                 <button
                   onClick={() => setShowMenu(!showMenu)}
-                  style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px 4px', transition: 'color 0.15s' }}
+                  style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: '2px 4px', transition: 'color 0.15s', fontSize: 13 }}
                 >
                   <LuPlus size={22} />
+                  Add image
                 </button>
                 {showMenu && (
                   <div style={{ position: 'absolute', bottom: 40, left: 0, background: t.menuBg, border: `1px solid ${t.border}`, borderRadius: 14, padding: 6, width: 190, zIndex: 200, display: 'flex', flexDirection: 'column', gap: 2, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
-                    {menuItems.map((item) => (
-                      <div
-                        key={item.label}
-                        onClick={() => { fileRef.current.accept = item.accept; fileRef.current.click(); }}
-                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: t.muted, transition: 'background 0.1s' }}
-                        onMouseEnter={e => e.currentTarget.style.background = dark ? '#252525' : '#f0f0f0'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      >
-                        {item.icon} {item.label}
-                      </div>
-                    ))}
+                    <div
+                      onClick={() => {
+                        fileRef.current.accept = IMAGE_ACCEPT;
+                        fileRef.current.click();
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: t.muted, transition: 'background 0.1s' }}
+                      onMouseEnter={(event) => {
+                        event.currentTarget.style.background = dark ? '#252525' : '#f0f0f0';
+                      }}
+                      onMouseLeave={(event) => {
+                        event.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <LuImage size={15} /> Add photo
+                    </div>
                   </div>
                 )}
                 <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} style={{ display: 'none' }} onChange={handleFile} />
               </div>
 
+              <div style={{ fontSize: 12, color: t.muted, flex: 1, minWidth: 180 }}>
+                Supports JPG, PNG, WEBP up to 5 MB
+              </div>
+
               <button
                 onClick={handleGenerate}
-                disabled={loading || !input.trim()}
-                style={{ background: '#CAFF00', color: '#000', fontFamily: "'Syne', sans-serif", fontSize: 15, fontWeight: 800, padding: '8px 24px', border: 'none', borderRadius: 10, cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', opacity: loading || !input.trim() ? 0.5 : 1, transition: 'all 0.2s' }}
+                disabled={loading || refreshingIndex !== null || !input.trim()}
+                style={{ background: '#CAFF00', color: '#000', fontFamily: "'Syne', sans-serif", fontSize: 15, fontWeight: 800, padding: '8px 24px', border: 'none', borderRadius: 10, cursor: loading || refreshingIndex !== null || !input.trim() ? 'not-allowed' : 'pointer', opacity: loading || refreshingIndex !== null || !input.trim() ? 0.5 : 1, transition: 'all 0.2s' }}
               >
                 {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
               </button>
@@ -260,11 +512,33 @@ export default function GeneratePage() {
           </div>
 
           <div>
+            <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Platform / Format</label>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {PLATFORM_OPTIONS.map((option) => (
+                <button key={option} onClick={() => setPlatform(option)} style={{ background: platform === option ? '#CAFF00' : t.toneBg, border: `1px solid ${platform === option ? '#CAFF00' : t.toneBorder}`, color: platform === option ? '#000' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '8px 16px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontWeight: platform === option ? 700 : 400 }}>
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Length</label>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {LENGTH_OPTIONS.map((option) => (
+                <button key={option} onClick={() => setLength(option)} style={{ background: length === option ? '#CAFF00' : t.toneBg, border: `1px solid ${length === option ? '#CAFF00' : t.toneBorder}`, color: length === option ? '#000' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '8px 16px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontWeight: length === option ? 700 : 400 }}>
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Tone / Vibe</label>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {TONES.map((tn) => (
-                <button key={tn} onClick={() => setTone(tn)} style={{ background: tone === tn ? '#CAFF00' : t.toneBg, border: `1px solid ${tone === tn ? '#CAFF00' : t.toneBorder}`, color: tone === tn ? '#000' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '8px 16px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontWeight: tone === tn ? 700 : 400 }}>
-                  {tn}
+              {TONES.map((option) => (
+                <button key={option} onClick={() => setTone(option)} style={{ background: tone === option ? '#CAFF00' : t.toneBg, border: `1px solid ${tone === option ? '#CAFF00' : t.toneBorder}`, color: tone === option ? '#000' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '8px 16px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontWeight: tone === option ? 700 : 400 }}>
+                  {option}
                 </button>
               ))}
             </div>
@@ -273,9 +547,9 @@ export default function GeneratePage() {
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, color: t.muted, letterSpacing: '0.03em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Options</label>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {OPTIONS.map((opt) => (
-                <button key={opt} onClick={() => toggleOption(opt)} style={{ background: selectedOptions.includes(opt) ? '#CAFF00' : t.toneBg, border: `1px solid ${selectedOptions.includes(opt) ? '#CAFF00' : t.toneBorder}`, color: selectedOptions.includes(opt) ? '#000' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '8px 16px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontWeight: selectedOptions.includes(opt) ? 700 : 400 }}>
-                  {opt}
+              {OPTIONS.map((option) => (
+                <button key={option} onClick={() => toggleOption(option)} style={{ background: selectedOptions.includes(option) ? '#CAFF00' : t.toneBg, border: `1px solid ${selectedOptions.includes(option) ? '#CAFF00' : t.toneBorder}`, color: selectedOptions.includes(option) ? '#000' : t.toneText, fontFamily: "'DM Sans', sans-serif", fontSize: 13, padding: '8px 16px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s', fontWeight: selectedOptions.includes(option) ? 700 : 400 }}>
+                  {option}
                 </button>
               ))}
             </div>
@@ -286,7 +560,7 @@ export default function GeneratePage() {
           <div style={{ textAlign: 'center', padding: '48px 0', color: t.muted, fontSize: 15 }}>
             <div>AI likh raha hai... ✨</div>
             <div style={{ display: 'inline-flex', gap: 6, marginTop: 12 }}>
-              {[0,1,2].map(i => <div key={i} style={{ width: 8, height: 8, background: '#CAFF00', borderRadius: '50%', animation: `bounce 1s infinite ${i*0.15}s` }} />)}
+              {[0, 1, 2].map((index) => <div key={index} style={{ width: 8, height: 8, background: '#CAFF00', borderRadius: '50%', animation: `bounce 1s infinite ${index * 0.15}s` }} />)}
             </div>
           </div>
         )}
@@ -295,18 +569,72 @@ export default function GeneratePage() {
 
         {results.length > 0 && (
           <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text, marginBottom: 8 }}>Yeh lo {results.length} options 🔥</div>
-            {results.map((r, i) => (
-              <div key={i} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 14, padding: 20, position: 'relative' }}>
-                <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 60 }}>{r}</p>
-                <button onClick={() => handleCopy(r, i)} style={{ position: 'absolute', top: 14, right: 14, background: copied === i ? 'rgba(202,255,0,0.1)' : t.copyBg, border: `1px solid ${copied === i ? '#CAFF00' : t.resultBorder}`, color: copied === i ? '#CAFF00' : t.copyText, fontSize: 12, padding: '5px 12px', borderRadius: 100, cursor: 'pointer', transition: 'all 0.15s' }}>
-                  {copied === i ? '✓ Copied!' : 'Copy'}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Yeh lo {results.length} options 🔥</div>
+                <div style={{ fontSize: 13, color: t.muted, marginTop: 6 }}>
+                  {platform} · {length} · {tone}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button onClick={handleCopyAll} style={{ ...actionButtonStyle, color: copiedAll ? '#CAFF00' : actionButtonStyle.color, border: copiedAll ? '1px solid #CAFF00' : actionButtonStyle.border }}>
+                  {copiedAll ? '✓ Copied all' : 'Copy all'}
                 </button>
+                <button onClick={handleDownload} style={actionButtonStyle}>
+                  Download .txt
+                </button>
+              </div>
+            </div>
+
+            {results.map((item, index) => (
+              <div key={`${item}-${index}`} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 14, padding: 20, position: 'relative' }}>
+                <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <button onClick={() => handleRegenerateOption(index)} disabled={refreshingIndex === index || loading} style={{ ...actionButtonStyle, opacity: refreshingIndex === index || loading ? 0.6 : 1, cursor: refreshingIndex === index || loading ? 'not-allowed' : 'pointer' }}>
+                    {refreshingIndex === index ? 'Refreshing...' : 'Regenerate'}
+                  </button>
+                  <button onClick={() => handleCopy(item, index)} style={{ ...actionButtonStyle, color: copied === index ? '#CAFF00' : actionButtonStyle.color, border: copied === index ? '1px solid #CAFF00' : actionButtonStyle.border }}>
+                    {copied === index ? '✓ Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 170 }}>{item}</p>
               </div>
             ))}
           </div>
         )}
+
+        {history.length > 0 && (
+          <div style={{ marginTop: 56, borderTop: `1px solid ${t.border}`, paddingTop: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Recent history</div>
+                <div style={{ fontSize: 13, color: t.muted, marginTop: 6 }}>
+                  Saved only in this browser with your latest results.
+                </div>
+              </div>
+              <button onClick={handleClearHistory} style={actionButtonStyle}>Clear history</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+              {history.map((entry) => (
+                <div key={entry.id} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 14, padding: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: 220 }}>
+                      <div style={{ fontSize: 14, color: t.text, lineHeight: 1.6, fontWeight: 600 }}>{entry.input}</div>
+                      <div style={{ fontSize: 12, color: t.muted, marginTop: 8 }}>
+                        {formatHistoryTime(entry.createdAt)} · {entry.platform || 'Auto Detect'} · {entry.length || 'Medium'} · {entry.tone || 'Aesthetic'}{entry.hadImage ? ' · Image-based' : ''}
+                      </div>
+                    </div>
+                    <button onClick={() => handleRestoreHistory(entry)} style={{ ...actionButtonStyle, alignSelf: 'flex-start' }}>
+                      Use again
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap'); @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:0.4}40%{transform:translateY(-8px);opacity:1}}`}</style>
     </div>
   );

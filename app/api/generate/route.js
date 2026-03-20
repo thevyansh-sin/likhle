@@ -7,6 +7,7 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 6;
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_GENERATION_COUNT = 4;
 const rateLimitStore = globalThis.__likhleRateLimitStore || new Map();
 
 if (!globalThis.__likhleRateLimitStore) {
@@ -70,37 +71,106 @@ function validateImageFile(imageFile) {
   return null;
 }
 
-function buildPrompt({ input, tone, hinglish, emoji, hashtags, imageDescription }) {
+function parseGenerationCount(rawCount) {
+  const parsedCount = Number.parseInt(rawCount, 10);
+
+  if (Number.isNaN(parsedCount)) {
+    return MAX_GENERATION_COUNT;
+  }
+
+  return Math.min(MAX_GENERATION_COUNT, Math.max(1, parsedCount));
+}
+
+function parseAvoidResults(rawValue) {
+  if (!rawValue) {
+    return [];
+  }
+
+  try {
+    const parsedValue = JSON.parse(rawValue);
+
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    return parsedValue
+      .filter((item) => typeof item === 'string')
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, MAX_GENERATION_COUNT)
+      .map((item) => item.slice(0, 280));
+  } catch {
+    return [];
+  }
+}
+
+function getLengthNote(length) {
+  if (length === 'Short') {
+    return 'Keep each version short and punchy. Aim for one tight line or a very short 2-line post.';
+  }
+
+  if (length === 'Long') {
+    return 'Make each version more expressive and detailed. Use multiple lines when it fits the platform naturally.';
+  }
+
+  return 'Keep each version medium-length and easy to post immediately.';
+}
+
+function buildPrompt({
+  input,
+  tone,
+  hinglish,
+  emoji,
+  hashtags,
+  imageDescription,
+  platform,
+  length,
+  count,
+  avoidResults,
+}) {
   const langNote = hinglish
     ? 'Write in Hinglish (natural mix of Hindi and English, like how Gen Z Indians actually talk).'
     : 'Write STRICTLY in English only. Do not use any Hindi words at all.';
   const emojiNote = emoji ? 'Include relevant emojis naturally.' : 'Do not use emojis.';
   const hashtagNote = hashtags ? 'Add 5-8 relevant hashtags at the end if it is a caption.' : 'Do not add hashtags.';
-  const imageNote = imageDescription ? `IMPORTANT: The user has uploaded a photo. Here is exactly what the photo shows: ${imageDescription}. You MUST write captions that are specifically about THIS image. The captions should directly reference the mood, style, and elements visible in the photo. Do NOT write generic captions.` : '';
+  const imageNote = imageDescription
+    ? `IMPORTANT: The user has uploaded a photo. Here is exactly what the photo shows: ${imageDescription}. You MUST write captions that are specifically about THIS image. The captions should directly reference the mood, style, and elements visible in the photo. Do NOT write generic captions.`
+    : '';
+  const platformNote = platform && platform !== 'Auto Detect'
+    ? `Write specifically for this format: ${platform}.`
+    : 'Automatically detect what format fits best from the user request.';
+  const avoidNote = avoidResults.length > 0
+    ? `Avoid sounding too similar to these existing options:\n- ${avoidResults.join('\n- ')}`
+    : '';
+
   return `You are Likhle, an AI writing assistant made for Gen Z Indian creators.
 
 The user will describe what they want in plain language. You must:
-1. Automatically understand what type of content they need (Instagram caption, bio, WhatsApp status, Twitter bio, LinkedIn bio, YouTube description, Reels hook, POV caption etc.)
-2. Write in the tone they described or use this tone: ${tone}
-3. Make it feel authentic and Gen Z
+1. Understand what type of content they need
+2. Match the requested vibe: ${tone}
+3. Make it feel authentic, sharp, and post-ready
 
 User's request: ${input}
 ${imageNote}
 
+${platformNote}
+${getLengthNote(length)}
 ${langNote}
 ${emojiNote}
 ${hashtagNote}
+${avoidNote}
 
 Rules:
-- Write 4 different versions, each distinctly different
-- Understand the platform and format automatically from the user's description
+- Write ${count} version${count === 1 ? '' : 's'}
+- Each version must feel fresh and distinct
+- Understand the platform and formatting needs exactly
 - Keep it genuine, not corporate or AI-generated
 - Use Indian cultural references naturally when relevant
 - DO NOT number the versions or add labels
 - Separate each version with exactly: ---SPLIT---
 - Write ONLY the content, nothing else
 
-Write the 4 versions now:`;
+Write the ${count} version${count === 1 ? '' : 's'} now:`;
 }
 
 export async function POST(req) {
@@ -126,6 +196,10 @@ export async function POST(req) {
     const emoji = formData.get('emoji') === 'true';
     const hashtags = formData.get('hashtags') === 'true';
     const imageFile = formData.get('image');
+    const platform = formData.get('platform') || 'Auto Detect';
+    const length = formData.get('length') || 'Medium';
+    const count = parseGenerationCount(formData.get('count'));
+    const avoidResults = parseAvoidResults(formData.get('avoidResults'));
 
     if (!input?.trim()) {
       return Response.json({ error: 'Input required' }, { status: 400 });
@@ -149,10 +223,11 @@ export async function POST(req) {
           {
             inlineData: {
               data: base64Image,
-              mimeType: mimeType,
+              mimeType,
             },
           },
-          'Describe this image in detail. What is the main subject? What is the overall mood and aesthetic? What colors, lighting, and style does it have? What would someone feel looking at this? Be very specific - mention the exact visual elements, artistic style, and emotional tone.',        ]);
+          'Describe this image in detail. What is the main subject? What is the overall mood and aesthetic? What colors, lighting, and style does it have? What would someone feel looking at this? Be very specific - mention the exact visual elements, artistic style, and emotional tone.',
+        ]);
         imageDescription = result.response.text();
       } catch (imgError) {
         console.error('Image analysis error:', imgError);
@@ -163,7 +238,18 @@ export async function POST(req) {
       }
     }
 
-    const prompt = buildPrompt({ input, tone, hinglish, emoji, hashtags, imageDescription });
+    const prompt = buildPrompt({
+      input,
+      tone,
+      hinglish,
+      emoji,
+      hashtags,
+      imageDescription,
+      platform,
+      length,
+      count,
+      avoidResults,
+    });
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
@@ -175,9 +261,9 @@ export async function POST(req) {
     const raw = completion.choices[0]?.message?.content || '';
     const results = raw
       .split('---SPLIT---')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0)
-      .slice(0, 4);
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0)
+      .slice(0, count);
 
     if (results.length === 0) {
       return Response.json(
