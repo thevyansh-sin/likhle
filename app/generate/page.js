@@ -305,6 +305,33 @@ export default function GeneratePage() {
     return '';
   };
 
+  const applyAttachment = (file) => {
+    const validationError = validateAttachment(file);
+
+    if (validationError) {
+      setAttachment(null);
+      setError(validationError);
+      setShowMenu(false);
+      return false;
+    }
+
+    const nextFileName = file.name || `pasted-image-${Date.now()}.png`;
+    const nextFile = file instanceof File
+      ? new File([file], nextFileName, {
+          type: file.type || 'image/png',
+          lastModified: file.lastModified || Date.now(),
+        })
+      : new File([file], nextFileName, {
+          type: file.type || 'image/png',
+          lastModified: Date.now(),
+        });
+
+    setAttachment(nextFile);
+    setError('');
+    setShowMenu(false);
+    return true;
+  };
+
   const syncHistory = (nextResults, nextId) => {
     const historyId = nextId || sessionId || `likhle-${Date.now()}`;
     const entry = {
@@ -431,20 +458,26 @@ export default function GeneratePage() {
       return;
     }
 
-    const validationError = validateAttachment(file);
+    applyAttachment(file);
+    event.target.value = '';
+  };
 
-    if (validationError) {
-      setAttachment(null);
-      setError(validationError);
-      setShowMenu(false);
-      event.target.value = '';
+  const handleComposerPaste = (event) => {
+    const clipboardItems = Array.from(event.clipboardData?.items || []);
+    const imageItem = clipboardItems.find((item) => item.type.startsWith('image/'));
+
+    if (!imageItem) {
       return;
     }
 
-    setAttachment(file);
-    setError('');
-    setShowMenu(false);
-    event.target.value = '';
+    const pastedImage = imageItem.getAsFile();
+
+    if (!pastedImage) {
+      return;
+    }
+
+    event.preventDefault();
+    applyAttachment(pastedImage);
   };
 
   const handleGenerate = async () => {
@@ -704,6 +737,7 @@ export default function GeneratePage() {
               handleGenerate();
             }
           }}
+          onPaste={handleComposerPaste}
           style={{ background: 'transparent', border: 'none', color: t.inputText, fontFamily: 'var(--font-body)', fontSize: 16, resize: 'none', minHeight: 100, outline: 'none', width: '100%', lineHeight: 1.7 }}
           placeholder={placeholder}
           value={input}
@@ -742,7 +776,7 @@ export default function GeneratePage() {
           </div>
 
           <div style={{ fontSize: 12, color: t.muted, flex: 1, minWidth: 180 }}>
-            Tap + to add a reference image. Supports JPG, PNG, WEBP up to 5 MB.
+            Tap + to add a reference image, or press Ctrl+V after copying a screenshot. Supports JPG, PNG, WEBP up to 5 MB.
           </div>
 
           <button
