@@ -1171,9 +1171,10 @@ export default function GeneratePage() {
           </div>
 
           <button
+            className="gen-submit-button"
             onClick={handleGenerate}
             disabled={controlsDisabled || !input.trim()}
-            style={{ background: t.accent, color: '#000', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, padding: '8px 24px', border: 'none', borderRadius: 12, cursor: controlsDisabled || !input.trim() ? 'not-allowed' : 'pointer', opacity: controlsDisabled || !input.trim() ? 0.5 : 1, transition: 'all 0.2s', boxShadow: controlsDisabled || !input.trim() ? 'none' : t.sectionShadow }}
+            style={{ background: t.accent, color: '#000', border: 'none', borderRadius: 12, cursor: controlsDisabled || !input.trim() ? 'not-allowed' : 'pointer', opacity: controlsDisabled || !input.trim() ? 0.5 : 1, transition: 'all 0.2s', boxShadow: controlsDisabled || !input.trim() ? 'none' : t.sectionShadow }}
           >
             {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
           </button>
@@ -1233,7 +1234,7 @@ export default function GeneratePage() {
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: 'clamp(40px, 6vw, 60px) clamp(16px, 4vw, 20px)' }}>
         <div style={{ marginBottom: 48 }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 800, letterSpacing: -2, color: t.text, marginBottom: 8 }}>Kya likhna hai? ✍️</h1>
+          <h1 className="gen-page-title" style={{ color: t.text, marginBottom: 8 }}>Kya likhna hai? ✍️</h1>
           <p style={{ fontSize: 16, color: t.muted }}>Describe karo — AI sab samajh leta hai.</p>
         </div>
 
