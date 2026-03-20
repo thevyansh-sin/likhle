@@ -98,6 +98,7 @@ export default function GeneratePage() {
   const [history, setHistory] = useState([]);
   const [historyReady, setHistoryReady] = useState(false);
   const [sessionId, setSessionId] = useState('');
+  const [pasteShortcutLabel, setPasteShortcutLabel] = useState('');
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -184,6 +185,19 @@ export default function GeneratePage() {
 
       setSelectedOptions(nextOptions);
     }
+  }, []);
+
+  useEffect(() => {
+    const hasFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const hasTouchInput = navigator.maxTouchPoints > 0;
+    const platform = navigator.platform || '';
+
+    if (!hasFinePointer || hasTouchInput) {
+      setPasteShortcutLabel('');
+      return;
+    }
+
+    setPasteShortcutLabel(platform.toLowerCase().includes('mac') ? 'Cmd+V' : 'Ctrl+V');
   }, []);
 
   const t = {
@@ -776,7 +790,9 @@ export default function GeneratePage() {
           </div>
 
           <div style={{ fontSize: 12, color: t.muted, flex: 1, minWidth: 180 }}>
-            Tap + to add a reference image, or press Ctrl+V after copying a screenshot. Supports JPG, PNG, WEBP up to 5 MB.
+            {pasteShortcutLabel
+              ? `Tap + to add a reference image, or press ${pasteShortcutLabel} after copying a screenshot. Supports JPG, PNG, WEBP up to 5 MB.`
+              : 'Tap + to add a reference image. Supports JPG, PNG, WEBP up to 5 MB.'}
           </div>
 
           <button
