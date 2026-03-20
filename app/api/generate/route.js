@@ -1,13 +1,16 @@
 import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-function buildPrompt({ input, tone, hinglish, emoji, hashtags }) {
+function buildPrompt({ input, tone, hinglish, emoji, hashtags, imageDescription }) {
   const langNote = hinglish
     ? 'Write in Hinglish (natural mix of Hindi and English, like how Gen Z Indians actually talk).'
     : 'Write STRICTLY in English only. Do not use any Hindi words at all.';
   const emojiNote = emoji ? 'Include relevant emojis naturally.' : 'Do not use emojis.';
   const hashtagNote = hashtags ? 'Add 5-8 relevant hashtags at the end if it is a caption.' : 'Do not add hashtags.';
+  const imageNote = imageDescription ? `The user has also uploaded a photo. Here is what the photo shows: ${imageDescription}. Use this to make the content more relevant and personal.` : '';
 
   return `You are Likhle, an AI writing assistant made for Gen Z Indian creators.
 
@@ -17,6 +20,7 @@ The user will describe what they want in plain language. You must:
 3. Make it feel authentic and Gen Z
 
 User's request: ${input}
+${imageNote}
 
 ${langNote}
 ${emojiNote}
@@ -36,14 +40,44 @@ Write the 4 versions now:`;
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const { input, tone, hinglish, emoji, hashtags } = body;
+    const formData = await req.formData();
+    const input = formData.get('input');
+    const tone = formData.get('tone') || 'Aesthetic';
+    const hinglish = formData.get('hinglish') === 'true';
+    const emoji = formData.get('emoji') === 'true';
+    const hashtags = formData.get('hashtags') === 'true';
+    const imageFile = formData.get('image');
 
     if (!input?.trim()) {
       return Response.json({ error: 'Input required' }, { status: 400 });
     }
 
-    const prompt = buildPrompt({ input, tone, hinglish, emoji, hashtags });
+    let imageDescription = null;
+
+    if (imageFile && imageFile.size > 0) {
+      try {
+        const imageBytes = await imageFile.arrayBuffer();
+        const base64Image = Buffer.from(imageBytes).toString('base64');
+        const mimeType = imageFile.type || 'image/jpeg';
+
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const result = await model.generateContent([
+          {
+            inlineData: {
+              data: base64Image,
+              mimeType: mimeType,
+            },
+          },
+          'Describe this image in 2-3 sentences. Focus on what is happening, the mood, setting, people, and any notable elements. Be specific and descriptive.',
+        ]);
+        imageDescription = result.response.text();
+      } catch (imgError) {
+        console.error('Image analysis error:', imgError);
+      }
+    }
+
+    const prompt = buildPrompt({ input, tone, hinglish, emoji, hashtags, imageDescription });
+
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
@@ -60,7 +94,7 @@ export async function POST(req) {
 
     return Response.json({ results });
   } catch (err) {
-    console.error('Groq error:', err);
+    console.error('Error:', err);
     return Response.json({ error: 'Generation failed' }, { status: 500 });
   }
 }

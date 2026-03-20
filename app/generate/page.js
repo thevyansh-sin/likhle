@@ -95,10 +95,18 @@ export default function GeneratePage() {
       const hinglish = selectedOptions.includes('Hinglish 🇮🇳');
       const emoji = selectedOptions.includes('Add Emojis ✨');
       const hashtags = selectedOptions.includes('Add Hashtags #');
+
+      const formData = new FormData();
+      formData.append('input', input);
+      formData.append('tone', tone);
+      formData.append('hinglish', hinglish);
+      formData.append('emoji', emoji);
+      formData.append('hashtags', hashtags);
+      if (attachment) formData.append('image', attachment);
+
       const res = await fetch('/api/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input, tone, contentType: 'auto', hinglish, emoji, hashtags }),
+        body: formData,
       });
       const data = await res.json();
       if (data.results) setResults(data.results);
