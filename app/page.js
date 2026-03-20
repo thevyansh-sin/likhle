@@ -90,7 +90,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="footer">
         <span className="logo">likhle<span className="logo-dot">.</span></span>
-        <span className="footer-text">Built by Manya Class 12th for Gen Z India</span>
+        <span className="footer-text">Built by Indian for Gen Z India</span>
       </footer>
     </main>
   );
