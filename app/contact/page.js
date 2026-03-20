@@ -1,7 +1,6 @@
 import InfoPageLayout from '../components/info-page-layout';
 
-const PUBLIC_CONTACT_EMAIL = 'replace-with-your-public-email@example.com';
-const IS_PLACEHOLDER_EMAIL = PUBLIC_CONTACT_EMAIL.startsWith('replace-with');
+const PUBLIC_CONTACT_EMAIL = 'likhlesupport@gmail.com';
 
 export const metadata = {
   title: 'Contact | Likhle',
@@ -16,12 +15,6 @@ export default function ContactPage() {
       description="If something breaks, feels confusing, or you want to collaborate, this is the page users should check first."
       updatedLabel="Last updated: March 20, 2026"
     >
-      {IS_PLACEHOLDER_EMAIL && (
-        <section className="info-note">
-          The contact email on this page is still a placeholder so a private email is not published by accident. Replace it with your public support email before wider launch.
-        </section>
-      )}
-
       <div className="info-grid">
         <section className="info-card">
           <h2 className="info-card-title">Best way to contact</h2>
