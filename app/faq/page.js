@@ -1,4 +1,5 @@
 import InfoPageLayout from '../components/info-page-layout';
+import { buildMetadata } from '../lib/site';
 
 const faqItems = [
   {
@@ -35,9 +36,24 @@ const faqItems = [
   },
 ];
 
-export const metadata = {
-  title: 'FAQ | Likhle',
+export const metadata = buildMetadata({
+  title: 'FAQ',
   description: 'Frequently asked questions about how Likhle works.',
+  path: '/faq',
+  keywords: ['Likhle FAQ', 'AI writing tool FAQ', 'caption generator questions'],
+});
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer,
+    },
+  })),
 };
 
 export default function FAQPage() {
@@ -48,6 +64,10 @@ export default function FAQPage() {
       description="This page gives users simple answers about pricing, uploads, history, output quality, and how the product works."
       updatedLabel="Last updated: March 20, 2026"
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <div className="info-faq-list">
         {faqItems.map((item) => (
           <section key={item.question} className="info-faq-card">

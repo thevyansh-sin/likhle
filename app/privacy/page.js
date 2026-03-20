@@ -1,9 +1,12 @@
 import InfoPageLayout from '../components/info-page-layout';
+import { buildMetadata } from '../lib/site';
 
-export const metadata = {
-  title: 'Privacy Policy | Likhle',
+export const metadata = buildMetadata({
+  title: 'Privacy Policy',
   description: 'How Likhle handles prompts, images, analytics, and browser-stored history.',
-};
+  path: '/privacy',
+  keywords: ['privacy policy', 'AI privacy', 'prompt privacy'],
+});
 
 export default function PrivacyPage() {
   return (

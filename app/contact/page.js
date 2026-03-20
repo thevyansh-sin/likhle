@@ -1,13 +1,17 @@
 import InfoPageLayout from '../components/info-page-layout';
+import {
+  buildMetadata,
+  instagramHandle,
+  instagramUrl,
+  supportEmail,
+} from '../lib/site';
 
-const PUBLIC_CONTACT_EMAIL = 'likhlesupport@gmail.com';
-const INSTAGRAM_HANDLE = '@likhle.in';
-const INSTAGRAM_URL = 'https://instagram.com/likhle.in';
-
-export const metadata = {
-  title: 'Contact | Likhle',
+export const metadata = buildMetadata({
+  title: 'Contact',
   description: 'How to reach Likhle for support, bug reports, and feedback.',
-};
+  path: '/contact',
+  keywords: ['Likhle contact', 'Likhle support', 'report a bug'],
+});
 
 export default function ContactPage() {
   return (
@@ -21,10 +25,10 @@ export default function ContactPage() {
         <section className="info-card">
           <h2 className="info-card-title">Best way to contact</h2>
           <p className="info-text">
-            Email: <a href={`mailto:${PUBLIC_CONTACT_EMAIL}`} className="info-inline-link">{PUBLIC_CONTACT_EMAIL}</a>
+            Email: <a href={`mailto:${supportEmail}`} className="info-inline-link">{supportEmail}</a>
           </p>
           <p className="info-text">
-            Instagram: <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="info-inline-link">{INSTAGRAM_HANDLE}</a>
+            Instagram: <a href={instagramUrl} target="_blank" rel="noreferrer" className="info-inline-link">{instagramHandle}</a>
           </p>
           <p className="info-text">
             You can use this for support questions, feedback, partnerships, bug reports, takedown requests, or general product suggestions.

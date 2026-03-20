@@ -1,9 +1,12 @@
 import InfoPageLayout from '../components/info-page-layout';
+import { buildMetadata } from '../lib/site';
 
-export const metadata = {
-  title: 'Terms of Use | Likhle',
+export const metadata = buildMetadata({
+  title: 'Terms of Use',
   description: 'The basic rules for using Likhle responsibly.',
-};
+  path: '/terms',
+  keywords: ['terms of use', 'usage policy', 'AI tool terms'],
+});
 
 export default function TermsPage() {
   return (
@@ -49,7 +52,7 @@ export default function TermsPage() {
       <section className="info-section">
         <h2 className="info-section-title">Availability and changes</h2>
         <p className="info-text">
-          The site is provided on an “as available” basis. Features may be added, removed, or changed without notice. Rate limits, safety controls, and usage restrictions may also be updated whenever needed to keep the service stable.
+          The site is provided on an &quot;as available&quot; basis. Features may be added, removed, or changed without notice. Rate limits, safety controls, and usage restrictions may also be updated whenever needed to keep the service stable.
         </p>
       </section>
 

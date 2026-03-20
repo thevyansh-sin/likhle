@@ -1,31 +1,141 @@
-import Script from "next/script";
+import { DM_Sans, Syne } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
+import {
+  absoluteUrl,
+  instagramHandle,
+  instagramUrl,
+  siteDescription,
+  siteKeywords,
+  siteName,
+  siteTitle,
+  siteUrl,
+  supportEmail,
+} from './lib/site';
 
 export const metadata = {
-  title: 'Likhle — AI Captions for Gen Z India',
-  description: 'AI-powered captions, bios & hashtags for Indian creators. Hinglish mode, tone detection & more.',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: `${siteName} | ${siteTitle}`,
+    template: `%s | ${siteName}`,
+  },
+  description: siteDescription,
+  applicationName: siteName,
+  keywords: siteKeywords,
+  authors: [{ name: siteName, url: siteUrl }],
+  creator: siteName,
+  publisher: siteName,
+  category: 'AI writing tool',
+  referrer: 'origin-when-cross-origin',
+  alternates: {
+    canonical: '/',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
+  openGraph: {
+    title: `${siteName} | ${siteTitle}`,
+    description: siteDescription,
+    url: '/',
+    siteName,
+    locale: 'en_IN',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${siteName} | ${siteTitle}`,
+    description: siteDescription,
+    creator: instagramHandle,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
 };
+
+export const viewport = {
+  themeColor: '#080808',
+};
+
+const syne = Syne({
+  subsets: ['latin'],
+  variable: '--font-syne',
+  display: 'swap',
+});
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+});
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: siteName,
+    url: siteUrl,
+    email: supportEmail,
+    sameAs: [instagramUrl],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteName,
+    url: siteUrl,
+    description: siteDescription,
+    inLanguage: 'en-IN',
+    publisher: {
+      '@type': 'Organization',
+      name: siteName,
+      url: siteUrl,
+    },
+    potentialAction: {
+      '@type': 'ViewAction',
+      target: absoluteUrl('/generate'),
+      name: 'Open the generator',
+    },
+  },
+];
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <Script 
-        src="https://www.googletagmanager.com/gtag/js?id=G-EBEXGB44Y4"
-        strategy="afterInteractive"
-      />
-      <Script 
-        id="google-analytics"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-EBEXGB44Y4');
-          `,
-        }}
-      />
-      <body>{children}</body>
+    <html lang="en-IN" className={`${syne.variable} ${dmSans.variable}`}>
+      <body>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-EBEXGB44Y4"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-EBEXGB44Y4');
+            `,
+          }}
+        />
+        {structuredData.map((item) => (
+          <script
+            key={item['@type']}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(item) }}
+          />
+        ))}
+        {children}
+      </body>
     </html>
   );
 }

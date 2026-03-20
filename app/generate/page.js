@@ -237,7 +237,7 @@ export default function GeneratePage() {
     background: isActive ? '#CAFF00' : t.toneBg,
     border: `1px solid ${isActive ? '#CAFF00' : t.toneBorder}`,
     color: isActive ? '#000' : t.toneText,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: 'var(--font-body)',
     fontSize: 13,
     padding: '10px 18px',
     borderRadius: 999,
@@ -497,12 +497,12 @@ export default function GeneratePage() {
 
   return (
     <div
-      style={{ minHeight: '100vh', background: t.bg, transition: 'all 0.3s', fontFamily: "'DM Sans', sans-serif" }}
+      style={{ minHeight: '100vh', background: t.bg, transition: 'all 0.3s', fontFamily: 'var(--font-body)' }}
       onClick={() => setShowMenu(false)}
     >
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 40px', borderBottom: `1px solid ${t.border}`, position: 'sticky', top: 0, zIndex: 100, background: t.navBg, backdropFilter: 'blur(12px)' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, lineHeight: 1 }}>likhle<span style={{ color: '#CAFF00' }}>.</span></div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, lineHeight: 1 }}>likhle<span style={{ color: '#CAFF00' }}>.</span></div>
         </Link>
         <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '7px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s' }}>
           {dark ? '☀️ Light' : '🌙 Dark'}
@@ -511,7 +511,7 @@ export default function GeneratePage() {
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '60px 20px' }}>
         <div style={{ marginBottom: 48 }}>
-          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 800, letterSpacing: -2, color: t.text, marginBottom: 8 }}>Kya likhna hai? ✍️</h1>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 800, letterSpacing: -2, color: t.text, marginBottom: 8 }}>Kya likhna hai? ✍️</h1>
           <p style={{ fontSize: 16, color: t.muted }}>Describe karo — AI sab samajh leta hai.</p>
         </div>
 
@@ -551,7 +551,7 @@ export default function GeneratePage() {
                   handleGenerate();
                 }
               }}
-              style={{ background: 'transparent', border: 'none', color: t.inputText, fontFamily: "'DM Sans', sans-serif", fontSize: 16, resize: 'none', minHeight: 100, outline: 'none', width: '100%', lineHeight: 1.7 }}
+              style={{ background: 'transparent', border: 'none', color: t.inputText, fontFamily: 'var(--font-body)', fontSize: 16, resize: 'none', minHeight: 100, outline: 'none', width: '100%', lineHeight: 1.7 }}
               placeholder={placeholder}
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -595,7 +595,7 @@ export default function GeneratePage() {
               <button
                 onClick={handleGenerate}
                 disabled={loading || refreshingIndex !== null || !input.trim()}
-                style={{ background: '#CAFF00', color: '#000', fontFamily: "'Syne', sans-serif", fontSize: 15, fontWeight: 800, padding: '8px 24px', border: 'none', borderRadius: 10, cursor: loading || refreshingIndex !== null || !input.trim() ? 'not-allowed' : 'pointer', opacity: loading || refreshingIndex !== null || !input.trim() ? 0.5 : 1, transition: 'all 0.2s' }}
+                style={{ background: '#CAFF00', color: '#000', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, padding: '8px 24px', border: 'none', borderRadius: 10, cursor: loading || refreshingIndex !== null || !input.trim() ? 'not-allowed' : 'pointer', opacity: loading || refreshingIndex !== null || !input.trim() ? 0.5 : 1, transition: 'all 0.2s' }}
               >
                 {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
               </button>
@@ -668,7 +668,7 @@ export default function GeneratePage() {
           <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div>
-                <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Yeh lo {results.length} options 🔥</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Yeh lo {results.length} options 🔥</div>
                 <div style={{ fontSize: 13, color: t.muted, marginTop: 6 }}>
                   {platform} · {length} · {tone}
                 </div>
@@ -703,7 +703,7 @@ export default function GeneratePage() {
           <div style={{ marginTop: 56, borderTop: `1px solid ${t.border}`, paddingTop: 32 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div>
-                <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Recent history</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Recent history</div>
                 <div style={{ fontSize: 13, color: t.muted, marginTop: 6 }}>
                   Saved only in this browser with your latest results.
                 </div>
@@ -742,7 +742,6 @@ export default function GeneratePage() {
         </footer>
       </div>
 
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap'); @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:0.4}40%{transform:translateY(-8px);opacity:1}}`}</style>
     </div>
   );
 }
