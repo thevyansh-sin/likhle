@@ -3,7 +3,15 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { LuImage, LuPlus } from 'react-icons/lu';
+import {
+  LuBookmark,
+  LuBookmarkCheck,
+  LuCheck,
+  LuCopy,
+  LuImage,
+  LuPlus,
+  LuRefreshCw,
+} from 'react-icons/lu';
 import { templateLibrary } from '../template-library';
 
 const PLACEHOLDERS = [
@@ -737,6 +745,24 @@ export default function GeneratePage() {
     opacity: disabled ? 0.55 : 1,
   });
 
+  const getResultIconButtonStyle = ({ active = false, disabled = false } = {}) => ({
+    width: 38,
+    height: 38,
+    background: active
+      ? (dark ? 'rgba(202,255,0,0.08)' : 'rgba(147,181,0,0.10)')
+      : t.copyBg,
+    border: `1px solid ${active ? '#CAFF00' : t.resultBorder}`,
+    color: active ? '#CAFF00' : t.copyText,
+    borderRadius: 12,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    transition: 'all 0.15s ease',
+    opacity: disabled ? 0.55 : 1,
+    boxShadow: active ? t.chipShadow : 'none',
+  });
+
   const controlsDisabled = loading || pendingResultAction !== null;
 
   const renderTemplateCard = (template, compact = false) => (
@@ -1066,23 +1092,37 @@ export default function GeneratePage() {
                 <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   <button
                     onClick={() => handleToggleFavorite(item)}
-                    style={{
-                      ...actionButtonStyle,
-                      color: isFavorite ? '#CAFF00' : actionButtonStyle.color,
-                      border: isFavorite ? '1px solid #CAFF00' : actionButtonStyle.border,
-                      background: isFavorite ? (dark ? 'rgba(202,255,0,0.08)' : 'rgba(147,181,0,0.10)') : actionButtonStyle.background,
-                    }}
+                    aria-label={isFavorite ? 'Saved to favorites' : 'Save to favorites'}
+                    title={isFavorite ? 'Saved to favorites' : 'Save to favorites'}
+                    style={getResultIconButtonStyle({ active: isFavorite })}
                   >
-                    {isFavorite ? 'Saved' : 'Save'}
+                    {isFavorite ? <LuBookmarkCheck size={16} /> : <LuBookmark size={16} />}
                   </button>
-                  <button onClick={() => handleRegenerateOption(index)} disabled={controlsDisabled} style={{ ...actionButtonStyle, opacity: controlsDisabled ? 0.6 : 1, cursor: controlsDisabled ? 'not-allowed' : 'pointer' }}>
-                    {pendingResultAction?.index === index && pendingResultAction.label === 'Refreshing...' ? 'Refreshing...' : 'Regenerate'}
+                  <button
+                    onClick={() => handleRegenerateOption(index)}
+                    disabled={controlsDisabled}
+                    aria-label={pendingResultAction?.index === index ? 'Refreshing result' : 'Regenerate result'}
+                    title={pendingResultAction?.index === index ? 'Refreshing result' : 'Regenerate result'}
+                    style={getResultIconButtonStyle({
+                      active: pendingResultAction?.index === index && pendingResultAction.label === 'Refreshing...',
+                      disabled: controlsDisabled,
+                    })}
+                  >
+                    <LuRefreshCw size={16} />
                   </button>
-                  <button onClick={() => handleCopy(item, index)} style={{ ...actionButtonStyle, color: copied === index ? '#CAFF00' : actionButtonStyle.color, border: copied === index ? '1px solid #CAFF00' : actionButtonStyle.border }}>
+                  <button
+                    onClick={() => handleCopy(item, resultCopyKey)}
+                    aria-label={copied === resultCopyKey ? 'Copied' : 'Copy result'}
+                    title={copied === resultCopyKey ? 'Copied' : 'Copy result'}
+                    style={{ ...getResultIconButtonStyle({ active: copied === resultCopyKey }), fontSize: 0 }}
+                  >
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {copied === resultCopyKey ? <LuCheck size={16} /> : <LuCopy size={16} />}
+                    </span>
                     {copied === index ? '✓ Copied!' : 'Copy'}
                   </button>
                 </div>
-                <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 250 }}>{item}</p>
+                <p style={{ fontSize: 15, lineHeight: 1.7, color: t.text, whiteSpace: 'pre-wrap', paddingRight: 156 }}>{item}</p>
                 <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${t.resultBorder}` }}>
                   <div style={{ fontSize: 12, color: t.muted, marginBottom: 10 }}>Quick rewrite</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
