@@ -59,10 +59,15 @@ const LEGACY_OPTION_LABELS = {
   'Add Emojis ✨': OPTION_LABELS.emojis,
   'Add Hashtags #': OPTION_LABELS.hashtags,
   'Hinglish ðŸ‡®ðŸ‡³': OPTION_LABELS.hinglish,
+  'Hinglish Ã°Å¸â€¡Â®Ã°Å¸â€¡Â³': OPTION_LABELS.hinglish,
   'Add Emojis âœ¨': OPTION_LABELS.emojis,
+  'Add Emojis Ã¢Å“Â¨': OPTION_LABELS.emojis,
 };
-const OPTIONS = ['Hinglish 🇮🇳', 'Add Emojis ✨', 'Add Hashtags #'];
-const DEFAULT_OPTIONS = ['Add Emojis ✨', 'Add Hashtags #'];
+const OPTIONS = [OPTION_LABELS.hinglish, OPTION_LABELS.emojis, OPTION_LABELS.hashtags];
+const DEFAULT_OPTIONS = [OPTION_LABELS.emojis, OPTION_LABELS.hashtags];
+const CLEAN_OPTION_VALUES = OPTION_LABELS;
+const CLEAN_OPTIONS = OPTIONS;
+const CLEAN_DEFAULT_OPTIONS = DEFAULT_OPTIONS;
 const PLATFORM_OPTIONS = [
   'Auto Detect',
   'Instagram Caption',
@@ -205,7 +210,39 @@ function normalizeResultItems(results, fallbackActions) {
     .filter(Boolean);
 }
 
-function getOptionDisplayLabel(option) {
+function legacySanitizeOptionLabel(option) {
+  if (typeof option !== 'string') {
+    return '';
+  }
+
+  if (/hinglish/i.test(option) || option.includes('ðŸ‡') || option.includes('Ã°Å¸')) {
+    return CLEAN_OPTION_VALUES.hinglish;
+  }
+
+  if (/emoji/i.test(option) || option.includes('âœ¨') || option.includes('Ã¢Å“Â¨')) {
+    return CLEAN_OPTION_VALUES.emojis;
+  }
+
+  if (/hashtag/i.test(option)) {
+    return CLEAN_OPTION_VALUES.hashtags;
+  }
+
+  return option;
+}
+
+function legacyNormalizeSelectedOptions(options) {
+  if (!Array.isArray(options)) {
+    return CLEAN_DEFAULT_OPTIONS;
+  }
+
+  const normalizedOptions = options
+    .map((option) => sanitizeOptionLabel(option))
+    .filter((option) => CLEAN_OPTIONS.includes(option));
+
+  return normalizedOptions.length > 0 ? Array.from(new Set(normalizedOptions)) : CLEAN_DEFAULT_OPTIONS;
+}
+
+function legacyGetOptionDisplayLabel(option) {
   if (option === 'Add Emojis âœ¨' || option === 'Add Emojis ✨') {
     return 'Emojis ✨';
   }
@@ -217,7 +254,53 @@ function getOptionDisplayLabel(option) {
   return option;
 }
 
-function getRewriteActionsForContext({ tone, selectedOptions }) {
+function sanitizeOptionLabel(option) {
+  if (typeof option !== 'string') {
+    return '';
+  }
+
+  if (
+    /hinglish/i.test(option) ||
+    option.includes('ðŸ‡') ||
+    option.includes('Ã°Å¸â€¡') ||
+    option.includes('ÃƒÂ°Ã…Â¸')
+  ) {
+    return OPTION_LABELS.hinglish;
+  }
+
+  if (
+    /emoji/i.test(option) ||
+    option.includes('âœ¨') ||
+    option.includes('Ã¢Å“Â¨') ||
+    option.includes('ÃƒÂ¢Ã…â€œÃ‚Â¨')
+  ) {
+    return OPTION_LABELS.emojis;
+  }
+
+  if (/hashtag/i.test(option)) {
+    return OPTION_LABELS.hashtags;
+  }
+
+  return LEGACY_OPTION_LABELS[option] || option;
+}
+
+function normalizeSelectedOptions(options) {
+  if (!Array.isArray(options)) {
+    return DEFAULT_OPTIONS;
+  }
+
+  const normalizedOptions = options
+    .map((option) => sanitizeOptionLabel(option))
+    .filter((option) => OPTIONS.includes(option));
+
+  return normalizedOptions.length > 0 ? Array.from(new Set(normalizedOptions)) : DEFAULT_OPTIONS;
+}
+
+function getOptionDisplayLabel(option) {
+  return sanitizeOptionLabel(option);
+}
+
+function legacyGetRewriteActionsForContext({ tone, selectedOptions }) {
   const actions = [REWRITE_ACTIONS.shorter];
   const selectedToneAction = {
     Aesthetic: REWRITE_ACTIONS.moreAesthetic,
@@ -248,13 +331,45 @@ function getRewriteActionsForContext({ tone, selectedOptions }) {
   return actions;
 }
 
+function getRewriteActionsForContext({ tone, selectedOptions }) {
+  const normalizedOptions = normalizeSelectedOptions(selectedOptions);
+  const actions = [REWRITE_ACTIONS.shorter];
+  const selectedToneAction = {
+    Aesthetic: REWRITE_ACTIONS.moreAesthetic,
+    Funny: REWRITE_ACTIONS.moreFunny,
+    Savage: REWRITE_ACTIONS.moreSavage,
+    Motivational: REWRITE_ACTIONS.moreMotivational,
+    Romantic: REWRITE_ACTIONS.moreRomantic,
+    Professional: REWRITE_ACTIONS.moreProfessional,
+    Desi: REWRITE_ACTIONS.moreDesi,
+  }[tone];
+
+  if (selectedToneAction) {
+    actions.push(selectedToneAction);
+  }
+
+  if (normalizedOptions.includes(OPTION_LABELS.hinglish)) {
+    actions.push(REWRITE_ACTIONS.moreHinglish);
+  }
+
+  if (normalizedOptions.includes(OPTION_LABELS.emojis)) {
+    actions.push(REWRITE_ACTIONS.moreEmoji);
+  }
+
+  if (normalizedOptions.includes(OPTION_LABELS.hashtags)) {
+    actions.push(REWRITE_ACTIONS.betterHashtags);
+  }
+
+  return actions;
+}
+
 export default function GeneratePage() {
   const [input, setInput] = useState('');
   const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
   const [tone, setTone] = useState('Aesthetic');
   const [platform, setPlatform] = useState('Auto Detect');
   const [length, setLength] = useState('Medium');
-  const [selectedOptions, setSelectedOptions] = useState(DEFAULT_OPTIONS);
+  const [selectedOptions, setSelectedOptions] = useState(() => DEFAULT_OPTIONS);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingStageIndex, setLoadingStageIndex] = useState(0);
@@ -421,7 +536,7 @@ export default function GeneratePage() {
         nextOptions.push('Add Hashtags #');
       }
 
-      setSelectedOptions(nextOptions);
+      setSelectedOptions(normalizeSelectedOptions(nextOptions));
     }
   }, []);
 
@@ -561,11 +676,13 @@ export default function GeneratePage() {
   });
 
   const toggleOption = (option) => {
-    setSelectedOptions((previousOptions) =>
-      previousOptions.includes(option)
-        ? previousOptions.filter((item) => item !== option)
-        : [...previousOptions, option]
-    );
+    setSelectedOptions((previousOptions) => {
+      const normalizedOptions = normalizeSelectedOptions(previousOptions);
+
+      return normalizedOptions.includes(option)
+        ? normalizedOptions.filter((item) => item !== option)
+        : [...normalizedOptions, option];
+    });
   };
 
   const getTemplateOptions = (template) => {
@@ -583,7 +700,7 @@ export default function GeneratePage() {
       nextOptions.push('Add Hashtags #');
     }
 
-    return nextOptions;
+    return normalizeSelectedOptions(nextOptions);
   };
 
   const handleApplyTemplate = (template) => {
@@ -669,7 +786,7 @@ export default function GeneratePage() {
       tone,
       platform,
       length,
-      selectedOptions: [...selectedOptions],
+      selectedOptions: normalizeSelectedOptions(selectedOptions),
       results: normalizedResults,
       createdAt: Date.now(),
       hadImage: Boolean(attachment),
@@ -693,7 +810,7 @@ export default function GeneratePage() {
     tone,
     platform,
     length,
-    selectedOptions: [...selectedOptions],
+    selectedOptions: normalizeSelectedOptions(selectedOptions),
     createdAt: Date.now(),
     hadImage: Boolean(attachment),
   });
@@ -722,25 +839,20 @@ export default function GeneratePage() {
   };
 
   const handleUseFavorite = (entry) => {
+    const restoredOptions = normalizeSelectedOptions(entry.selectedOptions);
+
     setInput(entry.input || '');
     setTone(entry.tone || 'Aesthetic');
     setPlatform(entry.platform || 'Auto Detect');
     setLength(entry.length || 'Medium');
-    setSelectedOptions(
-      Array.isArray(entry.selectedOptions) && entry.selectedOptions.length > 0
-        ? entry.selectedOptions
-        : DEFAULT_OPTIONS
-    );
+    setSelectedOptions(restoredOptions);
     setResults(
       entry.text
         ? normalizeResultItems(
             [{ text: entry.text, rewriteSuggestions: entry.rewriteSuggestions || [] }],
             getRewriteActionsForContext({
               tone: entry.tone || 'Aesthetic',
-              selectedOptions:
-                Array.isArray(entry.selectedOptions) && entry.selectedOptions.length > 0
-                  ? entry.selectedOptions
-                  : DEFAULT_OPTIONS,
+              selectedOptions: restoredOptions,
             })
           )
         : []
@@ -772,6 +884,11 @@ export default function GeneratePage() {
     formData.append('hinglish', String(hinglish));
     formData.append('emoji', String(emoji));
     formData.append('hashtags', String(hashtags));
+
+    const normalizedOptions = normalizeSelectedOptions(selectedOptions);
+    formData.set('hinglish', String(normalizedOptions.includes(OPTION_LABELS.hinglish)));
+    formData.set('emoji', String(normalizedOptions.includes(OPTION_LABELS.emojis)));
+    formData.set('hashtags', String(normalizedOptions.includes(OPTION_LABELS.hashtags)));
 
     if (avoidResults.length > 0) {
       formData.append('avoidResults', JSON.stringify(avoidResults));
@@ -975,7 +1092,7 @@ export default function GeneratePage() {
       `Platform: ${platform}`,
       `Length: ${length}`,
       `Tone: ${tone}`,
-      `Options: ${selectedOptions.join(', ') || 'None'}`,
+      `Options: ${normalizeSelectedOptions(selectedOptions).join(', ') || 'None'}`,
       attachment ? `Image: ${attachment.name}` : 'Image: None',
       '',
       ...results.map((item, index) => `Option ${index + 1}\n${getResultText(item)}`),
@@ -993,24 +1110,19 @@ export default function GeneratePage() {
   };
 
   const handleRestoreHistory = (entry) => {
+    const restoredOptions = normalizeSelectedOptions(entry.selectedOptions);
+
     setInput(entry.input || '');
     setTone(entry.tone || 'Aesthetic');
     setPlatform(entry.platform || 'Auto Detect');
     setLength(entry.length || 'Medium');
-    setSelectedOptions(
-      Array.isArray(entry.selectedOptions) && entry.selectedOptions.length > 0
-        ? entry.selectedOptions
-        : DEFAULT_OPTIONS
-    );
+    setSelectedOptions(restoredOptions);
     setResults(
       normalizeResultItems(
         Array.isArray(entry.results) ? entry.results : [],
         getRewriteActionsForContext({
           tone: entry.tone || 'Aesthetic',
-          selectedOptions:
-            Array.isArray(entry.selectedOptions) && entry.selectedOptions.length > 0
-              ? entry.selectedOptions
-              : DEFAULT_OPTIONS,
+          selectedOptions: restoredOptions,
         })
       )
     );
@@ -1494,7 +1606,7 @@ export default function GeneratePage() {
                 <span className="gen-empty-chip">{platform}</span>
                 <span className="gen-empty-chip">{length}</span>
                 <span className="gen-empty-chip">{tone}</span>
-                {selectedOptions.slice(0, 2).map((option) => (
+                {normalizeSelectedOptions(selectedOptions).slice(0, 2).map((option) => (
                   <span key={option} className="gen-empty-chip gen-empty-chip--muted">{getOptionDisplayLabel(option)}</span>
                 ))}
               </div>
@@ -1520,7 +1632,7 @@ export default function GeneratePage() {
                 <span className="gen-empty-chip">{platform}</span>
                 <span className="gen-empty-chip">{length}</span>
                 <span className="gen-empty-chip">{tone}</span>
-                {selectedOptions.slice(0, 2).map((option) => (
+                {normalizeSelectedOptions(selectedOptions).slice(0, 2).map((option) => (
                   <span key={option} className="gen-empty-chip gen-empty-chip--muted">{getOptionDisplayLabel(option)}</span>
                 ))}
               </div>
