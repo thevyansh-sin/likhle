@@ -220,6 +220,12 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="section-divider" aria-hidden="true" data-reveal>
+        <span className="section-divider-line" />
+        <span className="section-divider-core" />
+        <span className="section-divider-line" />
+      </div>
+
       <section className="seo-links-section" data-reveal>
         <div className="section-header">
           <span className="section-kicker">Popular Generators</span>
@@ -239,6 +245,12 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <div className="section-divider" aria-hidden="true" data-reveal>
+        <span className="section-divider-line" />
+        <span className="section-divider-core" />
+        <span className="section-divider-line" />
+      </div>
 
       <section className="idea-links-section" data-reveal>
         <div className="section-header">
@@ -260,6 +272,12 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="section-divider" aria-hidden="true" data-reveal>
+        <span className="section-divider-line" />
+        <span className="section-divider-core" />
+        <span className="section-divider-line" />
+      </div>
+
       <section className="workflow" id="workflow" data-reveal>
         <div className="section-header">
           <span className="section-kicker">How it works</span>
@@ -279,6 +297,12 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <div className="section-divider" aria-hidden="true" data-reveal>
+        <span className="section-divider-line" />
+        <span className="section-divider-core" />
+        <span className="section-divider-line" />
+      </div>
 
       <section className="cta-section" data-reveal>
         <div className="cta-shell">
