@@ -17,6 +17,21 @@ export function PWAProvider() {
     }
 
     let cancelled = false;
+    let hasReloadedForController = false;
+    const hadController = Boolean(navigator.serviceWorker.controller);
+
+    const requestSkipWaiting = (worker) => {
+      worker?.postMessage({ type: 'SKIP_WAITING' });
+    };
+
+    const handleControllerChange = () => {
+      if (!hadController || hasReloadedForController) {
+        return;
+      }
+
+      hasReloadedForController = true;
+      window.location.reload();
+    };
 
     const register = async () => {
       try {
@@ -26,18 +41,36 @@ export function PWAProvider() {
           return;
         }
 
+        await registration.update();
+
         if (registration.waiting) {
-          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          requestSkipWaiting(registration.waiting);
         }
+
+        registration.addEventListener('updatefound', () => {
+          const worker = registration.installing;
+
+          if (!worker) {
+            return;
+          }
+
+          worker.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+              requestSkipWaiting(registration.waiting || worker);
+            }
+          });
+        });
       } catch {
         // Keep installability progressive. If registration fails, the site should still work.
       }
     };
 
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
     register();
 
     return () => {
       cancelled = true;
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
     };
   }, []);
 

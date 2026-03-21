@@ -1,7 +1,5 @@
-const CACHE_NAME = 'likhle-pwa-v1';
-const APP_SHELL = [
-  '/',
-  '/generate',
+const CACHE_NAME = 'likhle-static-v0-2-13';
+const STATIC_ASSETS = [
   '/manifest.webmanifest',
   '/icons/icon-32.png',
   '/icons/icon-192.png',
@@ -9,9 +7,13 @@ const APP_SHELL = [
   '/icons/apple-touch-icon.png',
 ];
 
+function isStaticAsset(pathname) {
+  return STATIC_ASSETS.includes(pathname);
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)).then(() => self.skipWaiting())
   );
 });
 
@@ -20,10 +22,16 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME)
+          .filter((key) => key.startsWith('likhle-') && key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       )
-    ).then(() => self.clients.claim())
+    ).then(async () => {
+      if ('navigationPreload' in self.registration) {
+        await self.registration.navigationPreload.enable();
+      }
+
+      await self.clients.claim();
+    })
   );
 });
 
@@ -47,18 +55,10 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          return response;
-        })
-        .catch(async () => {
-          const cachedPage = await caches.match(request);
-          return cachedPage || caches.match('/');
-        })
-    );
+    return;
+  }
+
+  if (!isStaticAsset(url.pathname)) {
     return;
   }
 
