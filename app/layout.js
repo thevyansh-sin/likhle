@@ -1,5 +1,6 @@
 import { DM_Sans, Syne } from 'next/font/google';
 import Script from 'next/script';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 import { PWAProvider } from './components/pwa-provider';
 import ScrollReveal from './components/scroll-reveal';
@@ -154,6 +155,7 @@ export default function RootLayout({ children }) {
           {children}
           <ScrollToTop />
         </SiteThemeProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
