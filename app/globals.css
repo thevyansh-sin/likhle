@@ -77,6 +77,41 @@ html[data-theme='light'] {
 
 html { scroll-behavior: smooth; }
 
+[data-reveal] {
+  --reveal-distance: 22px;
+  --reveal-duration: 0.78s;
+  --reveal-delay: 0s;
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-distance), 0) scale(0.985);
+  filter: saturate(0.94);
+  transition:
+    opacity var(--reveal-duration) cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay),
+    transform var(--reveal-duration) cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay),
+    filter var(--reveal-duration) ease var(--reveal-delay);
+  will-change: opacity, transform, filter;
+}
+
+[data-reveal][data-reveal-delay='0.02s'] { --reveal-delay: 0.02s; }
+[data-reveal][data-reveal-delay='0.03s'] { --reveal-delay: 0.03s; }
+[data-reveal][data-reveal-delay='0.04s'] { --reveal-delay: 0.04s; }
+[data-reveal][data-reveal-delay='0.06s'] { --reveal-delay: 0.06s; }
+[data-reveal][data-reveal-delay='0.1s'] { --reveal-delay: 0.1s; }
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: saturate(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+}
+
 body {
   background: var(--bg);
   color: var(--text);

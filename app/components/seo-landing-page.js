@@ -44,9 +44,9 @@ export default function SEOLandingPage({ page }) {
         </div>
       </nav>
 
-      <section className="seo-hero">
+      <section className="seo-hero" data-reveal>
         <div className="seo-hero-shell">
-          <div className="seo-hero-copy">
+          <div className="seo-hero-copy" data-reveal data-reveal-delay="0.04s">
             <div className="seo-kicker">{page.eyebrow}</div>
             <h1 className="seo-title">{page.title}</h1>
             <p className="seo-description">{page.description}</p>
@@ -77,7 +77,7 @@ export default function SEOLandingPage({ page }) {
             </div>
           </div>
 
-          <div className="seo-preview-card">
+          <div className="seo-preview-card" data-reveal data-reveal-delay="0.1s">
             <div className="seo-preview-head">Quick setup</div>
             <div className="seo-preview-stack">
               <div className="seo-preview-item">
@@ -101,16 +101,16 @@ export default function SEOLandingPage({ page }) {
       </section>
 
       <div className="seo-shell">
-        <section className="seo-highlight-grid">
+        <section className="seo-highlight-grid" data-reveal>
           {page.highlights.map((item) => (
-            <div key={item.title} className="seo-highlight-card">
+            <div key={item.title} className="seo-highlight-card" data-reveal data-reveal-delay="0.02s">
               <h2 className="seo-card-title">{item.title}</h2>
               <p className="seo-card-text">{item.description}</p>
             </div>
           ))}
         </section>
 
-        <section className="seo-section" id="prompt-ideas">
+        <section className="seo-section" id="prompt-ideas" data-reveal>
           <div className="seo-section-head">
             <span className="section-kicker">Prompt ideas</span>
             <h2 className="section-title">Start faster with prompts that already fit this use case</h2>
@@ -133,6 +133,8 @@ export default function SEOLandingPage({ page }) {
                   },
                 }}
                 className="seo-prompt-card"
+                data-reveal
+                data-reveal-delay="0.02s"
               >
                 <span className="seo-card-kicker">Open in generator</span>
                 <span className="seo-prompt-text">{prompt}</span>
@@ -141,7 +143,7 @@ export default function SEOLandingPage({ page }) {
           </div>
         </section>
 
-        <section className="seo-section">
+        <section className="seo-section" data-reveal>
           <div className="seo-section-head">
             <span className="section-kicker">FAQ</span>
             <h2 className="section-title">Common questions about this generator</h2>
@@ -149,7 +151,7 @@ export default function SEOLandingPage({ page }) {
 
           <div className="seo-faq-list">
             {page.faqs.map((item) => (
-              <div key={item.question} className="seo-faq-card">
+              <div key={item.question} className="seo-faq-card" data-reveal data-reveal-delay="0.02s">
                 <h3 className="seo-card-title">{item.question}</h3>
                 <p className="seo-card-text">{item.answer}</p>
               </div>
@@ -157,7 +159,7 @@ export default function SEOLandingPage({ page }) {
           </div>
         </section>
 
-        <section className="seo-section">
+        <section className="seo-section" data-reveal>
           <div className="seo-section-head">
             <span className="section-kicker">Related pages</span>
             <h2 className="section-title">Explore other generator pages</h2>
@@ -165,7 +167,7 @@ export default function SEOLandingPage({ page }) {
 
           <div className="seo-related-grid">
             {relatedPages.map((item) => (
-              <Link key={item.slug} href={`/${item.slug}`} className="seo-related-card">
+              <Link key={item.slug} href={`/${item.slug}`} className="seo-related-card" data-reveal data-reveal-delay="0.02s">
                 <span className="seo-card-kicker">Explore</span>
                 <h3 className="seo-card-title">{item.shortTitle}</h3>
                 <p className="seo-card-text">{item.description}</p>
@@ -175,7 +177,7 @@ export default function SEOLandingPage({ page }) {
         </section>
 
         {relatedIdeaPages.length > 0 ? (
-          <section className="seo-section">
+          <section className="seo-section" data-reveal>
             <div className="seo-section-head">
               <span className="section-kicker">Idea guides</span>
               <h2 className="section-title">Need inspiration before generating?</h2>
@@ -186,7 +188,7 @@ export default function SEOLandingPage({ page }) {
 
             <div className="seo-related-grid">
               {relatedIdeaPages.map((item) => (
-                <Link key={item.slug} href={`/${item.slug}`} className="seo-related-card">
+                <Link key={item.slug} href={`/${item.slug}`} className="seo-related-card" data-reveal data-reveal-delay="0.02s">
                   <span className="seo-card-kicker">Idea guide</span>
                   <h3 className="seo-card-title">{item.shortTitle}</h3>
                   <p className="seo-card-text">{item.description}</p>
@@ -196,7 +198,7 @@ export default function SEOLandingPage({ page }) {
           </section>
         ) : null}
 
-        <section className="seo-cta">
+        <section className="seo-cta" data-reveal>
           <h2 className="cta-title">Ready to try {page.shortTitle.toLowerCase()} for real?</h2>
           <p className="cta-sub">
             Open the main generator with the right format already selected, then adjust tone, length, and extras however you want.

@@ -1234,15 +1234,15 @@ export default function GeneratePage() {
       </nav>
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: 'clamp(40px, 6vw, 60px) clamp(16px, 4vw, 20px)' }}>
-        <div style={{ marginBottom: 48 }}>
+        <div style={{ marginBottom: 48 }} data-reveal>
           <h1 className="gen-page-title" style={{ color: t.text, marginBottom: 8 }}>Kya likhna hai? ✍️</h1>
           <p style={{ fontSize: 16, color: t.muted }}>Describe karo — AI sab samajh leta hai.</p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {composerPanel}
+          <div data-reveal>{composerPanel}</div>
 
-          <div style={sectionCardStyle}>
+          <div style={sectionCardStyle} data-reveal>
             <div style={sectionLabelStyle}>Platform / Format</div>
             <div style={sectionHelpStyle}>Choose exactly where this text will be used so the output fits better.</div>
             <div style={pillRowStyle}>
@@ -1254,8 +1254,8 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
-            <div style={sectionCardStyle}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }} data-reveal>
+            <div style={sectionCardStyle} data-reveal data-reveal-delay="0.02s">
               <div style={sectionLabelStyle}>Length</div>
               <div style={sectionHelpStyle}>Pick how short or detailed each result should feel.</div>
               <div style={pillRowStyle}>
@@ -1267,7 +1267,7 @@ export default function GeneratePage() {
               </div>
             </div>
 
-            <div style={sectionCardStyle}>
+            <div style={sectionCardStyle} data-reveal data-reveal-delay="0.06s">
               <div style={sectionLabelStyle}>Options</div>
               <div style={sectionHelpStyle}>Turn on extras like Hinglish, emojis, or hashtags.</div>
               <div style={pillRowStyle}>
@@ -1280,7 +1280,7 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          <div style={sectionCardStyle}>
+          <div style={sectionCardStyle} data-reveal>
             <div style={sectionLabelStyle}>Tone / Vibe</div>
             <div style={sectionHelpStyle}>Choose the mood first, then let the AI shape the language around it.</div>
             <div style={pillRowStyle}>
@@ -1292,7 +1292,7 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          {mobileTemplateLibrary}
+          <div data-reveal>{mobileTemplateLibrary}</div>
         </div>
 
         {loading && (
@@ -1307,7 +1307,7 @@ export default function GeneratePage() {
         {error && <div style={{ marginTop: 24, color: '#FF2D78', fontSize: 14, textAlign: 'center' }}>{error}</div>}
 
         {results.length > 0 && (
-          <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }} data-reveal>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Yeh lo {results.length} options 🔥</div>
@@ -1415,7 +1415,7 @@ export default function GeneratePage() {
         )}
 
         {favorites.length > 0 && (
-          <div style={{ marginTop: 56, borderTop: `1px solid ${t.border}`, paddingTop: 32 }}>
+          <div style={{ marginTop: 56, borderTop: `1px solid ${t.border}`, paddingTop: 32 }} data-reveal>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Favorites</div>
@@ -1485,7 +1485,7 @@ export default function GeneratePage() {
         )}
 
         {history.length > 0 && (
-          <div style={{ marginTop: 56, borderTop: `1px solid ${t.border}`, paddingTop: 32 }}>
+          <div style={{ marginTop: 56, borderTop: `1px solid ${t.border}`, paddingTop: 32 }} data-reveal>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Recent history</div>

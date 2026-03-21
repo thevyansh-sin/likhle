@@ -121,9 +121,9 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="hero">
+      <section className="hero" data-reveal>
         <div className="hero-grid">
-          <div className="hero-copy">
+          <div className="hero-copy" data-reveal data-reveal-delay="0.04s">
             <div className="hero-badge">🇮🇳 Built for Indian creators and side-hustlers</div>
             <h1 className="hero-title">
               AI-powered
@@ -152,7 +152,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-panel">
+          <div className="hero-panel" data-reveal data-reveal-delay="0.1s">
             <div className="demo-card">
               <div className="demo-topbar">
                 <span className="demo-dot" />
@@ -200,7 +200,7 @@ export default function Home() {
         </div>
       </div>
 
-      <section className="features" id="features">
+      <section className="features" id="features" data-reveal>
         <div className="section-header">
           <span className="section-kicker">What changed</span>
           <h2 className="section-title">Likhle now shows the product it was supposed to be</h2>
@@ -211,7 +211,7 @@ export default function Home() {
 
         <div className="features-grid">
           {featureCards.map((feature) => (
-            <div key={feature.title} className="feature-card">
+            <div key={feature.title} className="feature-card" data-reveal data-reveal-delay="0.02s">
               <span className="feature-eyebrow">{feature.eyebrow}</span>
               <h3 className="feature-title">{feature.title}</h3>
               <p className="feature-desc">{feature.desc}</p>
@@ -220,7 +220,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="seo-links-section">
+      <section className="seo-links-section" data-reveal>
         <div className="section-header">
           <span className="section-kicker">Popular Generators</span>
           <h2 className="section-title">Browse focused pages for the main use cases</h2>
@@ -231,7 +231,7 @@ export default function Home() {
 
         <div className="seo-link-grid">
           {seoPages.map((page) => (
-            <Link key={page.slug} href={`/${page.slug}`} className="seo-link-card">
+            <Link key={page.slug} href={`/${page.slug}`} className="seo-link-card" data-reveal data-reveal-delay="0.02s">
               <span className="seo-link-kicker">{page.eyebrow}</span>
               <h3 className="seo-link-title">{page.shortTitle}</h3>
               <p className="seo-link-desc">{page.description}</p>
@@ -240,7 +240,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="idea-links-section">
+      <section className="idea-links-section" data-reveal>
         <div className="section-header">
           <span className="section-kicker">Idea Guides</span>
           <h2 className="section-title">Static pages for people who search with a very specific mood in mind</h2>
@@ -251,7 +251,7 @@ export default function Home() {
 
         <div className="seo-related-grid">
           {ideaPages.slice(0, 4).map((page) => (
-            <Link key={page.slug} href={`/${page.slug}`} className="seo-related-card">
+            <Link key={page.slug} href={`/${page.slug}`} className="seo-related-card" data-reveal data-reveal-delay="0.02s">
               <span className="seo-card-kicker">{page.eyebrow}</span>
               <h3 className="seo-card-title">{page.shortTitle}</h3>
               <p className="seo-card-text">{page.description}</p>
@@ -260,7 +260,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="workflow" id="workflow">
+      <section className="workflow" id="workflow" data-reveal>
         <div className="section-header">
           <span className="section-kicker">How it works</span>
           <h2 className="section-title">Simple flow, smarter result</h2>
@@ -271,7 +271,7 @@ export default function Home() {
 
         <div className="workflow-grid">
           {workflowSteps.map((item) => (
-            <div key={item.step} className="workflow-card">
+            <div key={item.step} className="workflow-card" data-reveal data-reveal-delay="0.03s">
               <div className="workflow-step">{item.step}</div>
               <h3 className="workflow-title">{item.title}</h3>
               <p className="workflow-desc">{item.desc}</p>
@@ -280,7 +280,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="cta-section">
+      <section className="cta-section" data-reveal>
         <div className="cta-shell">
           <h2 className="cta-title">Ready to go from idea to post in one tab?</h2>
           <p className="cta-sub">

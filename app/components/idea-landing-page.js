@@ -81,9 +81,9 @@ export default function IdeaLandingPage({ page }) {
         </div>
       </nav>
 
-      <section className="seo-hero">
+      <section className="seo-hero" data-reveal>
         <div className="seo-hero-shell">
-          <div className="seo-hero-copy">
+          <div className="seo-hero-copy" data-reveal data-reveal-delay="0.04s">
             <div className="seo-kicker">{page.eyebrow}</div>
             <h1 className="seo-title">{page.title}</h1>
             <p className="seo-description">{page.description}</p>
@@ -110,7 +110,7 @@ export default function IdeaLandingPage({ page }) {
             </div>
           </div>
 
-          <div className="seo-preview-card">
+          <div className="seo-preview-card" data-reveal data-reveal-delay="0.1s">
             <div className="seo-preview-head">How to use this page</div>
             <div className="seo-preview-stack">
               <div className="seo-preview-item">
@@ -132,16 +132,16 @@ export default function IdeaLandingPage({ page }) {
       </section>
 
       <div className="seo-shell">
-        <section className="seo-highlight-grid">
+        <section className="seo-highlight-grid" data-reveal>
           {page.highlights.map((item) => (
-            <div key={item.title} className="seo-highlight-card">
+            <div key={item.title} className="seo-highlight-card" data-reveal data-reveal-delay="0.02s">
               <h2 className="seo-card-title">{item.title}</h2>
               <p className="seo-card-text">{item.description}</p>
             </div>
           ))}
         </section>
 
-        <section className="seo-section" id="ideas">
+        <section className="seo-section" id="ideas" data-reveal>
           <div className="seo-section-head">
             <span className="section-kicker">Idea list</span>
             <h2 className="section-title">{ideaCount} starting lines, grouped by vibe</h2>
@@ -152,7 +152,7 @@ export default function IdeaLandingPage({ page }) {
 
           <div className="idea-group-grid">
             {page.ideaGroups.map((group) => (
-              <div key={group.title} className="idea-group-card">
+              <div key={group.title} className="idea-group-card" data-reveal data-reveal-delay="0.02s">
                 <div className="idea-group-head">
                   <h3 className="idea-group-title">{group.title}</h3>
                   <p className="idea-group-copy">{group.description}</p>
@@ -181,7 +181,7 @@ export default function IdeaLandingPage({ page }) {
           </div>
         </section>
 
-        <section className="seo-section">
+        <section className="seo-section" data-reveal>
           <div className="seo-section-head">
             <span className="section-kicker">Prompt ideas</span>
             <h2 className="section-title">Start from a cleaner prompt if you want brand-new options</h2>
@@ -199,6 +199,8 @@ export default function IdeaLandingPage({ page }) {
                   query: buildGeneratorQuery(page, prompt),
                 }}
                 className="seo-prompt-card"
+                data-reveal
+                data-reveal-delay="0.02s"
               >
                 <span className="seo-card-kicker">Open in generator</span>
                 <span className="seo-prompt-text">{prompt}</span>
@@ -208,7 +210,7 @@ export default function IdeaLandingPage({ page }) {
         </section>
 
         {relatedGenerators.length > 0 ? (
-          <section className="seo-section">
+          <section className="seo-section" data-reveal>
             <div className="seo-section-head">
               <span className="section-kicker">Related generators</span>
               <h2 className="section-title">Use the matching tool when you want fresh variations</h2>
@@ -216,7 +218,7 @@ export default function IdeaLandingPage({ page }) {
 
             <div className="seo-related-grid">
               {relatedGenerators.map((item) => (
-                <Link key={item.slug} href={`/${item.slug}`} className="seo-related-card">
+                <Link key={item.slug} href={`/${item.slug}`} className="seo-related-card" data-reveal data-reveal-delay="0.02s">
                   <span className="seo-card-kicker">Generator</span>
                   <h3 className="seo-card-title">{item.shortTitle}</h3>
                   <p className="seo-card-text">{item.description}</p>
@@ -226,7 +228,7 @@ export default function IdeaLandingPage({ page }) {
           </section>
         ) : null}
 
-        <section className="seo-section">
+        <section className="seo-section" data-reveal>
           <div className="seo-section-head">
             <span className="section-kicker">FAQ</span>
             <h2 className="section-title">Common questions about these idea pages</h2>
@@ -234,7 +236,7 @@ export default function IdeaLandingPage({ page }) {
 
           <div className="seo-faq-list">
             {page.faqs.map((item) => (
-              <div key={item.question} className="seo-faq-card">
+              <div key={item.question} className="seo-faq-card" data-reveal data-reveal-delay="0.02s">
                 <h3 className="seo-card-title">{item.question}</h3>
                 <p className="seo-card-text">{item.answer}</p>
               </div>
@@ -242,7 +244,7 @@ export default function IdeaLandingPage({ page }) {
           </div>
         </section>
 
-        <section className="seo-section">
+        <section className="seo-section" data-reveal>
           <div className="seo-section-head">
             <span className="section-kicker">More idea pages</span>
             <h2 className="section-title">Keep exploring other specific writing moods</h2>
@@ -250,7 +252,7 @@ export default function IdeaLandingPage({ page }) {
 
           <div className="seo-related-grid">
             {relatedIdeaPages.map((item) => (
-              <Link key={item.slug} href={`/${item.slug}`} className="seo-related-card">
+              <Link key={item.slug} href={`/${item.slug}`} className="seo-related-card" data-reveal data-reveal-delay="0.02s">
                 <span className="seo-card-kicker">Idea guide</span>
                 <h3 className="seo-card-title">{item.shortTitle}</h3>
                 <p className="seo-card-text">{item.description}</p>
@@ -259,7 +261,7 @@ export default function IdeaLandingPage({ page }) {
           </div>
         </section>
 
-        <section className="seo-cta">
+        <section className="seo-cta" data-reveal>
           <h2 className="cta-title">Want fresh versions instead of a fixed list?</h2>
           <p className="cta-sub">
             Open the generator with this exact use case already set up, then make the output more personal, more sharp, more soft, or more Hinglish.

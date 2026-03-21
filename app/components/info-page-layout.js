@@ -26,14 +26,14 @@ export default function InfoPageLayout({ eyebrow, title, description, updatedLab
         </div>
       </nav>
 
-      <section className="info-hero">
+      <section className="info-hero" data-reveal>
         <div className="info-kicker">{eyebrow}</div>
         <h1 className="info-title">{title}</h1>
         <p className="info-description">{description}</p>
         <div className="info-updated">{updatedLabel}</div>
       </section>
 
-      <div className="info-shell">{children}</div>
+      <div className="info-shell" data-reveal>{children}</div>
 
       <footer className="info-footer">
         <div className="info-footer-links">
