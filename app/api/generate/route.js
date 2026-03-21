@@ -10,8 +10,8 @@ const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_GENERATION_COUNT = 4;
 const MAX_REWRITE_SUGGESTIONS = 3;
-const QUALITY_REVIEW_MIN_CANDIDATES = 4;
-const QUALITY_REVIEW_MAX_CANDIDATES = 8;
+const QUALITY_REVIEW_MIN_CANDIDATES = 3;
+const QUALITY_REVIEW_MAX_CANDIDATES = 6;
 const REWRITE_ACTIONS = {
   shorter: {
     instruction:
@@ -116,6 +116,74 @@ function validateImageFile(imageFile) {
 
   if (imageFile.size > MAX_IMAGE_SIZE_BYTES) {
     return 'Image too large. Please keep it under 5 MB.';
+  }
+
+  return null;
+}
+
+function getHeaderValue(headers, name) {
+  if (!headers) {
+    return null;
+  }
+
+  if (typeof headers.get === 'function') {
+    return headers.get(name);
+  }
+
+  const lowerName = name.toLowerCase();
+  const headerEntries = Object.entries(headers).find(
+    ([key]) => key.toLowerCase() === lowerName
+  );
+
+  return headerEntries?.[1] ?? null;
+}
+
+function parseRetryAfterSeconds(value) {
+  const parsedValue = Number.parseInt(value, 10);
+
+  if (Number.isNaN(parsedValue) || parsedValue < 1) {
+    return null;
+  }
+
+  return parsedValue;
+}
+
+function formatRetryDelay(retryAfterSeconds) {
+  if (!retryAfterSeconds || retryAfterSeconds < 60) {
+    return retryAfterSeconds
+      ? `about ${retryAfterSeconds} seconds`
+      : 'a moment';
+  }
+
+  const minutes = Math.ceil(retryAfterSeconds / 60);
+
+  return minutes === 1 ? 'about 1 minute' : `about ${minutes} minutes`;
+}
+
+function normalizeProviderError(error) {
+  const status = Number(error?.status);
+  const providerMessage =
+    error?.error?.error?.message ||
+    error?.error?.message ||
+    error?.message ||
+    '';
+  const providerCode = error?.error?.error?.code || error?.error?.code || '';
+  const retryAfterSeconds = parseRetryAfterSeconds(
+    getHeaderValue(error?.headers, 'retry-after')
+  );
+
+  if (
+    status === 429 ||
+    providerCode === 'rate_limit_exceeded' ||
+    /rate limit/i.test(providerMessage)
+  ) {
+    return {
+      status: 429,
+      retryAfterSeconds,
+      message: `Likhle is hitting the current AI quota right now. Please wait ${formatRetryDelay(
+        retryAfterSeconds
+      )} and try again.`,
+    };
   }
 
   return null;
@@ -432,26 +500,26 @@ function getQualityCandidateCount({ count, rewriteInstruction, currentResult }) 
 
   return Math.min(
     QUALITY_REVIEW_MAX_CANDIDATES,
-    Math.max(QUALITY_REVIEW_MIN_CANDIDATES, count * 2)
+    Math.max(QUALITY_REVIEW_MIN_CANDIDATES, count + 2)
   );
 }
 
 function getCompletionMaxTokens({ count, hashtags, rewriteInstruction, currentResult }) {
   if (rewriteInstruction && currentResult) {
-    return 900;
+    return 700;
   }
 
-  let maxTokens = 1200 + count * 220;
+  let maxTokens = 1000 + count * 180;
 
   if (hashtags) {
-    maxTokens += 220;
+    maxTokens += 160;
   }
 
-  return Math.min(maxTokens, 2400);
+  return Math.min(maxTokens, 1900);
 }
 
 function getQualityReviewMaxTokens({ count }) {
-  return Math.min(1800, 700 + count * 260);
+  return Math.min(1200, 500 + count * 180);
 }
 
 function buildPrompt({
@@ -855,22 +923,27 @@ async function generateResultsWithRecovery({
       candidates: results,
     });
 
-    const reviewedRaw = await requestGroqJson({
-      prompt: qualityReviewPrompt,
-      maxTokens: getQualityReviewMaxTokens({ count }),
-      temperature: 0.35,
-    });
-    const reviewedResults = parseStructuredResults(reviewedRaw, {
-      count,
-      tone,
-      hinglish,
-      emoji,
-      hashtags,
-    });
+    try {
+      const reviewedRaw = await requestGroqJson({
+        prompt: qualityReviewPrompt,
+        maxTokens: getQualityReviewMaxTokens({ count }),
+        temperature: 0.35,
+      });
+      const reviewedResults = parseStructuredResults(reviewedRaw, {
+        count,
+        tone,
+        hinglish,
+        emoji,
+        hashtags,
+      });
 
-    if (reviewedResults.length > 0) {
-      results = reviewedResults;
-    } else {
+      if (reviewedResults.length > 0) {
+        results = reviewedResults;
+      } else {
+        results = results.slice(0, count);
+      }
+    } catch (reviewError) {
+      console.warn('Quality review skipped:', reviewError);
       results = results.slice(0, count);
     }
   } else {
@@ -987,6 +1060,22 @@ export async function POST(req) {
     return Response.json({ results });
   } catch (err) {
     console.error('Error:', err);
+    const providerError = normalizeProviderError(err);
+
+    if (providerError) {
+      return Response.json(
+        { error: providerError.message },
+        {
+          status: providerError.status,
+          headers: providerError.retryAfterSeconds
+            ? {
+                'Retry-After': String(providerError.retryAfterSeconds),
+              }
+            : undefined,
+        }
+      );
+    }
+
     return Response.json({ error: 'Generation failed' }, { status: 500 });
   }
 }

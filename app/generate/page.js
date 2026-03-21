@@ -1076,6 +1076,12 @@ export default function GeneratePage() {
   const controlsDisabled = loading || pendingResultAction !== null;
   const visibleRewriteActions = getRewriteActionsForContext({ tone, selectedOptions });
   const hasPrompt = input.trim().length > 0;
+  const isQuotaError =
+    /ai quota/i.test(error) || /too many tries right now/i.test(error);
+  const errorCardKicker = isQuotaError ? 'Quota pause' : 'This try broke';
+  const errorCardTitle = isQuotaError
+    ? 'AI quota is busy right now.'
+    : 'No usable caption came back that time.';
   const emptyStateTitle = hasPrompt ? 'Your setup already looks ready.' : 'Start with a vibe, not a perfect sentence.';
   const emptyStateCopy = hasPrompt
     ? 'Press Enter or hit Likhle and we will turn this prompt into four stronger directions.'
@@ -1449,10 +1455,10 @@ export default function GeneratePage() {
             }}
           >
             <div className="gen-empty-kicker" style={{ color: '#FF6A95', borderColor: dark ? 'rgba(255,106,149,0.24)' : 'rgba(182,74,102,0.22)', background: dark ? 'rgba(255,106,149,0.08)' : 'rgba(182,74,102,0.10)' }}>
-              This try broke
+              {errorCardKicker}
             </div>
             <div className="gen-empty-title" style={{ marginTop: 16 }}>
-              No usable caption came back that time.
+              {errorCardTitle}
             </div>
             <p className="gen-empty-copy" style={{ maxWidth: 680 }}>
               {error} Your prompt and settings are still here, so you can retry instantly or tweak the vibe first.
