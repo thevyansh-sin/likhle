@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import ThemeToggle from './components/theme-toggle';
 import { ideaPages } from './idea-pages-data';
+import { siteVersionLabel } from './lib/site';
 import { seoPages } from './seo-pages-data';
 
 const words = ['Captions', 'Bios', 'Hooks', 'Hashtags', 'Status'];
@@ -292,7 +293,10 @@ export default function Home() {
       <footer className="footer">
         <span className="logo">likhle<span className="logo-dot">.</span></span>
         <div className="footer-stack">
-          <span className="footer-text">Built in India, by an Indian, for Gen Z India.</span>
+          <div className="footer-meta">
+            <span className="footer-text">Built in India, by an Indian, for Gen Z India.</span>
+            <span className="footer-version">{siteVersionLabel}</span>
+          </div>
           <div className="footer-links">
             <Link href="/privacy" className="footer-link">Privacy</Link>
             <Link href="/terms" className="footer-link">Terms</Link>

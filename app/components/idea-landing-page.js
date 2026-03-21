@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ideaPages } from '../idea-pages-data';
+import { siteVersionLabel } from '../lib/site';
 import { seoPagesBySlug } from '../seo-pages-data';
 import ThemeToggle from './theme-toggle';
 
@@ -285,7 +286,8 @@ export default function IdeaLandingPage({ page }) {
           <Link href="/faq" className="info-footer-link">FAQ</Link>
         </div>
         <div className="info-footer-note">
-          These idea pages are meant to be useful on their own and even better when connected to the main generator.
+          <span>These idea pages are meant to be useful on their own and even better when connected to the main generator.</span>
+          <span className="info-footer-version">{siteVersionLabel}</span>
         </div>
       </footer>
     </main>

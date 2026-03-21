@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { siteVersionLabel } from '../lib/site';
 import ThemeToggle from './theme-toggle';
 
 const footerLinks = [
@@ -42,7 +43,10 @@ export default function InfoPageLayout({ eyebrow, title, description, updatedLab
             </Link>
           ))}
         </div>
-        <div className="info-footer-note">Likhle is a lightweight AI writing tool. These pages are meant to explain the current product clearly and honestly.</div>
+        <div className="info-footer-note">
+          <span>Likhle is a lightweight AI writing tool. These pages are meant to explain the current product clearly and honestly.</span>
+          <span className="info-footer-version">{siteVersionLabel}</span>
+        </div>
       </footer>
     </main>
   );

@@ -12,6 +12,7 @@ import {
   LuPlus,
   LuRefreshCw,
 } from 'react-icons/lu';
+import { siteVersionLabel } from '../lib/site';
 import { SITE_THEME_DEFAULT, SITE_THEME_STORAGE_KEY } from '../lib/theme';
 import { templateLibrary } from '../template-library';
 
@@ -1516,7 +1517,28 @@ export default function GeneratePage() {
         )}
 
         <footer style={{ marginTop: 56, paddingTop: 24, borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ fontSize: 13, color: t.muted }}>Use Likhle thoughtfully and review AI output before posting.</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 13, color: t.muted }}>Use Likhle thoughtfully and review AI output before posting.</div>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 'fit-content',
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: t.accentInk,
+                padding: '6px 10px',
+                borderRadius: 999,
+                border: `1px solid ${t.border}`,
+                background: t.resultBg,
+              }}
+            >
+              {siteVersionLabel}
+            </span>
+          </div>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <Link href="/privacy" style={{ fontSize: 13, color: t.muted, textDecoration: 'none' }}>Privacy</Link>
             <Link href="/terms" style={{ fontSize: 13, color: t.muted, textDecoration: 'none' }}>Terms</Link>

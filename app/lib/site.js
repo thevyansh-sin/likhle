@@ -1,7 +1,11 @@
+import packageJson from '../../package.json';
+
 export const siteName = 'Likhle';
 export const siteTitle = 'AI writing tool for Gen Z India';
 export const siteDescription =
   'Likhle helps Indian creators generate Instagram captions, bios, Reels hooks, WhatsApp statuses, LinkedIn bios, Twitter/X bios, and Hinglish content with better control over tone, length, emojis, hashtags, and image context.';
+export const siteVersion = packageJson.version;
+export const siteVersionLabel = `v${siteVersion}`;
 const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://likhle.vercel.app';
 
 export const siteUrl = rawSiteUrl.endsWith('/') ? rawSiteUrl.slice(0, -1) : rawSiteUrl;
