@@ -276,6 +276,8 @@ export default function GeneratePage() {
   const [toast, setToast] = useState(null);
   const fileRef = useRef(null);
   const toastTimeoutRef = useRef(null);
+  const outputSectionRef = useRef(null);
+  const shouldFocusOutputRef = useRef(false);
 
   useEffect(() => {
     setPlaceholder(PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
@@ -448,6 +450,29 @@ export default function GeneratePage() {
 
     return () => window.clearInterval(interval);
   }, [loading]);
+
+  useEffect(() => {
+    if (!shouldFocusOutputRef.current) {
+      return;
+    }
+
+    if (!loading && results.length === 0 && !error) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      outputSectionRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    });
+
+    if (!loading && (results.length > 0 || error)) {
+      shouldFocusOutputRef.current = false;
+    }
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, results.length, error]);
 
   useEffect(() => () => {
     if (toastTimeoutRef.current) {
@@ -869,6 +894,7 @@ export default function GeneratePage() {
   };
 
   const handleGenerate = async () => {
+    shouldFocusOutputRef.current = true;
     const nextResults = await requestGeneration({ count: 4 });
 
     if (!nextResults) {
@@ -1415,109 +1441,110 @@ export default function GeneratePage() {
           <div data-reveal>{mobileTemplateLibrary}</div>
         </div>
 
-        {loading && (
-          <div className="gen-loading-shell" style={{ color: t.muted }}>
-            <div className="gen-loading-kicker">Generator working live</div>
-            <div className="gen-loading-title">AI likh raha hai...</div>
-            <div className="gen-loading-stage">{LOADING_STEPS[loadingStageIndex]}</div>
-            <div className="gen-loading-track" aria-hidden="true">
-              <span
-                className="gen-loading-progress"
-                style={{ transform: `scaleX(${(loadingStageIndex + 1) / LOADING_STEPS.length})` }}
-              />
-            </div>
-            <div className="gen-loading-steps" aria-hidden="true">
-              {LOADING_STEPS.map((step, index) => (
+        <div ref={outputSectionRef} style={{ scrollMarginTop: 116 }}>
+          {loading && (
+            <div className="gen-loading-shell" style={{ color: t.muted }}>
+              <div className="gen-loading-kicker">Generator working live</div>
+              <div className="gen-loading-title">AI likh raha hai...</div>
+              <div className="gen-loading-stage">{LOADING_STEPS[loadingStageIndex]}</div>
+              <div className="gen-loading-track" aria-hidden="true">
                 <span
-                  key={step}
-                  className={`gen-loading-step-chip${index === loadingStageIndex ? ' is-active' : ''}`}
-                >
-                  {step}
-                </span>
-              ))}
+                  className="gen-loading-progress"
+                  style={{ transform: `scaleX(${(loadingStageIndex + 1) / LOADING_STEPS.length})` }}
+                />
+              </div>
+              <div className="gen-loading-steps" aria-hidden="true">
+                {LOADING_STEPS.map((step, index) => (
+                  <span
+                    key={step}
+                    className={`gen-loading-step-chip${index === loadingStageIndex ? ' is-active' : ''}`}
+                  >
+                    {step}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {showInlineError && <div style={{ marginTop: 24, color: '#FF2D78', fontSize: 14, textAlign: 'center' }}>{error}</div>}
+          {showInlineError && <div style={{ marginTop: 24, color: '#FF2D78', fontSize: 14, textAlign: 'center' }}>{error}</div>}
 
-        {showGenerationErrorCard && (
-          <div
-            className="gen-surface-card"
-            data-reveal
-            style={{
-              ...sectionCardStyle,
-              marginTop: 40,
-              border: `1px solid ${dark ? 'rgba(255,45,120,0.24)' : 'rgba(182,74,102,0.22)'}`,
-              background: dark
-                ? 'linear-gradient(180deg, rgba(255,45,120,0.08) 0%, rgba(255,45,120,0.02) 100%), #111111'
-                : 'linear-gradient(180deg, rgba(182,74,102,0.10) 0%, rgba(182,74,102,0.03) 100%), #FFFCFA',
-            }}
-          >
-            <div className="gen-empty-kicker" style={{ color: '#FF6A95', borderColor: dark ? 'rgba(255,106,149,0.24)' : 'rgba(182,74,102,0.22)', background: dark ? 'rgba(255,106,149,0.08)' : 'rgba(182,74,102,0.10)' }}>
-              {errorCardKicker}
+          {showGenerationErrorCard && (
+            <div
+              className="gen-surface-card"
+              data-reveal
+              style={{
+                ...sectionCardStyle,
+                marginTop: 40,
+                border: `1px solid ${dark ? 'rgba(255,45,120,0.24)' : 'rgba(182,74,102,0.22)'}`,
+                background: dark
+                  ? 'linear-gradient(180deg, rgba(255,45,120,0.08) 0%, rgba(255,45,120,0.02) 100%), #111111'
+                  : 'linear-gradient(180deg, rgba(182,74,102,0.10) 0%, rgba(182,74,102,0.03) 100%), #FFFCFA',
+              }}
+            >
+              <div className="gen-empty-kicker" style={{ color: '#FF6A95', borderColor: dark ? 'rgba(255,106,149,0.24)' : 'rgba(182,74,102,0.22)', background: dark ? 'rgba(255,106,149,0.08)' : 'rgba(182,74,102,0.10)' }}>
+                {errorCardKicker}
+              </div>
+              <div className="gen-empty-title" style={{ marginTop: 16 }}>
+                {errorCardTitle}
+              </div>
+              <p className="gen-empty-copy" style={{ maxWidth: 680 }}>
+                {error} Your prompt and settings are still here, so you can retry instantly or tweak the vibe first.
+              </p>
+
+              <div className="gen-empty-chip-row">
+                <span className="gen-empty-chip">{platform}</span>
+                <span className="gen-empty-chip">{length}</span>
+                <span className="gen-empty-chip">{tone}</span>
+                {selectedOptions.slice(0, 2).map((option) => (
+                  <span key={option} className="gen-empty-chip gen-empty-chip--muted">{getOptionDisplayLabel(option)}</span>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 22 }}>
+                <button onClick={handleGenerate} disabled={controlsDisabled || !hasPrompt} style={primaryActionButtonStyle}>
+                  Try again
+                </button>
+                <button onClick={() => setError('')} style={actionButtonStyle}>
+                  Dismiss
+                </button>
+              </div>
             </div>
-            <div className="gen-empty-title" style={{ marginTop: 16 }}>
-              {errorCardTitle}
+          )}
+
+          {!loading && results.length === 0 && !error && (
+            <div className="gen-empty-state gen-surface-card" data-reveal style={{ marginTop: 40 }}>
+              <div className="gen-empty-kicker">Ready when you are</div>
+              <div className="gen-empty-title">{emptyStateTitle}</div>
+              <p className="gen-empty-copy">{emptyStateCopy}</p>
+
+              <div className="gen-empty-chip-row">
+                <span className="gen-empty-chip">{platform}</span>
+                <span className="gen-empty-chip">{length}</span>
+                <span className="gen-empty-chip">{tone}</span>
+                {selectedOptions.slice(0, 2).map((option) => (
+                  <span key={option} className="gen-empty-chip gen-empty-chip--muted">{getOptionDisplayLabel(option)}</span>
+                ))}
+              </div>
+
+              <div className="gen-empty-grid">
+                {EMPTY_STATE_IDEAS.map((item) => (
+                  <div key={item.title} className="gen-empty-card">
+                    <div className="gen-empty-card-title">{item.title}</div>
+                    <div className="gen-empty-card-copy">{item.copy}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="gen-empty-note">
+                {hasPrompt
+                  ? 'You can also add an image or paste a screenshot before generating if the vibe depends on visuals.'
+                  : 'You can still use a template or add an image reference first if you want a faster starting point.'}
+              </div>
             </div>
-            <p className="gen-empty-copy" style={{ maxWidth: 680 }}>
-              {error} Your prompt and settings are still here, so you can retry instantly or tweak the vibe first.
-            </p>
+          )}
 
-            <div className="gen-empty-chip-row">
-              <span className="gen-empty-chip">{platform}</span>
-              <span className="gen-empty-chip">{length}</span>
-              <span className="gen-empty-chip">{tone}</span>
-              {selectedOptions.slice(0, 2).map((option) => (
-                <span key={option} className="gen-empty-chip gen-empty-chip--muted">{getOptionDisplayLabel(option)}</span>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 22 }}>
-              <button onClick={handleGenerate} disabled={controlsDisabled || !hasPrompt} style={primaryActionButtonStyle}>
-                Try again
-              </button>
-              <button onClick={() => setError('')} style={actionButtonStyle}>
-                Dismiss
-              </button>
-            </div>
-          </div>
-        )}
-
-        {!loading && results.length === 0 && !error && (
-          <div className="gen-empty-state gen-surface-card" data-reveal style={{ marginTop: 40 }}>
-            <div className="gen-empty-kicker">Ready when you are</div>
-            <div className="gen-empty-title">{emptyStateTitle}</div>
-            <p className="gen-empty-copy">{emptyStateCopy}</p>
-
-            <div className="gen-empty-chip-row">
-              <span className="gen-empty-chip">{platform}</span>
-              <span className="gen-empty-chip">{length}</span>
-              <span className="gen-empty-chip">{tone}</span>
-              {selectedOptions.slice(0, 2).map((option) => (
-                <span key={option} className="gen-empty-chip gen-empty-chip--muted">{getOptionDisplayLabel(option)}</span>
-              ))}
-            </div>
-
-            <div className="gen-empty-grid">
-              {EMPTY_STATE_IDEAS.map((item) => (
-                <div key={item.title} className="gen-empty-card">
-                  <div className="gen-empty-card-title">{item.title}</div>
-                  <div className="gen-empty-card-copy">{item.copy}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="gen-empty-note">
-              {hasPrompt
-                ? 'You can also add an image or paste a screenshot before generating if the vibe depends on visuals.'
-                : 'You can still use a template or add an image reference first if you want a faster starting point.'}
-            </div>
-          </div>
-        )}
-
-        {results.length > 0 && (
-          <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }} data-reveal>
+          {results.length > 0 && (
+            <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }} data-reveal>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Yeh lo {results.length} options 🔥</div>
@@ -1703,8 +1730,9 @@ export default function GeneratePage() {
                 );
               })}
             </div>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
 
         {history.length > 0 && (
           <div style={{ marginTop: 56, borderTop: `1px solid ${t.border}`, paddingTop: 32 }} data-reveal>
