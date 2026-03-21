@@ -12,3 +12,4 @@ Suggested use:
 Current note:
 
 - Homepage 2.5D premium redesign concept is approved as a possible future direction.
+- Saved concept folder: `homepage-2_5d-concept`

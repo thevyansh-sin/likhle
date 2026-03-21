@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Likhle Homepage 2.5D Concept</title>
+  <style>
+    :root {
+      --bg: #07080a;
+      --bg-soft: #111317;
+      --bg-card: rgba(17, 20, 24, 0.88);
+      --bg-card-2: rgba(20, 24, 29, 0.92);
+      --text: #f3f4f2;
+      --muted: #9ca1a8;
+      --line: rgba(255, 255, 255, 0.08);
+      --accent: #caff00;
+      --pink: #ff2d78;
+      --blue: #67ddff;
+      --shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+      --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.24);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 12%, rgba(202, 255, 0, 0.16), transparent 26%),
+        radial-gradient(circle at 88% 8%, rgba(255, 45, 120, 0.14), transparent 28%),
+        radial-gradient(circle at 82% 82%, rgba(103, 221, 255, 0.14), transparent 25%),
+        linear-gradient(180deg, #060708 0%, #090b0e 36%, #060708 100%);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before {
+      background:
+        linear-gradient(transparent 0 95%, rgba(255,255,255,0.02) 95% 100%);
+      background-size: 100% 8px;
+      opacity: 0.12;
+      mix-blend-mode: soft-light;
+    }
+
+    body::after {
+      background:
+        linear-gradient(120deg, transparent 0 40%, rgba(202,255,0,0.04) 50%, transparent 60%);
+      transform: translateX(-30%);
+      opacity: 0.45;
+    }
+
+    .frame {
+      position: relative;
+      z-index: 1;
+      width: 1600px;
+      min-height: 3600px;
+      margin: 0 auto;
+      padding: 28px 38px 64px;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 28px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(12, 14, 18, 0.76);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .logo {
+      font-size: 60px;
+      font-weight: 800;
+      letter-spacing: -0.08em;
+    }
+
+    .logo .dot {
+      color: var(--accent);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      color: #d8dade;
+      font-size: 20px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(19, 22, 26, 0.95);
+      color: #dadddf;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .pill.active {
+      background: var(--accent);
+      color: #050607;
+      border-color: rgba(202,255,0,0.55);
+      box-shadow: 0 10px 24px rgba(202,255,0,0.15);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 36px;
+      margin-top: 54px;
+      align-items: start;
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(202,255,0,0.22);
+      color: #bfd85a;
+      background: rgba(202,255,0,0.06);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+    }
+
+    .hero-title {
+      max-width: 720px;
+      margin-top: 26px;
+      font-size: 92px;
+      line-height: 0.96;
+      letter-spacing: -0.07em;
+      font-weight: 800;
+    }
+
+    .hero-copy {
+      margin-top: 26px;
+      max-width: 620px;
+      font-size: 26px;
+      line-height: 1.62;
+      color: var(--muted);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 34px;
+    }
+
+    .chip-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, max-content));
+      gap: 12px;
+      margin-top: 38px;
+    }
+
+    .micro-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.09);
+      background: rgba(17,19,23,0.8);
+      color: #e5e7ea;
+      font-size: 16px;
+    }
+
+    .hero-stack {
+      position: relative;
+      min-height: 740px;
+    }
+
+    .float-tag {
+      position: absolute;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(15,18,22,0.82);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .tag-a { top: 62px; left: 250px; color: var(--accent); border-color: rgba(202,255,0,0.28); }
+    .tag-b { top: 310px; left: -24px; color: var(--pink); border-color: rgba(255,45,120,0.24); }
+    .tag-c { bottom: 10px; right: 52px; color: var(--blue); border-color: rgba(103,221,255,0.24); }
+
+    .panel {
+      position: absolute;
+      border-radius: 42px;
+      background: linear-gradient(180deg, rgba(19,22,26,0.96), rgba(10,12,15,0.92));
+      border: 1px solid rgba(255,255,255,0.09);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(202,255,0,0.72), transparent);
+      opacity: 0.78;
+    }
+
+    .panel.panel-back {
+      inset: 0 18px 0 34px;
+      transform: rotate(-3deg) translateY(18px);
+      opacity: 0.92;
+    }
+
+    .panel.panel-mid {
+      inset: 84px 62px 128px 98px;
+      transform: rotate(4deg);
+      background: linear-gradient(180deg, rgba(22,25,30,0.96), rgba(14,16,20,0.96));
+    }
+
+    .panel.panel-front {
+      inset: 158px 122px 192px 176px;
+      transform: rotate(-2deg);
+      border-radius: 30px;
+      background: linear-gradient(180deg, rgba(24,27,33,0.98), rgba(16,18,22,0.98));
+      padding: 36px;
+    }
+
+    .ui-label {
+      font-size: 14px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .prompt-box,
+    .result-box {
+      margin-top: 14px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(10,12,15,0.95);
+      padding: 20px 22px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .prompt-text {
+      font-size: 20px;
+      line-height: 1.45;
+      color: #eef0f2;
+    }
+
+    .ui-chips {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .ui-chip {
+      padding: 11px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(20, 23, 28, 0.96);
+      font-size: 16px;
+      color: #d6d9dd;
+    }
+
+    .ui-chip.active {
+      background: var(--accent);
+      color: #070809;
+      border-color: rgba(202,255,0,0.55);
+      font-weight: 700;
+    }
+
+    .result-box {
+      margin-top: 28px;
+      border-color: rgba(202,255,0,0.18);
+      background:
+        linear-gradient(180deg, rgba(202,255,0,0.06), rgba(202,255,0,0.02)),
+        rgba(12,14,17,0.96);
+    }
+
+    .result-title {
+      color: #bfd85a;
+      font-size: 15px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .result-copy {
+      margin-top: 18px;
+      font-size: 28px;
+      line-height: 1.45;
+      letter-spacing: -0.02em;
+    }
+
+    .result-meta {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .strip {
+      margin-top: 56px;
+      padding: 28px 34px;
+      border-radius: 30px;
+      border: 1px solid var(--line);
+      background: rgba(14, 16, 20, 0.82);
+      display: flex;
+      gap: 26px;
+      white-space: nowrap;
+      overflow: hidden;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .strip span {
+      font-size: 20px;
+      letter-spacing: 0.07em;
+      color: #dde0e4;
+    }
+
+    .strip span:nth-child(odd) {
+      color: var(--accent);
+    }
+
+    .section {
+      margin-top: 88px;
+    }
+
+    .section-title {
+      max-width: 980px;
+      font-size: 64px;
+      line-height: 1.04;
+      letter-spacing: -0.06em;
+      font-weight: 800;
+    }
+
+    .section-copy {
+      max-width: 760px;
+      margin-top: 20px;
+      font-size: 24px;
+      line-height: 1.62;
+      color: var(--muted);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 26px 28px;
+      margin-top: 42px;
+    }
+
+    .feature-card {
+      min-height: 256px;
+      padding: 30px;
+      border-radius: 30px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(18,22,26,0.94), rgba(13,16,20,0.94));
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card:nth-child(1),
+    .feature-card:nth-child(4) {
+      transform: translateY(-6px);
+    }
+
+    .feature-card:nth-child(2),
+    .feature-card:nth-child(5) {
+      transform: translateY(18px);
+    }
+
+    .feature-card:nth-child(3),
+    .feature-card:nth-child(6) {
+      transform: translateY(8px);
+    }
+
+    .feature-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(202,255,0,0.08), transparent 40%);
+      pointer-events: none;
+    }
+
+    .feature-kicker {
+      font-size: 15px;
+      color: #bfd85a;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .feature-title {
+      margin-top: 18px;
+      font-size: 42px;
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+      font-weight: 800;
+    }
+
+    .feature-copy {
+      margin-top: 18px;
+      font-size: 21px;
+      line-height: 1.58;
+      color: var(--muted);
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      margin-top: 52px;
+    }
+
+    .flow-card {
+      padding: 28px;
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(16,19,23,0.94), rgba(12,15,18,0.96));
+      box-shadow: var(--shadow-soft);
+    }
+
+    .flow-card:nth-child(2) {
+      transform: translateY(14px);
+    }
+
+    .step-badge {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      color: var(--accent);
+      border: 1px solid rgba(202,255,0,0.26);
+      background: rgba(202,255,0,0.05);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .flow-title {
+      margin-top: 24px;
+      font-size: 40px;
+      line-height: 1.05;
+      letter-spacing: -0.05em;
+      font-weight: 800;
+    }
+
+    .flow-copy {
+      margin-top: 18px;
+      font-size: 21px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .cta {
+      position: relative;
+      margin-top: 108px;
+      padding: 62px 56px 48px;
+      border-radius: 44px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(15,18,22,0.96), rgba(10,12,15,0.96));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .cta::before,
+    .cta::after {
+      content: "";
+      position: absolute;
+      border-radius: 32px;
+      filter: blur(8px);
+      opacity: 0.7;
+    }
+
+    .cta::before {
+      inset: 96px auto auto 48px;
+      width: 420px;
+      height: 250px;
+      transform: skewX(-14deg);
+      background: rgba(202,255,0,0.08);
+    }
+
+    .cta::after {
+      inset: 74px 58px auto auto;
+      width: 360px;
+      height: 250px;
+      transform: skewX(14deg);
+      background: rgba(103,221,255,0.08);
+    }
+
+    .cta-kicker {
+      position: relative;
+      z-index: 1;
+      color: #bfd85a;
+      font-size: 16px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .cta-title {
+      position: relative;
+      z-index: 1;
+      max-width: 920px;
+      margin-top: 20px;
+      font-size: 68px;
+      line-height: 1.03;
+      letter-spacing: -0.06em;
+      font-weight: 800;
+    }
+
+    .cta-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin-top: 22px;
+      font-size: 24px;
+      line-height: 1.62;
+      color: var(--muted);
+    }
+
+    .cta-actions {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 16px;
+      margin-top: 34px;
+    }
+
+    .footer-notes {
+      position: absolute;
+      right: 56px;
+      bottom: 46px;
+      display: flex;
+      gap: 12px;
+      z-index: 1;
+    }
+
+    .tiny-badge {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(18,20,24,0.88);
+      font-size: 14px;
+      color: #d8dbe0;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <nav class="nav">
+      <div class="logo">likhle<span class="dot">.</span></div>
+      <div class="nav-links">
+        <span>Features</span>
+        <span>How it works</span>
+        <span>Idea pages</span>
+        <span>Generate</span>
+        <span class="pill">Light</span>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div>
+        <div class="kicker">BUILT FOR GEN Z INDIA</div>
+        <h1 class="hero-title">A homepage that feels premium before the scroll even starts.</h1>
+        <p class="hero-copy">
+          This concept keeps your current product structure, but gives it a layered 2.5D flow
+          with depth, glow, and cleaner visual confidence.
+        </p>
+        <div class="hero-actions">
+          <span class="pill active">Start for free</span>
+          <span class="pill">See the flow</span>
+        </div>
+        <div class="chip-grid">
+          <span class="micro-chip">Platform-aware</span>
+          <span class="micro-chip">Image-led</span>
+          <span class="micro-chip">Fast rewrites</span>
+          <span class="micro-chip">No signup</span>
+        </div>
+      </div>
+
+      <div class="hero-stack">
+        <div class="float-tag tag-a">2.5D SCROLL</div>
+        <div class="float-tag tag-b">DEPTH</div>
+        <div class="float-tag tag-c">LIVE CREATOR FLOW</div>
+        <div class="panel panel-back"></div>
+        <div class="panel panel-mid"></div>
+        <div class="panel panel-front">
+          <div class="ui-label">Prompt</div>
+          <div class="prompt-box">
+            <div class="prompt-text">Goa sunset photo. Make it aesthetic, warm, and not cringe.</div>
+          </div>
+          <div class="ui-chips">
+            <span class="ui-chip">Instagram</span>
+            <span class="ui-chip active">Medium</span>
+            <span class="ui-chip">Aesthetic</span>
+          </div>
+          <div class="result-box">
+            <div class="result-title">Fresh result</div>
+            <div class="result-copy">sunset, sea breeze, and zero unnecessary drama. Goa really knows how to romanticize life.</div>
+            <div class="result-meta">#GoaDiaries  #SunsetMood</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="strip">
+      <span>PLATFORM SELECTOR</span>
+      <span>IMAGE CONTEXT</span>
+      <span>SAVE HISTORY</span>
+      <span>REWRITE FLOW</span>
+      <span>IDEA PAGES</span>
+      <span>PLATFORM SELECTOR</span>
+      <span>IMAGE CONTEXT</span>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">A homepage flow with layers, separation, and stronger visual rhythm.</h2>
+      <p class="section-copy">Same product. Better presence. The sections feel connected, but not flat.</p>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-kicker">Templates</div>
+          <div class="feature-title">Start from ready-made ideas</div>
+          <div class="feature-copy">Cards feel lifted with thin lime edges and softer shadow layers.</div>
+        </article>
+        <article class="feature-card">
+          <div class="feature-kicker">Precision</div>
+          <div class="feature-title">Choose the exact format first</div>
+          <div class="feature-copy">A stronger hierarchy makes the page feel intentional instead of generic.</div>
+        </article>
+        <article class="feature-card">
+          <div class="feature-kicker">Control</div>
+          <div class="feature-title">Dial the length up or down</div>
+          <div class="feature-copy">Spacing, glows, and angle changes create subtle depth without chaos.</div>
+        </article>
+        <article class="feature-card">
+          <div class="feature-kicker">Memory</div>
+          <div class="feature-title">Your recent ideas stay saved</div>
+          <div class="feature-copy">Each panel can enter with a softer stagger as the user scrolls down.</div>
+        </article>
+        <article class="feature-card">
+          <div class="feature-kicker">Visual</div>
+          <div class="feature-title">Add an image reference</div>
+          <div class="feature-copy">The homepage demo card carries the product confidence visually.</div>
+        </article>
+        <article class="feature-card">
+          <div class="feature-kicker">Output</div>
+          <div class="feature-title">Copy everything or download it</div>
+          <div class="feature-copy">Calls to action stay clean, simple, and still premium.</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">How the 2.5D scroll could feel.</h2>
+      <p class="section-copy">Not a heavy 3D website. Just enough layered motion to feel modern and expensive.</p>
+      <div class="flow-grid">
+        <article class="flow-card">
+          <div class="step-badge">01</div>
+          <div class="flow-title">Hero breathes</div>
+          <div class="flow-copy">Background glow shifts softly while the UI card stays sharp in front.</div>
+        </article>
+        <article class="flow-card">
+          <div class="step-badge">02</div>
+          <div class="flow-title">Cards separate</div>
+          <div class="flow-copy">Feature blocks rise at different speeds and feel stacked, not flat.</div>
+        </article>
+        <article class="flow-card">
+          <div class="step-badge">03</div>
+          <div class="flow-title">CTA anchors</div>
+          <div class="flow-copy">The final call-to-action lands with the strongest contrast and cleanest spacing.</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="cta-kicker">FINAL SECTION</div>
+      <h2 class="cta-title">Still Likhle. Just more premium, deeper, and more memorable.</h2>
+      <p class="cta-copy">
+        This concept keeps your actual product at the center. The design just makes the value
+        feel stronger on first impression.
+      </p>
+      <div class="cta-actions">
+        <span class="pill active">Approve this direction</span>
+        <span class="pill">Make it calmer</span>
+        <span class="pill">Make it bolder</span>
+      </div>
+      <div class="footer-notes">
+        <span class="tiny-badge">Concept only</span>
+        <span class="tiny-badge">Homepage redesign</span>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
