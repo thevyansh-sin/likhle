@@ -63,6 +63,20 @@ const PLATFORM_OPTIONS = [
 ];
 const LOADING_STEPS = ['Reading vibe', 'Shaping tone', 'Final polish'];
 const LENGTH_OPTIONS = ['Short', 'Medium', 'Long'];
+const EMPTY_STATE_IDEAS = [
+  {
+    title: 'Trip dump',
+    copy: 'Name the place, the mood, and whether you want it aesthetic, funny, or clean.',
+  },
+  {
+    title: 'Bio refresh',
+    copy: 'Tell Likhle who you are, what you do, and whether the tone should feel cool or professional.',
+  },
+  {
+    title: 'Reels opener',
+    copy: 'Mention the video topic and ask for a short hook that stops the scroll in one line.',
+  },
+];
 const REWRITE_ACTIONS = {
   shorter: { key: 'shorter', label: 'Shorter', pendingLabel: 'Shortening...' },
   moreAesthetic: { key: 'moreAesthetic', label: 'More aesthetic', pendingLabel: 'Polishing...' },
@@ -1038,6 +1052,11 @@ export default function GeneratePage() {
 
   const controlsDisabled = loading || pendingResultAction !== null;
   const visibleRewriteActions = getRewriteActionsForContext({ tone, selectedOptions });
+  const hasPrompt = input.trim().length > 0;
+  const emptyStateTitle = hasPrompt ? 'Your setup already looks ready.' : 'Start with a vibe, not a perfect sentence.';
+  const emptyStateCopy = hasPrompt
+    ? 'Press Enter or hit Likhle and we will turn this prompt into four stronger directions.'
+    : 'Type one clear line, then let the format, tone, and length controls shape the rest for you.';
 
   const renderTemplateCard = (template, compact = false) => (
     <button
@@ -1372,6 +1391,38 @@ export default function GeneratePage() {
         )}
 
         {error && <div style={{ marginTop: 24, color: '#FF2D78', fontSize: 14, textAlign: 'center' }}>{error}</div>}
+
+        {!loading && results.length === 0 && (
+          <div className="gen-empty-state gen-surface-card" data-reveal style={{ marginTop: 40 }}>
+            <div className="gen-empty-kicker">Ready when you are</div>
+            <div className="gen-empty-title">{emptyStateTitle}</div>
+            <p className="gen-empty-copy">{emptyStateCopy}</p>
+
+            <div className="gen-empty-chip-row">
+              <span className="gen-empty-chip">{platform}</span>
+              <span className="gen-empty-chip">{length}</span>
+              <span className="gen-empty-chip">{tone}</span>
+              {selectedOptions.slice(0, 2).map((option) => (
+                <span key={option} className="gen-empty-chip gen-empty-chip--muted">{option}</span>
+              ))}
+            </div>
+
+            <div className="gen-empty-grid">
+              {EMPTY_STATE_IDEAS.map((item) => (
+                <div key={item.title} className="gen-empty-card">
+                  <div className="gen-empty-card-title">{item.title}</div>
+                  <div className="gen-empty-card-copy">{item.copy}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="gen-empty-note">
+              {hasPrompt
+                ? 'You can also add an image or paste a screenshot before generating if the vibe depends on visuals.'
+                : 'You can still use a template or add an image reference first if you want a faster starting point.'}
+            </div>
+          </div>
+        )}
 
         {results.length > 0 && (
           <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }} data-reveal>

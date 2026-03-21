@@ -894,6 +894,10 @@ html[data-theme='light'] .gen-surface-card::after {
   .gen-toast {
     max-width: 100%;
   }
+
+  .gen-empty-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .gen-composer-card {
@@ -2082,6 +2086,105 @@ html[data-theme='light'] :is(.nav-link, .footer-link, .info-nav-link, .info-inli
   background: var(--accent-soft-bg);
   color: var(--text);
   box-shadow: 0 10px 22px rgba(0,0,0,0.1);
+}
+
+.gen-empty-state {
+  padding: 28px;
+  border-radius: 24px;
+  border: 1px solid var(--surface-border);
+  background: linear-gradient(180deg, var(--surface-overlay-strong) 0%, rgba(255,255,255,0.01) 100%), var(--bg2);
+}
+
+.gen-empty-kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-soft-border);
+  background: var(--accent-soft-bg);
+  color: var(--accent-ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gen-empty-title {
+  margin-top: 18px;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--text);
+}
+
+.gen-empty-copy {
+  margin-top: 10px;
+  max-width: 640px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+.gen-empty-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.gen-empty-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-soft-border);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gen-empty-chip--muted {
+  border-color: var(--surface-border);
+  background: var(--surface-overlay);
+  color: var(--muted);
+}
+
+.gen-empty-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.gen-empty-card {
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-overlay);
+}
+
+.gen-empty-card-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.gen-empty-card-copy {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.gen-empty-note {
+  margin-top: 18px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--muted);
 }
 
 @keyframes bounce {
