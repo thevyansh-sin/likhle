@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { flushSync } from 'react-dom';
 import {
   LuBookmark,
   LuBookmarkCheck,
@@ -734,16 +735,37 @@ export default function GeneratePage() {
     return normalizeSelectedOptions(nextOptions);
   };
 
-  const handleApplyTemplate = (template) => {
-    setInput(template.prompt);
-    setPlatform(template.platform);
-    setTone(template.tone);
-    setLength(template.length);
-    setSelectedOptions(getTemplateOptions(template));
-    setResults([]);
-    setError('');
-    setSessionId('');
+  const handleApplyTemplate = async (template) => {
+    if (controlsDisabled) {
+      return;
+    }
+
+    const templateOptions = getTemplateOptions(template);
+
+    flushSync(() => {
+      setInput(template.prompt);
+      setPlatform(template.platform);
+      setTone(template.tone);
+      setLength(template.length);
+      setSelectedOptions(templateOptions);
+      setAttachment(null);
+      setResults([]);
+      setError('');
+      setStatusNotice('');
+      setSessionId('');
+    });
+
+    shouldFocusOutputRef.current = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    const nextResults = await requestGeneration({ count: 3 });
+
+    if (!nextResults) {
+      return;
+    }
+
+    setResults(nextResults);
+    syncHistory(nextResults, `likhle-${Date.now()}`);
   };
 
   const showToast = (message, tone = 'success') => {
@@ -1300,6 +1322,7 @@ export default function GeneratePage() {
       className="gen-surface-card gen-template-card"
       key={template.id}
       onClick={() => handleApplyTemplate(template)}
+      disabled={controlsDisabled}
       style={{
         background: t.resultBg,
         border: `1px solid ${t.resultBorder}`,
@@ -1309,10 +1332,11 @@ export default function GeneratePage() {
         display: 'flex',
         flexDirection: 'column',
         gap: 10,
-        cursor: 'pointer',
+        cursor: controlsDisabled ? 'not-allowed' : 'pointer',
         transition: 'all 0.15s ease',
         minWidth: compact ? 'min(78vw, 260px)' : 'min(82vw, 280px)',
         boxShadow: t.sectionShadow,
+        opacity: controlsDisabled ? 0.6 : 1,
       }}
     >
       <div>
@@ -1498,7 +1522,7 @@ export default function GeneratePage() {
         <div>
           <div style={sectionLabelStyle}>Quick Start Templates</div>
           <div style={sectionHelpStyle}>
-            Use one if you want a head start, but keep the main controls right above for fast edits.
+            Tap one if you want a fast start. Likhle will load the setup and generate results right away.
           </div>
         </div>
         <div style={{ fontSize: 12, color: t.muted }}>
