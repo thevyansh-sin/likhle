@@ -584,11 +584,17 @@ export default function GeneratePage() {
       return undefined;
     }
 
-    const interval = window.setInterval(() => {
-      setLoadingStageIndex((currentIndex) => (currentIndex + 1) % LOADING_STEPS.length);
-    }, 1150);
+    setLoadingStageIndex(0);
 
-    return () => window.clearInterval(interval);
+    const timeouts = LOADING_STEPS.slice(1).map((_, index) =>
+      window.setTimeout(() => {
+        setLoadingStageIndex(index + 1);
+      }, (index + 1) * 1100)
+    );
+
+    return () => {
+      timeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    };
   }, [loading]);
 
   useEffect(() => {
@@ -890,7 +896,7 @@ export default function GeneratePage() {
   };
 
   const buildRequestFormData = ({
-    count = 4,
+    count = 3,
     avoidResults = [],
     rewriteAction = '',
     rewriteInstruction = '',
@@ -943,7 +949,7 @@ export default function GeneratePage() {
   };
 
   const requestGeneration = async ({
-    count = 4,
+    count = 3,
     resultIndex = null,
     avoidResults = [],
     rewriteAction = '',
@@ -1053,7 +1059,7 @@ export default function GeneratePage() {
 
   const handleGenerate = async () => {
     shouldFocusOutputRef.current = true;
-    const nextResults = await requestGeneration({ count: 4 });
+    const nextResults = await requestGeneration({ count: 3 });
 
     if (!nextResults) {
       return;
@@ -1266,7 +1272,7 @@ export default function GeneratePage() {
     : 'No usable caption came back that time.';
   const emptyStateTitle = hasPrompt ? 'Your setup already looks ready.' : 'Start with a vibe, not a perfect sentence.';
   const emptyStateCopy = hasPrompt
-    ? 'Press Enter or hit Likhle and we will turn this prompt into four stronger directions.'
+    ? 'Press Enter or hit Likhle and we will turn this prompt into three stronger directions.'
     : 'Type one clear line, then let the format, tone, and length controls shape the rest for you.';
   const showGenerationErrorCard = !loading && results.length === 0 && Boolean(error);
   const showInlineError = Boolean(error) && !showGenerationErrorCard;
