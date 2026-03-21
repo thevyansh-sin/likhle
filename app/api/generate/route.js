@@ -621,8 +621,11 @@ function getFallbackRewriteSuggestions({ tone, hinglish, emoji, hashtags }) {
   return suggestions
     .filter(Boolean)
     .slice(0, MAX_REWRITE_SUGGESTIONS)
-    .map((suggestion) => ({
-      label: suggestion.label || 'Rework',
+    .map((suggestion, index) => ({
+      label:
+        sanitizeSuggestionLabel(suggestion.label) ||
+        ['Shorter', 'Shift vibe', 'Fresh angle'][index] ||
+        'Fresh edit',
       instruction: suggestion.instruction,
     }));
 }
@@ -706,6 +709,10 @@ function normalizeRewriteSuggestions(rawSuggestions, fallbackSuggestions) {
     const signature = `${label.toLowerCase()}::${instruction.toLowerCase()}`;
 
     if (seenSuggestions.has(signature)) {
+      continue;
+    }
+
+    if (normalizedSuggestions.some((existingSuggestion) => existingSuggestion.label.toLowerCase() === label.toLowerCase())) {
       continue;
     }
 

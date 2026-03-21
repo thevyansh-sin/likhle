@@ -1,4 +1,4 @@
-const CACHE_NAME = 'likhle-static-v0-2-24';
+const CACHE_NAME = 'likhle-static-v0-2-25';
 const STATIC_ASSETS = [
   '/manifest.webmanifest',
   '/icons/icon-32.png',
