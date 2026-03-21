@@ -1,6 +1,7 @@
 import Groq from 'groq-sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createHash } from 'node:crypto';
+import { isOwnerModeRequest } from '../../lib/owner-mode';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -1411,7 +1412,8 @@ async function generateResultsWithRecovery({
 
 export async function POST(req) {
   try {
-    const retryAfterSeconds = consumeRateLimit(req);
+    const ownerMode = isOwnerModeRequest(req);
+    const retryAfterSeconds = ownerMode ? null : consumeRateLimit(req);
 
     if (retryAfterSeconds) {
       return Response.json(
@@ -1450,23 +1452,6 @@ export async function POST(req) {
 
     if (rewriteAction && !currentResult) {
       return Response.json({ error: 'Current result required for rewrite.' }, { status: 400 });
-    }
-
-    const sessionRetryAfterSeconds = null;
-
-    if (sessionRetryAfterSeconds) {
-      return Response.json(
-        {
-          error: 'That was super fast. Give Likhle a couple seconds, then try again.',
-          retryAfterSeconds: sessionRetryAfterSeconds,
-        },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': String(sessionRetryAfterSeconds),
-          },
-        }
-      );
     }
 
     let imageDescription = null;
@@ -1551,7 +1536,9 @@ export async function POST(req) {
       return Response.json({ results: cachedResults, cached: true });
     }
 
-    const activeSessionRetryAfterSeconds = consumeSessionCooldown(req, sessionKey, rewriteAction);
+    const activeSessionRetryAfterSeconds = ownerMode
+      ? null
+      : consumeSessionCooldown(req, sessionKey, rewriteAction);
 
     if (activeSessionRetryAfterSeconds) {
       return Response.json(

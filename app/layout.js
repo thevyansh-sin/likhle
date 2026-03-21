@@ -1,6 +1,7 @@
 import { DM_Sans, Syne } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
+import OwnerModeBadge from './components/owner-mode-badge';
 import { PWAProvider } from './components/pwa-provider';
 import ScrollReveal from './components/scroll-reveal';
 import ScrollToTop from './components/scroll-to-top';
@@ -151,6 +152,7 @@ export default function RootLayout({ children }) {
         <PWAProvider />
         <SiteThemeProvider>
           <ScrollReveal />
+          <OwnerModeBadge />
           {children}
           <ScrollToTop />
         </SiteThemeProvider>
