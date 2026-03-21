@@ -10,44 +10,79 @@ export default function ScrollReveal() {
 
   useEffect(() => {
     let observer;
+    let mutationObserver;
     let frameId;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const observedElements = new WeakSet();
+
+    const observeRevealElement = (element) => {
+      if (!(element instanceof HTMLElement) || observedElements.has(element)) {
+        return;
+      }
+
+      observedElements.add(element);
+
+      if (reducedMotion) {
+        element.classList.add('is-revealed');
+        return;
+      }
+
+      element.classList.remove('is-revealed');
+      observer.observe(element);
+    };
+
+    const observeRevealTree = (root) => {
+      if (!(root instanceof HTMLElement || root instanceof Document)) {
+        return;
+      }
+
+      if (root instanceof HTMLElement && root.matches(REVEAL_SELECTOR)) {
+        observeRevealElement(root);
+      }
+
+      root.querySelectorAll?.(REVEAL_SELECTOR).forEach((element) => {
+        observeRevealElement(element);
+      });
+    };
 
     const setupRevealObserver = () => {
-      const revealElements = Array.from(document.querySelectorAll(REVEAL_SELECTOR));
+      if (!reducedMotion) {
+        observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) {
+                return;
+              }
 
-      if (revealElements.length === 0) {
-        return;
+              entry.target.classList.add('is-revealed');
+              observer.unobserve(entry.target);
+            });
+          },
+          {
+            rootMargin: '0px 0px -8% 0px',
+            threshold: 0.12,
+          }
+        );
       }
 
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        revealElements.forEach((element) => {
-          element.classList.add('is-revealed');
-        });
+      observeRevealTree(document);
 
-        return;
-      }
-
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) {
-              return;
+      mutationObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (node instanceof HTMLElement) {
+              observeRevealTree(node);
             }
-
-            entry.target.classList.add('is-revealed');
-            observer.unobserve(entry.target);
           });
-        },
-        {
-          rootMargin: '0px 0px -8% 0px',
-          threshold: 0.12,
-        }
-      );
-
-      revealElements.forEach((element) => {
-        element.classList.remove('is-revealed');
-        observer.observe(element);
+        });
       });
+
+      if (document.body) {
+        mutationObserver.observe(document.body, {
+          childList: true,
+          subtree: true,
+        });
+      }
     };
 
     frameId = window.requestAnimationFrame(setupRevealObserver);
@@ -59,6 +94,10 @@ export default function ScrollReveal() {
 
       if (observer) {
         observer.disconnect();
+      }
+
+      if (mutationObserver) {
+        mutationObserver.disconnect();
       }
     };
   }, [pathname]);

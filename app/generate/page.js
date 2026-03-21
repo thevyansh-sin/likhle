@@ -1471,7 +1471,6 @@ export default function GeneratePage() {
           {showGenerationErrorCard && (
             <div
               className="gen-surface-card"
-              data-reveal
               style={{
                 ...sectionCardStyle,
                 marginTop: 40,
@@ -1512,7 +1511,7 @@ export default function GeneratePage() {
           )}
 
           {!loading && results.length === 0 && !error && (
-            <div className="gen-empty-state gen-surface-card" data-reveal style={{ marginTop: 40 }}>
+            <div className="gen-empty-state gen-surface-card" style={{ marginTop: 40 }}>
               <div className="gen-empty-kicker">Ready when you are</div>
               <div className="gen-empty-title">{emptyStateTitle}</div>
               <p className="gen-empty-copy">{emptyStateCopy}</p>
@@ -1544,7 +1543,7 @@ export default function GeneratePage() {
           )}
 
           {results.length > 0 && (
-            <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }} data-reveal>
+            <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Yeh lo {results.length} options 🔥</div>
