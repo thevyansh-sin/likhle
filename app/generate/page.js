@@ -390,6 +390,7 @@ export default function GeneratePage() {
   const [pasteShortcutLabel, setPasteShortcutLabel] = useState('');
   const [themeReady, setThemeReady] = useState(false);
   const [toast, setToast] = useState(null);
+  const [statusNotice, setStatusNotice] = useState('');
   const fileRef = useRef(null);
   const toastTimeoutRef = useRef(null);
   const outputSectionRef = useRef(null);
@@ -970,6 +971,7 @@ export default function GeneratePage() {
       setPendingResultAction({ index: resultIndex, label: pendingLabel });
     }
 
+    setStatusNotice('');
     setError('');
 
     try {
@@ -980,7 +982,17 @@ export default function GeneratePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Kuch gadbad ho gayi 😅 Try again!');
+        const nextError = data.error || 'Kuch gadbad ho gayi 😅 Try again!';
+        const shouldKeepCurrentResults = response.status === 429 && (resultIndex !== null || results.length > 0);
+
+        if (shouldKeepCurrentResults) {
+          setStatusNotice(nextError);
+          showToast('Current results are still safe. Try again in a moment.');
+          setError('');
+          return null;
+        }
+
+        setError(nextError);
         return null;
       }
 
@@ -996,6 +1008,7 @@ export default function GeneratePage() {
         return null;
       }
 
+      setStatusNotice('');
       return normalizedResults;
     } catch {
       setError('Server se connection nahi hua. Try again!');
@@ -1708,6 +1721,29 @@ export default function GeneratePage() {
                 </button>
               </div>
             </div>
+
+            {statusNotice && (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  maxWidth: 'fit-content',
+                  padding: '10px 14px',
+                  borderRadius: 14,
+                  border: `1px solid ${dark ? 'rgba(255,106,149,0.24)' : 'rgba(182,74,102,0.22)'}`,
+                  background: dark
+                    ? 'rgba(255,106,149,0.08)'
+                    : 'rgba(182,74,102,0.08)',
+                  color: dark ? '#FF8AAE' : '#9A4260',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  lineHeight: 1.45,
+                }}
+              >
+                {statusNotice}
+              </div>
+            )}
 
             {results.map((item, index) => {
               const resultText = getResultText(item);
