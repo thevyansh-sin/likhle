@@ -1,9 +1,12 @@
 import Groq from 'groq-sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { createHash } from 'node:crypto';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash';
+const PRIMARY_GROQ_MODEL = process.env.GROQ_PRIMARY_MODEL || 'llama-3.3-70b-versatile';
+const FALLBACK_GROQ_MODEL = process.env.GROQ_FALLBACK_MODEL || 'llama-3.1-8b-instant';
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 6;
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -12,6 +15,13 @@ const MAX_GENERATION_COUNT = 4;
 const MAX_REWRITE_SUGGESTIONS = 3;
 const QUALITY_REVIEW_MIN_CANDIDATES = 3;
 const QUALITY_REVIEW_MAX_CANDIDATES = 6;
+const LIGHT_MODE_MAX_GENERATION_COUNT = 3;
+const GENERATION_CACHE_TTL_MS = 10 * 60 * 1000;
+const IMAGE_CONTEXT_CACHE_TTL_MS = 60 * 60 * 1000;
+const SESSION_COOLDOWN_GENERATE_MS = 2400;
+const SESSION_COOLDOWN_REWRITE_MS = 1600;
+const RETRY_BACKOFF_BASE_MS = 1250;
+const MAX_TRANSIENT_RETRIES = 2;
 const MIN_REQUIRED_HASHTAGS = 4;
 const MAX_REQUIRED_HASHTAGS = 6;
 const HASHTAG_STOP_WORDS = new Set([
@@ -109,9 +119,24 @@ const REWRITE_ACTIONS = {
   },
 };
 const rateLimitStore = globalThis.__likhleRateLimitStore || new Map();
+const generationCacheStore = globalThis.__likhleGenerationCacheStore || new Map();
+const imageContextCacheStore = globalThis.__likhleImageContextCacheStore || new Map();
+const sessionCooldownStore = globalThis.__likhleSessionCooldownStore || new Map();
 
 if (!globalThis.__likhleRateLimitStore) {
   globalThis.__likhleRateLimitStore = rateLimitStore;
+}
+
+if (!globalThis.__likhleGenerationCacheStore) {
+  globalThis.__likhleGenerationCacheStore = generationCacheStore;
+}
+
+if (!globalThis.__likhleImageContextCacheStore) {
+  globalThis.__likhleImageContextCacheStore = imageContextCacheStore;
+}
+
+if (!globalThis.__likhleSessionCooldownStore) {
+  globalThis.__likhleSessionCooldownStore = sessionCooldownStore;
 }
 
 function getClientKey(req) {
@@ -153,6 +178,112 @@ function consumeRateLimit(req) {
   });
 
   return null;
+}
+
+function pruneTimedStore(store) {
+  const now = Date.now();
+
+  for (const [key, value] of store.entries()) {
+    if (!value || value.expiresAt <= now) {
+      store.delete(key);
+    }
+  }
+}
+
+function getSessionKey(req, rawSessionKey) {
+  if (typeof rawSessionKey === 'string' && rawSessionKey.trim()) {
+    return `${getClientKey(req)}:${rawSessionKey.trim().slice(0, 80)}`;
+  }
+
+  return getClientKey(req);
+}
+
+function consumeSessionCooldown(req, rawSessionKey, rewriteAction) {
+  pruneTimedStore(sessionCooldownStore);
+
+  const sessionKey = getSessionKey(req, rawSessionKey);
+  const actionKey = rewriteAction ? 'rewrite' : 'generate';
+  const cooldownKey = `${sessionKey}:${actionKey}`;
+  const now = Date.now();
+  const existingEntry = sessionCooldownStore.get(cooldownKey);
+
+  if (existingEntry && existingEntry.expiresAt > now) {
+    return Math.max(1, Math.ceil((existingEntry.expiresAt - now) / 1000));
+  }
+
+  sessionCooldownStore.set(cooldownKey, {
+    expiresAt: now + (rewriteAction ? SESSION_COOLDOWN_REWRITE_MS : SESSION_COOLDOWN_GENERATE_MS),
+  });
+
+  return null;
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function createStableHash(value) {
+  return createHash('sha1').update(value).digest('hex');
+}
+
+function createImageCacheKey({ bytes, mimeType, size }) {
+  return createStableHash(`${mimeType}:${size}:${Buffer.from(bytes).toString('base64')}`);
+}
+
+function readCachedValue(store, key) {
+  pruneTimedStore(store);
+
+  const cachedEntry = store.get(key);
+
+  if (!cachedEntry || cachedEntry.expiresAt <= Date.now()) {
+    store.delete(key);
+    return null;
+  }
+
+  return cachedEntry.value;
+}
+
+function writeCachedValue(store, key, value, ttlMs) {
+  store.set(key, {
+    value,
+    expiresAt: Date.now() + ttlMs,
+  });
+}
+
+function createGenerationCacheKey({
+  input,
+  tone,
+  hinglish,
+  emoji,
+  hashtags,
+  imageKey,
+  platform,
+  length,
+  count,
+  avoidResults,
+  rewriteAction,
+  rewriteInstruction,
+  currentResult,
+}) {
+  return createStableHash(
+    JSON.stringify({
+      input,
+      tone,
+      hinglish,
+      emoji,
+      hashtags,
+      imageKey,
+      platform,
+      length,
+      count,
+      avoidResults,
+      rewriteAction,
+      rewriteInstruction,
+      currentResult,
+    })
+  );
 }
 
 function validateImageFile(imageFile) {
@@ -343,16 +474,51 @@ function normalizeProviderError(error) {
     providerCode === 'rate_limit_exceeded' ||
     /rate limit/i.test(providerMessage)
   ) {
+    const retryMessage = retryAfterSeconds
+      ? `Try again in ${formatRetryDelay(retryAfterSeconds)}.`
+      : 'Try again in 30-60 seconds.';
+
     return {
       status: 429,
       retryAfterSeconds,
-      message: `Likhle is hitting the current AI quota right now. Please wait ${formatRetryDelay(
-        retryAfterSeconds
-      )} and try again.`,
+      message: `Likhle is hitting the current AI quota right now. ${retryMessage}`,
     };
   }
 
   return null;
+}
+
+function isTransientProviderError(error) {
+  const providerError = normalizeProviderError(error);
+  const status = Number(error?.status);
+  const providerMessage =
+    error?.error?.error?.message ||
+    error?.error?.message ||
+    error?.message ||
+    '';
+
+  return Boolean(
+    providerError ||
+      status === 502 ||
+      status === 503 ||
+      status === 504 ||
+      /temporar/i.test(providerMessage) ||
+      /timeout/i.test(providerMessage) ||
+      /overloaded/i.test(providerMessage) ||
+      /busy/i.test(providerMessage) ||
+      /unavailable/i.test(providerMessage)
+  );
+}
+
+function getRetryDelayMs(error, attemptIndex) {
+  const providerError = normalizeProviderError(error);
+  const retryAfterSeconds = providerError?.retryAfterSeconds;
+
+  if (retryAfterSeconds) {
+    return Math.max(RETRY_BACKOFF_BASE_MS, retryAfterSeconds * 1000);
+  }
+
+  return RETRY_BACKOFF_BASE_MS * (attemptIndex + 1);
 }
 
 function parseGenerationCount(rawCount) {
@@ -410,6 +576,14 @@ function parseRewriteInstruction(rawValue) {
   }
 
   return rawValue.trim().slice(0, 240);
+}
+
+function parseSessionKey(rawValue) {
+  if (typeof rawValue !== 'string') {
+    return '';
+  }
+
+  return rawValue.trim().slice(0, 80);
 }
 
 function getFallbackRewriteSuggestions({ tone, hinglish, emoji, hashtags }) {
@@ -659,20 +833,22 @@ function getLengthNote(length) {
   return 'Keep each version medium-length and easy to post immediately.';
 }
 
-function getQualityCandidateCount({ count, rewriteInstruction, currentResult }) {
+function getQualityCandidateCount({ count, rewriteInstruction, currentResult, lightMode = false }) {
   if (rewriteInstruction && currentResult) {
     return count;
   }
 
-  return Math.min(
+  const baseCount = Math.min(
     QUALITY_REVIEW_MAX_CANDIDATES,
     Math.max(QUALITY_REVIEW_MIN_CANDIDATES, count + 2)
   );
+
+  return lightMode ? Math.max(count, Math.min(baseCount, count + 1)) : baseCount;
 }
 
-function getCompletionMaxTokens({ count, hashtags, rewriteInstruction, currentResult }) {
+function getCompletionMaxTokens({ count, hashtags, rewriteInstruction, currentResult, lightMode = false }) {
   if (rewriteInstruction && currentResult) {
-    return 700;
+    return lightMode ? 520 : 700;
   }
 
   let maxTokens = 1000 + count * 180;
@@ -681,11 +857,19 @@ function getCompletionMaxTokens({ count, hashtags, rewriteInstruction, currentRe
     maxTokens += 160;
   }
 
+  if (lightMode) {
+    maxTokens = Math.max(720, maxTokens - 260);
+  }
+
   return Math.min(maxTokens, 1900);
 }
 
-function getQualityReviewMaxTokens({ count }) {
-  return Math.min(1200, 500 + count * 180);
+function getQualityReviewMaxTokens({ count, lightMode = false }) {
+  const maxTokens = 500 + count * 180;
+
+  return lightMode
+    ? Math.min(860, Math.max(420, maxTokens - 220))
+    : Math.min(1200, maxTokens);
 }
 
 function buildPrompt({
@@ -981,9 +1165,9 @@ Selection rules:
 Return the JSON now:`;
 }
 
-async function requestGroqJson({ prompt, maxTokens, temperature }) {
+async function requestGroqJson({ prompt, maxTokens, temperature, model = PRIMARY_GROQ_MODEL }) {
   const completion = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
+    model,
     messages: [{ role: 'user', content: prompt }],
     max_tokens: maxTokens,
     temperature,
@@ -992,7 +1176,7 @@ async function requestGroqJson({ prompt, maxTokens, temperature }) {
   return completion.choices[0]?.message?.content || '';
 }
 
-async function generateResultsWithRecovery({
+async function runGenerationAttempt({
   input,
   tone,
   hinglish,
@@ -1006,17 +1190,22 @@ async function generateResultsWithRecovery({
   rewriteAction,
   rewriteInstruction,
   currentResult,
+  lightMode = false,
+  model = PRIMARY_GROQ_MODEL,
+  skipQualityReview = false,
 }) {
   const qualityCandidateCount = getQualityCandidateCount({
     count,
     rewriteInstruction,
     currentResult,
+    lightMode,
   });
   const completionTokenBudget = getCompletionMaxTokens({
     count: qualityCandidateCount,
     hashtags,
     rewriteInstruction,
     currentResult,
+    lightMode,
   });
 
   const primaryPrompt = buildPrompt({
@@ -1038,7 +1227,8 @@ async function generateResultsWithRecovery({
   const primaryRaw = await requestGroqJson({
     prompt: primaryPrompt,
     maxTokens: completionTokenBudget,
-    temperature: rewriteInstruction && currentResult ? 0.72 : 0.82,
+    temperature: rewriteInstruction && currentResult ? (lightMode ? 0.66 : 0.72) : (lightMode ? 0.72 : 0.82),
+    model,
   });
 
   let results = parseStructuredResults(primaryRaw, {
@@ -1069,7 +1259,8 @@ async function generateResultsWithRecovery({
     const fallbackRaw = await requestGroqJson({
       prompt: fallbackPrompt,
       maxTokens: completionTokenBudget,
-      temperature: rewriteInstruction && currentResult ? 0.64 : 0.74,
+      temperature: rewriteInstruction && currentResult ? (lightMode ? 0.58 : 0.64) : (lightMode ? 0.68 : 0.74),
+      model,
     });
 
     results = parseStructuredResults(fallbackRaw, {
@@ -1081,7 +1272,7 @@ async function generateResultsWithRecovery({
     });
   }
 
-  if (!rewriteInstruction && !currentResult && results.length > count) {
+  if (!skipQualityReview && !rewriteInstruction && !currentResult && results.length > count) {
     const qualityReviewPrompt = buildQualityReviewPrompt({
       input,
       tone,
@@ -1099,8 +1290,9 @@ async function generateResultsWithRecovery({
     try {
       const reviewedRaw = await requestGroqJson({
         prompt: qualityReviewPrompt,
-        maxTokens: getQualityReviewMaxTokens({ count }),
+        maxTokens: getQualityReviewMaxTokens({ count, lightMode }),
         temperature: 0.35,
+        model,
       });
       const reviewedResults = parseStructuredResults(reviewedRaw, {
         count,
@@ -1136,13 +1328,90 @@ async function generateResultsWithRecovery({
   }));
 }
 
+async function generateResultsWithRecovery({
+  input,
+  tone,
+  hinglish,
+  emoji,
+  hashtags,
+  imageDescription,
+  platform,
+  length,
+  count,
+  avoidResults,
+  rewriteAction,
+  rewriteInstruction,
+  currentResult,
+}) {
+  const isRewriteFlow = Boolean(rewriteInstruction && currentResult);
+  const lighterCount = isRewriteFlow ? count : Math.min(count, LIGHT_MODE_MAX_GENERATION_COUNT);
+  const attemptPlans = [
+    {
+      count,
+      lightMode: false,
+      skipQualityReview: false,
+      model: PRIMARY_GROQ_MODEL,
+    },
+    {
+      count: lighterCount,
+      lightMode: true,
+      skipQualityReview: true,
+      model: PRIMARY_GROQ_MODEL,
+    },
+    {
+      count: lighterCount,
+      lightMode: true,
+      skipQualityReview: true,
+      model: FALLBACK_GROQ_MODEL,
+    },
+  ].slice(0, MAX_TRANSIENT_RETRIES + 1);
+  let lastTransientError = null;
+
+  for (let attemptIndex = 0; attemptIndex < attemptPlans.length; attemptIndex += 1) {
+    const attemptPlan = attemptPlans[attemptIndex];
+
+    try {
+      return await runGenerationAttempt({
+        input,
+        tone,
+        hinglish,
+        emoji,
+        hashtags,
+        imageDescription,
+        platform,
+        length,
+        count: attemptPlan.count,
+        avoidResults,
+        rewriteAction,
+        rewriteInstruction,
+        currentResult,
+        lightMode: attemptPlan.lightMode,
+        skipQualityReview: attemptPlan.skipQualityReview,
+        model: attemptPlan.model,
+      });
+    } catch (error) {
+      if (!isTransientProviderError(error) || attemptIndex >= attemptPlans.length - 1) {
+        throw error;
+      }
+
+      lastTransientError = error;
+      await wait(getRetryDelayMs(error, attemptIndex));
+    }
+  }
+
+  throw lastTransientError || new Error('Generation failed');
+}
+
 export async function POST(req) {
   try {
     const retryAfterSeconds = consumeRateLimit(req);
 
     if (retryAfterSeconds) {
       return Response.json(
-        { error: 'Too many tries right now. Please wait a minute and try again.' },
+        {
+          error: 'Too many tries right now. Please wait about 1 minute and try again.',
+          retryAfterSeconds,
+        },
         {
           status: 429,
           headers: {
@@ -1166,6 +1435,7 @@ export async function POST(req) {
     const rewriteAction = parseRewriteAction(formData.get('rewriteAction'));
     const rewriteInstruction = parseRewriteInstruction(formData.get('rewriteInstruction'));
     const currentResult = parseCurrentResult(formData.get('currentResult'));
+    const sessionKey = parseSessionKey(formData.get('sessionKey'));
 
     if (!input?.trim()) {
       return Response.json({ error: 'Input required' }, { status: 400 });
@@ -1175,7 +1445,25 @@ export async function POST(req) {
       return Response.json({ error: 'Current result required for rewrite.' }, { status: 400 });
     }
 
+    const sessionRetryAfterSeconds = null;
+
+    if (sessionRetryAfterSeconds) {
+      return Response.json(
+        {
+          error: 'That was super fast. Give Likhle a couple seconds, then try again.',
+          retryAfterSeconds: sessionRetryAfterSeconds,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(sessionRetryAfterSeconds),
+          },
+        }
+      );
+    }
+
     let imageDescription = null;
+    let imageCacheKey = '';
     const imageValidationError = validateImageFile(imageFile);
 
     if (imageValidationError) {
@@ -1185,20 +1473,38 @@ export async function POST(req) {
     if (imageFile && imageFile.size > 0) {
       try {
         const imageBytes = await imageFile.arrayBuffer();
-        const base64Image = Buffer.from(imageBytes).toString('base64');
         const mimeType = imageFile.type || 'image/jpeg';
+        imageCacheKey = createImageCacheKey({
+          bytes: imageBytes,
+          mimeType,
+          size: imageFile.size,
+        });
+        imageDescription = readCachedValue(imageContextCacheStore, imageCacheKey);
 
-        const model = genAI.getGenerativeModel({ model: GEMINI_IMAGE_MODEL });
-        const result = await model.generateContent([
-          {
-            inlineData: {
-              data: base64Image,
-              mimeType,
+        if (!imageDescription) {
+          const base64Image = Buffer.from(imageBytes).toString('base64');
+
+          const model = genAI.getGenerativeModel({ model: GEMINI_IMAGE_MODEL });
+          const result = await model.generateContent([
+            {
+              inlineData: {
+                data: base64Image,
+                mimeType,
+              },
             },
-          },
-          'Describe this image in detail. What is the main subject? What is the overall mood and aesthetic? What colors, lighting, and style does it have? What would someone feel looking at this? Be very specific - mention the exact visual elements, artistic style, and emotional tone.',
-        ]);
-        imageDescription = result.response.text();
+            'Describe this image in detail. What is the main subject? What is the overall mood and aesthetic? What colors, lighting, and style does it have? What would someone feel looking at this? Be very specific - mention the exact visual elements, artistic style, and emotional tone.',
+          ]);
+          imageDescription = result.response.text();
+
+          if (imageDescription) {
+            writeCachedValue(
+              imageContextCacheStore,
+              imageCacheKey,
+              imageDescription,
+              IMAGE_CONTEXT_CACHE_TTL_MS
+            );
+          }
+        }
       } catch (imgError) {
         console.error('Image analysis error:', imgError);
         const imageErrorMessage = String(imgError?.message || '');
@@ -1215,6 +1521,44 @@ export async function POST(req) {
           { status: 400 }
         );
       }
+    }
+
+    const generationCacheKey = createGenerationCacheKey({
+      input: input.trim(),
+      tone,
+      hinglish,
+      emoji,
+      hashtags,
+      imageKey: imageCacheKey,
+      platform,
+      length,
+      count,
+      avoidResults,
+      rewriteAction,
+      rewriteInstruction,
+      currentResult,
+    });
+    const cachedResults = readCachedValue(generationCacheStore, generationCacheKey);
+
+    if (cachedResults) {
+      return Response.json({ results: cachedResults, cached: true });
+    }
+
+    const activeSessionRetryAfterSeconds = consumeSessionCooldown(req, sessionKey, rewriteAction);
+
+    if (activeSessionRetryAfterSeconds) {
+      return Response.json(
+        {
+          error: 'That was super fast. Give Likhle a couple seconds, then try again.',
+          retryAfterSeconds: activeSessionRetryAfterSeconds,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(activeSessionRetryAfterSeconds),
+          },
+        }
+      );
     }
 
     const results = await generateResultsWithRecovery({
@@ -1240,6 +1584,8 @@ export async function POST(req) {
       );
     }
 
+    writeCachedValue(generationCacheStore, generationCacheKey, results, GENERATION_CACHE_TTL_MS);
+
     return Response.json({ results });
   } catch (err) {
     console.error('Error:', err);
@@ -1247,7 +1593,7 @@ export async function POST(req) {
 
     if (providerError) {
       return Response.json(
-        { error: providerError.message },
+        { error: providerError.message, retryAfterSeconds: providerError.retryAfterSeconds || null },
         {
           status: providerError.status,
           headers: providerError.retryAfterSeconds

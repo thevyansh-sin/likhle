@@ -111,6 +111,7 @@ const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const IMAGE_ACCEPT = SUPPORTED_IMAGE_TYPES.join(',');
 const HISTORY_STORAGE_KEY = 'likhle-generation-history';
 const FAVORITES_STORAGE_KEY = 'likhle-favorite-results';
+const SESSION_KEY_STORAGE_KEY = 'likhle-session-key';
 const MAX_HISTORY_ITEMS = 10;
 const MAX_FAVORITES_ITEMS = 24;
 
@@ -393,6 +394,7 @@ export default function GeneratePage() {
   const toastTimeoutRef = useRef(null);
   const outputSectionRef = useRef(null);
   const shouldFocusOutputRef = useRef(false);
+  const sessionKeyRef = useRef('');
 
   useEffect(() => {
     setPlaceholder(PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
@@ -424,6 +426,28 @@ export default function GeneratePage() {
     document.documentElement.setAttribute('data-theme', nextTheme);
     document.documentElement.style.colorScheme = nextTheme;
   }, [dark, themeReady]);
+
+  useEffect(() => {
+    try {
+      const storedSessionKey = window.localStorage.getItem(SESSION_KEY_STORAGE_KEY);
+
+      if (storedSessionKey) {
+        sessionKeyRef.current = storedSessionKey;
+        return;
+      }
+
+      const nextSessionKey =
+        typeof crypto?.randomUUID === 'function'
+          ? crypto.randomUUID()
+          : `likhle-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+      sessionKeyRef.current = nextSessionKey;
+      window.localStorage.setItem(SESSION_KEY_STORAGE_KEY, nextSessionKey);
+    } catch (sessionError) {
+      console.error('Session key setup failed:', sessionError);
+      sessionKeyRef.current = `likhle-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -906,6 +930,10 @@ export default function GeneratePage() {
       formData.append('currentResult', currentResult);
     }
 
+    if (sessionKeyRef.current) {
+      formData.append('sessionKey', sessionKeyRef.current);
+    }
+
     if (attachment) {
       formData.append('image', attachment);
     }
@@ -1216,6 +1244,9 @@ export default function GeneratePage() {
   const hasPrompt = input.trim().length > 0;
   const isQuotaError =
     /ai quota/i.test(error) || /too many tries right now/i.test(error);
+  const quotaHelperCopy = isQuotaError
+    ? 'Try again in 30-60 seconds. If you were testing very fast, give it a small pause and then run it again.'
+    : '';
   const errorCardKicker = isQuotaError ? 'Quota pause' : 'This try broke';
   const errorCardTitle = isQuotaError
     ? 'AI quota is busy right now.'
@@ -1601,6 +1632,11 @@ export default function GeneratePage() {
               <p className="gen-empty-copy" style={{ maxWidth: 680 }}>
                 {error} Your prompt and settings are still here, so you can retry instantly or tweak the vibe first.
               </p>
+              {quotaHelperCopy && (
+                <p className="gen-empty-copy" style={{ maxWidth: 680, marginTop: 8 }}>
+                  {quotaHelperCopy}
+                </p>
+              )}
 
               <div className="gen-empty-chip-row">
                 <span className="gen-empty-chip">{platform}</span>
