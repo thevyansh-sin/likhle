@@ -61,6 +61,7 @@ const PLATFORM_OPTIONS = [
   'LinkedIn Bio',
   'Twitter/X Bio',
 ];
+const LOADING_STEPS = ['Reading vibe', 'Shaping tone', 'Final polish'];
 const LENGTH_OPTIONS = ['Short', 'Medium', 'Long'];
 const REWRITE_ACTIONS = {
   shorter: { key: 'shorter', label: 'Shorter', pendingLabel: 'Shortening...' },
@@ -219,6 +220,7 @@ export default function GeneratePage() {
   const [selectedOptions, setSelectedOptions] = useState(DEFAULT_OPTIONS);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingStageIndex, setLoadingStageIndex] = useState(0);
   const [pendingResultAction, setPendingResultAction] = useState(null);
   const [copied, setCopied] = useState(null);
   const [copiedAll, setCopiedAll] = useState(false);
@@ -396,6 +398,19 @@ export default function GeneratePage() {
 
     setPasteShortcutLabel(platform.toLowerCase().includes('mac') ? 'Cmd+V' : 'Ctrl+V');
   }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadingStageIndex(0);
+      return undefined;
+    }
+
+    const interval = window.setInterval(() => {
+      setLoadingStageIndex((currentIndex) => (currentIndex + 1) % LOADING_STEPS.length);
+    }, 1150);
+
+    return () => window.clearInterval(interval);
+  }, [loading]);
 
   useEffect(() => () => {
     if (toastTimeoutRef.current) {
@@ -1333,10 +1348,25 @@ export default function GeneratePage() {
         </div>
 
         {loading && (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: t.muted, fontSize: 15 }}>
-            <div>AI likh raha hai... ✨</div>
-            <div style={{ display: 'inline-flex', gap: 6, marginTop: 12 }}>
-              {[0, 1, 2].map((index) => <div key={index} style={{ width: 8, height: 8, background: t.accent, borderRadius: '50%', animation: `bounce 1s infinite ${index * 0.15}s` }} />)}
+          <div className="gen-loading-shell" style={{ color: t.muted }}>
+            <div className="gen-loading-kicker">Generator working live</div>
+            <div className="gen-loading-title">AI likh raha hai...</div>
+            <div className="gen-loading-stage">{LOADING_STEPS[loadingStageIndex]}</div>
+            <div className="gen-loading-track" aria-hidden="true">
+              <span
+                className="gen-loading-progress"
+                style={{ transform: `scaleX(${(loadingStageIndex + 1) / LOADING_STEPS.length})` }}
+              />
+            </div>
+            <div className="gen-loading-steps" aria-hidden="true">
+              {LOADING_STEPS.map((step, index) => (
+                <span
+                  key={step}
+                  className={`gen-loading-step-chip${index === loadingStageIndex ? ' is-active' : ''}`}
+                >
+                  {step}
+                </span>
+              ))}
             </div>
           </div>
         )}
