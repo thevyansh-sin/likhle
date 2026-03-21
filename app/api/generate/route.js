@@ -569,6 +569,92 @@ Rules:
 Return the JSON now:`;
 }
 
+function buildFallbackPrompt({
+  input,
+  tone,
+  hinglish,
+  emoji,
+  hashtags,
+  imageDescription,
+  platform,
+  length,
+  count,
+  avoidResults,
+  rewriteAction,
+  rewriteInstruction,
+  currentResult,
+}) {
+  const langNote = hinglish
+    ? 'Write in natural Hinglish with a smooth Hindi-English mix that sounds modern and authentic for Gen Z India.'
+    : 'Write strictly in English only. Do not use Hindi words.';
+  const emojiNote = emoji ? 'Emojis are allowed when they feel natural.' : 'Do not use emojis.';
+  const hashtagNote = hashtags ? 'If it is a caption, a clean hashtag ending is allowed.' : 'Do not add hashtags.';
+  const imageNote = imageDescription
+    ? `Use this uploaded image context carefully: ${imageDescription}`
+    : 'No image context is provided.';
+  const platformNote = platform && platform !== 'Auto Detect'
+    ? `Write specifically for ${platform}.`
+    : 'Choose the format that best matches the user request.';
+  const avoidNote = avoidResults.length > 0
+    ? `Do not sound too similar to these options:\n- ${avoidResults.join('\n- ')}`
+    : '';
+  const rewriteConfig = rewriteAction ? REWRITE_ACTIONS[rewriteAction] : null;
+  const rewriteInstructionText = rewriteInstruction || rewriteConfig?.instruction || '';
+
+  if (rewriteInstructionText && currentResult) {
+    return `You are Likhle, an AI writing assistant for Gen Z India.
+
+The user already has a draft and needs one cleaner rewrite.
+
+Original request: ${input}
+Current draft: ${currentResult}
+Rewrite direction: ${rewriteInstructionText}
+
+${imageNote}
+${platformNote}
+${getLengthNote(length)}
+${langNote}
+${emojiNote}
+${hashtagNote}
+
+Rules:
+- Return only the final rewritten text
+- No JSON
+- No markdown
+- No numbering
+- No quotation marks around the answer
+- Keep the same core meaning and post-ready vibe
+- Keep it natural, sharp, and usable immediately
+
+Return only the rewritten text now:`;
+  }
+
+  return `You are Likhle, an AI writing assistant for Gen Z India.
+
+Write ${count} strong, distinct options for this request.
+
+User request: ${input}
+Tone: ${tone}
+${imageNote}
+${platformNote}
+${getLengthNote(length)}
+${langNote}
+${emojiNote}
+${hashtagNote}
+${avoidNote}
+
+Rules:
+- Return plain text only
+- Do not use JSON
+- Do not use markdown fences
+- Do not number the options
+- Separate each option using this exact divider: ---SPLIT---
+- Keep each option fresh, usable, and post-ready
+- Avoid sounding generic or robotic
+
+Return the options now:`;
+}
+
 function buildQualityReviewPrompt({
   input,
   tone,
@@ -665,6 +751,135 @@ async function requestGroqJson({ prompt, maxTokens, temperature }) {
   return completion.choices[0]?.message?.content || '';
 }
 
+async function generateResultsWithRecovery({
+  input,
+  tone,
+  hinglish,
+  emoji,
+  hashtags,
+  imageDescription,
+  platform,
+  length,
+  count,
+  avoidResults,
+  rewriteAction,
+  rewriteInstruction,
+  currentResult,
+}) {
+  const qualityCandidateCount = getQualityCandidateCount({
+    count,
+    rewriteInstruction,
+    currentResult,
+  });
+  const completionTokenBudget = getCompletionMaxTokens({
+    count: qualityCandidateCount,
+    hashtags,
+    rewriteInstruction,
+    currentResult,
+  });
+
+  const primaryPrompt = buildPrompt({
+    input,
+    tone,
+    hinglish,
+    emoji,
+    hashtags,
+    imageDescription,
+    platform,
+    length,
+    count: qualityCandidateCount,
+    avoidResults,
+    rewriteAction,
+    rewriteInstruction,
+    currentResult,
+  });
+
+  const primaryRaw = await requestGroqJson({
+    prompt: primaryPrompt,
+    maxTokens: completionTokenBudget,
+    temperature: rewriteInstruction && currentResult ? 0.72 : 0.82,
+  });
+
+  let results = parseStructuredResults(primaryRaw, {
+    count: qualityCandidateCount,
+    tone,
+    hinglish,
+    emoji,
+    hashtags,
+  });
+
+  if (results.length === 0) {
+    const fallbackPrompt = buildFallbackPrompt({
+      input,
+      tone,
+      hinglish,
+      emoji,
+      hashtags,
+      imageDescription,
+      platform,
+      length,
+      count: qualityCandidateCount,
+      avoidResults,
+      rewriteAction,
+      rewriteInstruction,
+      currentResult,
+    });
+
+    const fallbackRaw = await requestGroqJson({
+      prompt: fallbackPrompt,
+      maxTokens: completionTokenBudget,
+      temperature: rewriteInstruction && currentResult ? 0.64 : 0.74,
+    });
+
+    results = parseStructuredResults(fallbackRaw, {
+      count: qualityCandidateCount,
+      tone,
+      hinglish,
+      emoji,
+      hashtags,
+    });
+  }
+
+  if (!rewriteInstruction && !currentResult && results.length > count) {
+    const qualityReviewPrompt = buildQualityReviewPrompt({
+      input,
+      tone,
+      hinglish,
+      emoji,
+      hashtags,
+      imageDescription,
+      platform,
+      length,
+      count,
+      avoidResults,
+      candidates: results,
+    });
+
+    const reviewedRaw = await requestGroqJson({
+      prompt: qualityReviewPrompt,
+      maxTokens: getQualityReviewMaxTokens({ count }),
+      temperature: 0.35,
+    });
+    const reviewedResults = parseStructuredResults(reviewedRaw, {
+      count,
+      tone,
+      hinglish,
+      emoji,
+      hashtags,
+    });
+
+    if (reviewedResults.length > 0) {
+      results = reviewedResults;
+    } else {
+      results = results.slice(0, count);
+    }
+  } else {
+    results = results.slice(0, count);
+  }
+
+  return results;
+}
+
 export async function POST(req) {
   try {
     const retryAfterSeconds = consumeRateLimit(req);
@@ -746,13 +961,7 @@ export async function POST(req) {
       }
     }
 
-    const qualityCandidateCount = getQualityCandidateCount({
-      count,
-      rewriteInstruction,
-      currentResult,
-    });
-
-    const prompt = buildPrompt({
+    const results = await generateResultsWithRecovery({
       input,
       tone,
       hinglish,
@@ -761,68 +970,12 @@ export async function POST(req) {
       imageDescription,
       platform,
       length,
-      count: qualityCandidateCount,
+      count,
       avoidResults,
       rewriteAction,
       rewriteInstruction,
       currentResult,
     });
-
-    const raw = await requestGroqJson({
-      prompt,
-      maxTokens: getCompletionMaxTokens({
-        count: qualityCandidateCount,
-        hashtags,
-        rewriteInstruction,
-        currentResult,
-      }),
-      temperature: rewriteInstruction && currentResult ? 0.72 : 0.82,
-    });
-
-    let results = parseStructuredResults(raw, {
-      count: qualityCandidateCount,
-      tone,
-      hinglish,
-      emoji,
-      hashtags,
-    });
-
-    if (!rewriteInstruction && !currentResult && results.length > count) {
-      const qualityReviewPrompt = buildQualityReviewPrompt({
-        input,
-        tone,
-        hinglish,
-        emoji,
-        hashtags,
-        imageDescription,
-        platform,
-        length,
-        count,
-        avoidResults,
-        candidates: results,
-      });
-
-      const reviewedRaw = await requestGroqJson({
-        prompt: qualityReviewPrompt,
-        maxTokens: getQualityReviewMaxTokens({ count }),
-        temperature: 0.35,
-      });
-      const reviewedResults = parseStructuredResults(reviewedRaw, {
-        count,
-        tone,
-        hinglish,
-        emoji,
-        hashtags,
-      });
-
-      if (reviewedResults.length > 0) {
-        results = reviewedResults;
-      } else {
-        results = results.slice(0, count);
-      }
-    } else {
-      results = results.slice(0, count);
-    }
 
     if (results.length === 0) {
       return Response.json(

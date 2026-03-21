@@ -1080,6 +1080,26 @@ export default function GeneratePage() {
   const emptyStateCopy = hasPrompt
     ? 'Press Enter or hit Likhle and we will turn this prompt into four stronger directions.'
     : 'Type one clear line, then let the format, tone, and length controls shape the rest for you.';
+  const showGenerationErrorCard = !loading && results.length === 0 && Boolean(error);
+  const showInlineError = Boolean(error) && !showGenerationErrorCard;
+
+  const primaryActionButtonStyle = {
+    background: t.accent,
+    border: `1px solid ${t.accent}`,
+    color: '#050607',
+    fontSize: 13,
+    fontWeight: 700,
+    padding: '11px 16px',
+    borderRadius: 14,
+    cursor: controlsDisabled ? 'not-allowed' : 'pointer',
+    transition: 'all 0.15s ease',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    letterSpacing: '0.01em',
+    boxShadow: t.chipShadow,
+    opacity: controlsDisabled ? 0.55 : 1,
+  };
 
   const renderTemplateCard = (template, compact = false) => (
     <button
@@ -1413,9 +1433,52 @@ export default function GeneratePage() {
           </div>
         )}
 
-        {error && <div style={{ marginTop: 24, color: '#FF2D78', fontSize: 14, textAlign: 'center' }}>{error}</div>}
+        {showInlineError && <div style={{ marginTop: 24, color: '#FF2D78', fontSize: 14, textAlign: 'center' }}>{error}</div>}
 
-        {!loading && results.length === 0 && (
+        {showGenerationErrorCard && (
+          <div
+            className="gen-surface-card"
+            data-reveal
+            style={{
+              ...sectionCardStyle,
+              marginTop: 40,
+              border: `1px solid ${dark ? 'rgba(255,45,120,0.24)' : 'rgba(182,74,102,0.22)'}`,
+              background: dark
+                ? 'linear-gradient(180deg, rgba(255,45,120,0.08) 0%, rgba(255,45,120,0.02) 100%), #111111'
+                : 'linear-gradient(180deg, rgba(182,74,102,0.10) 0%, rgba(182,74,102,0.03) 100%), #FFFCFA',
+            }}
+          >
+            <div className="gen-empty-kicker" style={{ color: '#FF6A95', borderColor: dark ? 'rgba(255,106,149,0.24)' : 'rgba(182,74,102,0.22)', background: dark ? 'rgba(255,106,149,0.08)' : 'rgba(182,74,102,0.10)' }}>
+              This try broke
+            </div>
+            <div className="gen-empty-title" style={{ marginTop: 16 }}>
+              No usable caption came back that time.
+            </div>
+            <p className="gen-empty-copy" style={{ maxWidth: 680 }}>
+              {error} Your prompt and settings are still here, so you can retry instantly or tweak the vibe first.
+            </p>
+
+            <div className="gen-empty-chip-row">
+              <span className="gen-empty-chip">{platform}</span>
+              <span className="gen-empty-chip">{length}</span>
+              <span className="gen-empty-chip">{tone}</span>
+              {selectedOptions.slice(0, 2).map((option) => (
+                <span key={option} className="gen-empty-chip gen-empty-chip--muted">{getOptionDisplayLabel(option)}</span>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 22 }}>
+              <button onClick={handleGenerate} disabled={controlsDisabled || !hasPrompt} style={primaryActionButtonStyle}>
+                Try again
+              </button>
+              <button onClick={() => setError('')} style={actionButtonStyle}>
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!loading && results.length === 0 && !error && (
           <div className="gen-empty-state gen-surface-card" data-reveal style={{ marginTop: 40 }}>
             <div className="gen-empty-kicker">Ready when you are</div>
             <div className="gen-empty-title">{emptyStateTitle}</div>
