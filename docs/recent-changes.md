@@ -9,6 +9,7 @@ Use this file as a quick human-readable memory of meaningful recent project chan
 - Workflow docs were added to make repo work faster and cleaner.
 - `docs/` source-of-truth files now exist for cross-thread consistency.
 - Thread read order and known-risk files now exist to help other threads start with the right context faster.
+- A release-post exporter now exists for socials automation and saves branded assets into `social-assets/releases/`.
 
 ## Recent Repo Process Additions
 - Added `PROJECT_CONTEXT.md`

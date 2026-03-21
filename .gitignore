@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated social assets
+/social-assets/releases/*.png
+/social-assets/releases/*.jpg
+/social-assets/releases/*.jpeg
