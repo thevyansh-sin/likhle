@@ -234,7 +234,9 @@ export default function GeneratePage() {
   const [sessionId, setSessionId] = useState('');
   const [pasteShortcutLabel, setPasteShortcutLabel] = useState('');
   const [themeReady, setThemeReady] = useState(false);
+  const [toast, setToast] = useState(null);
   const fileRef = useRef(null);
+  const toastTimeoutRef = useRef(null);
 
   useEffect(() => {
     setPlaceholder(PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
@@ -395,6 +397,12 @@ export default function GeneratePage() {
     setPasteShortcutLabel(platform.toLowerCase().includes('mac') ? 'Cmd+V' : 'Ctrl+V');
   }, []);
 
+  useEffect(() => () => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+  }, []);
+
   const t = {
     bg: dark ? '#080808' : '#F5F3EC',
     pageBg: dark
@@ -513,6 +521,22 @@ export default function GeneratePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const showToast = (message, tone = 'success') => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+
+    setToast({
+      id: Date.now(),
+      message,
+      tone,
+    });
+
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(null);
+    }, 2200);
+  };
+
   const validateAttachment = (file) => {
     if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
       return 'Only JPG, PNG, or WEBP images are supported right now.';
@@ -525,7 +549,7 @@ export default function GeneratePage() {
     return '';
   };
 
-  const applyAttachment = (file) => {
+  const applyAttachment = (file, source = 'upload') => {
     const validationError = validateAttachment(file);
 
     if (validationError) {
@@ -549,6 +573,7 @@ export default function GeneratePage() {
     setAttachment(nextFile);
     setError('');
     setShowMenu(false);
+    showToast(source === 'paste' ? 'Screenshot pasted into the prompt.' : 'Image added to your prompt.');
     return true;
   };
 
@@ -610,11 +635,13 @@ export default function GeneratePage() {
       setFavorites((previousFavorites) =>
         previousFavorites.filter((entry) => entry.id !== existingFavorite.id)
       );
+      showToast('Removed from favorites.');
       return;
     }
 
     const nextFavorite = buildFavoriteEntry(resultItem);
     setFavorites((previousFavorites) => [nextFavorite, ...previousFavorites].slice(0, MAX_FAVORITES_ITEMS));
+    showToast('Saved to favorites.');
   };
 
   const handleUseFavorite = (entry) => {
@@ -644,6 +671,7 @@ export default function GeneratePage() {
     setSessionId('');
     setAttachment(null);
     setError('');
+    showToast('Favorite loaded back into the generator.');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -766,7 +794,7 @@ export default function GeneratePage() {
       return;
     }
 
-    applyAttachment(file);
+    applyAttachment(file, 'upload');
     event.target.value = '';
   };
 
@@ -785,7 +813,7 @@ export default function GeneratePage() {
     }
 
     event.preventDefault();
-    applyAttachment(pastedImage);
+    applyAttachment(pastedImage, 'paste');
   };
 
   const handleGenerate = async () => {
@@ -845,6 +873,7 @@ export default function GeneratePage() {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(copyKey);
+      showToast('Copied to clipboard.');
       setTimeout(() => setCopied(null), 2000);
     } catch {
       setError('Copy nahi hua. Ek baar aur try karo.');
@@ -855,6 +884,7 @@ export default function GeneratePage() {
     try {
       await navigator.clipboard.writeText(results.map((item) => getResultText(item)).join('\n\n'));
       setCopiedAll(true);
+      showToast('All options copied.');
       setTimeout(() => setCopiedAll(false), 2000);
     } catch {
       setError('Copy nahi hua. Ek baar aur try karo.');
@@ -881,6 +911,7 @@ export default function GeneratePage() {
     link.download = `likhle-${Date.now()}.txt`;
     link.click();
     URL.revokeObjectURL(downloadUrl);
+    showToast('Text file downloaded.');
   };
 
   const handleRestoreHistory = (entry) => {
@@ -908,22 +939,26 @@ export default function GeneratePage() {
     setSessionId(entry.id || '');
     setAttachment(null);
     setError('');
+    showToast('Loaded from recent history.');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleRemoveFavorite = (id) => {
     setFavorites((previousFavorites) => previousFavorites.filter((entry) => entry.id !== id));
+    showToast('Favorite removed.');
   };
 
   const handleClearHistory = () => {
     setHistory([]);
     setSessionId('');
     window.localStorage.removeItem(HISTORY_STORAGE_KEY);
+    showToast('Recent history cleared.');
   };
 
   const handleClearFavorites = () => {
     setFavorites([]);
     window.localStorage.removeItem(FAVORITES_STORAGE_KEY);
+    showToast('Favorites cleared.');
   };
 
   const actionButtonStyle = {
@@ -1546,6 +1581,17 @@ export default function GeneratePage() {
           </div>
         </footer>
       </div>
+
+      {toast ? (
+        <div className="gen-toast-stack" aria-live="polite" aria-atomic="true">
+          <div className={`gen-toast gen-toast--${toast.tone}`} key={toast.id}>
+            <span className="gen-toast-icon">
+              <LuCheck size={14} />
+            </span>
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      ) : null}
 
     </div>
   );
