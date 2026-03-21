@@ -54,8 +54,42 @@ Do not use this thread for:
 - Keep one thread focused on one kind of work.
 - After a big milestone, starting a fresh thread is okay.
 
+## Fast Routing Map
+- `social content / captions / reels / post order / launch content`
+  - send to `socials`
+- `visual taste / layout / branding / logo / favicon / homepage look / post design`
+  - send to `branding and design`
+- `manual testing / QA / server issue / bug report / live-site issue / browser issue`
+  - send to `website bugs and testing`
+- `feature build / code edit / refactor / commit / push / repo docs`
+  - send to `coding`
+
+## Coding Thread Enforcement
+Default rule for the `coding` thread:
+- do the code work
+- commit it
+- push it
+
+If a request does not belong to coding:
+- stop
+- redirect to the correct thread
+- do not continue the wrong type of work here
+
 ## Best Task Format
 - what to change
 - where it is
 - what the final result should feel like
 - whether it should be saved for later or implemented now
+
+## Best One-Line Mode Tags
+Use one short line at the top of a message when possible:
+- `mode: code only`
+- `mode: fix and ship`
+- `mode: review only`
+- `mode: brainstorm only`
+
+## Fast Redirect Examples
+- `this belongs in socials thread`
+- `this belongs in branding and design thread`
+- `this belongs in website bugs and testing thread`
+- `this belongs in coding thread`
