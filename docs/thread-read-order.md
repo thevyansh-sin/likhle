@@ -44,12 +44,23 @@ Read first:
 1. `docs/likhle-master-context.md`
 2. `docs/recent-changes.md`
 3. `docs/known-risk-areas.md`
+4. `docs/bug-report-template.md`
 
 Main job:
 - QA
 - bug reports
 - server/debug feedback
 - regression checks
+
+Best report shape:
+- what broke
+- where it broke
+- what was expected
+- how to reproduce it
+- browser / device
+- console errors
+- network errors
+- screenshot if helpful
 
 ## Shared Rule
 - If something is for later, save it in `later upgrades/`.

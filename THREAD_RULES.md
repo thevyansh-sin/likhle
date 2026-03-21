@@ -24,6 +24,18 @@ Do not use this thread for:
 - long feature planning
 - social content work
 
+Expected bug report details:
+- what broke
+- where it broke
+- what was expected
+- how to reproduce it
+- route or page
+- prompt or input if relevant
+- browser / device details
+- console errors if any
+- network errors if any
+- screenshot if useful
+
 ## 3. Coding
 Use this thread for:
 - feature implementation

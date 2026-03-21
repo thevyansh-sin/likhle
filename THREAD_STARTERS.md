@@ -26,6 +26,18 @@ Where it happened:
 What I saw:
 
 What I expected:
+
+How to reproduce:
+
+Prompt / input used:
+
+Browser / device:
+
+Console errors:
+
+Network errors:
+
+Screenshot:
 ```
 
 ## 3. Branding And Design
