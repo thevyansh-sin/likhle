@@ -53,6 +53,7 @@ Do not use this thread for:
 - If something is for later, save it in `later upgrades/`.
 - Keep one thread focused on one kind of work.
 - After a big milestone, starting a fresh thread is okay.
+- Read the right `docs/` files first for that thread's work.
 
 ## Fast Routing Map
 - `social content / captions / reels / post order / launch content`
@@ -93,3 +94,11 @@ Use one short line at the top of a message when possible:
 - `this belongs in branding and design thread`
 - `this belongs in website bugs and testing thread`
 - `this belongs in coding thread`
+
+## Repo Memory Rule
+- Shared repo memory now lives mainly in:
+  - `docs/likhle-master-context.md`
+  - `docs/brand-rules.md`
+  - `docs/recent-changes.md`
+  - `docs/thread-read-order.md`
+  - `docs/known-risk-areas.md`
