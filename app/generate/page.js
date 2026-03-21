@@ -1122,6 +1122,7 @@ export default function GeneratePage() {
 
       <div className="gen-surface-card gen-composer-card" style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 16, padding: '18px 20px 14px', boxShadow: t.sectionShadow }}>
         <textarea
+          className="gen-composer-input"
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
               event.preventDefault();
