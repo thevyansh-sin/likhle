@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ideaPages } from '../idea-pages-data';
-import { siteVersionLabel } from '../lib/site';
+import { siteVersion, siteVersionPrefix } from '../lib/site';
 import { seoPages } from '../seo-pages-data';
 import ThemeToggle from './theme-toggle';
 
@@ -229,7 +229,10 @@ export default function SEOLandingPage({ page }) {
         </div>
         <div className="info-footer-note">
           <span>Each page targets a real generator use case and links directly into the working product.</span>
-          <span className="info-footer-version">{siteVersionLabel}</span>
+          <span className="info-footer-version site-version-badge">
+            <span className="site-version-prefix">{siteVersionPrefix}</span>
+            <span className="site-version-number">{siteVersion}</span>
+          </span>
         </div>
       </footer>
     </main>

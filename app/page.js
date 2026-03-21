@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import ThemeToggle from './components/theme-toggle';
 import { ideaPages } from './idea-pages-data';
-import { siteVersionLabel } from './lib/site';
+import { siteVersion, siteVersionPrefix } from './lib/site';
 import { seoPages } from './seo-pages-data';
 
 const words = ['Captions', 'Bios', 'Hooks', 'Hashtags', 'Status'];
@@ -295,7 +295,10 @@ export default function Home() {
         <div className="footer-stack">
           <div className="footer-meta">
             <span className="footer-text">Built in India, by an Indian, for Gen Z India.</span>
-            <span className="footer-version">{siteVersionLabel}</span>
+            <span className="footer-version site-version-badge">
+              <span className="site-version-prefix">{siteVersionPrefix}</span>
+              <span className="site-version-number">{siteVersion}</span>
+            </span>
           </div>
           <div className="footer-links">
             <Link href="/privacy" className="footer-link">Privacy</Link>
