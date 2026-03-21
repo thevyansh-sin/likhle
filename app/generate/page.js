@@ -1335,7 +1335,18 @@ export default function GeneratePage() {
               const resultCopyKey = `result-${index}`;
 
               return (
-                <div className="gen-surface-card gen-result-card" key={item.id || `${resultText}-${index}`} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 18, padding: 20, boxShadow: t.sectionShadow }}>
+                <div
+                  className="gen-surface-card gen-result-card"
+                  key={item.id || `${resultText}-${index}`}
+                  style={{
+                    background: t.resultBg,
+                    border: `1px solid ${t.resultBorder}`,
+                    borderRadius: 18,
+                    padding: 20,
+                    boxShadow: t.sectionShadow,
+                    animationDelay: `${index * 0.08}s`,
+                  }}
+                >
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
                   <div style={{ minHeight: 18 }}>
                     {pendingResultAction?.index === index ? (
