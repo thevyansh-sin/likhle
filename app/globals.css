@@ -253,9 +253,12 @@ p, li, .section-copy, .hero-sub, .feature-desc, .workflow-desc, .info-descriptio
   color: var(--muted);
   text-decoration: none;
   font-size: 14px;
-  transition: color 0.2s;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.22s ease, transform 0.22s ease;
 }
-.nav-link:hover { color: var(--text); }
+.nav-link:hover { color: var(--text); transform: translateY(-1px); }
 
 .nav-cta {
   font-family: var(--font-body);
@@ -1193,9 +1196,12 @@ html[data-theme='light'] .gen-composer-card:focus-within {
   font-size: 13px;
   color: var(--muted);
   text-decoration: none;
-  transition: color 0.2s;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.22s ease, transform 0.22s ease;
 }
-.footer-link:hover { color: var(--text); }
+.footer-link:hover { color: var(--text); transform: translateY(-1px); }
 
 /* Info Pages */
 .info-page {
@@ -1238,9 +1244,12 @@ html[data-theme='light'] .gen-composer-card:focus-within {
   font-size: 14px;
   color: var(--muted);
   text-decoration: none;
-  transition: color 0.2s;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.22s ease, transform 0.22s ease;
 }
-.info-nav-link:hover { color: var(--text); }
+.info-nav-link:hover { color: var(--text); transform: translateY(-1px); }
 
 .info-hero {
   max-width: 880px;
@@ -1335,6 +1344,10 @@ html[data-theme='light'] .gen-composer-card:focus-within {
 .info-inline-link {
   color: var(--accent-ink);
   text-decoration: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.22s ease, transform 0.22s ease;
 }
 
 .info-faq-list {
@@ -1367,8 +1380,42 @@ html[data-theme='light'] .gen-composer-card:focus-within {
   font-size: 13px;
   color: var(--muted);
   text-decoration: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.22s ease, transform 0.22s ease;
 }
-.info-footer-link:hover { color: var(--text); }
+.info-footer-link:hover { color: var(--text); transform: translateY(-1px); }
+
+:is(.nav-link, .footer-link, .info-nav-link, .info-inline-link, .info-footer-link)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(202,255,0,0.04), rgba(202,255,0,0.72), rgba(202,255,0,0.08));
+  transform: scaleX(0.2);
+  transform-origin: left center;
+  opacity: 0;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
+}
+
+html[data-theme='light'] :is(.nav-link, .footer-link, .info-nav-link, .info-inline-link, .info-footer-link)::after {
+  background: linear-gradient(90deg, rgba(112,137,0,0.04), rgba(112,137,0,0.7), rgba(112,137,0,0.08));
+}
+
+:is(.nav-link, .footer-link, .info-nav-link, .info-inline-link, .info-footer-link):hover::after,
+:is(.nav-link, .footer-link, .info-nav-link, .info-inline-link, .info-footer-link):focus-visible::after {
+  transform: scaleX(1);
+  opacity: 1;
+}
+
+:is(.nav-link, .footer-link, .info-nav-link, .info-inline-link, .info-footer-link):focus-visible {
+  outline: none;
+  color: var(--text);
+}
 
 .info-footer-note {
   font-size: 13px;
