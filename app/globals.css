@@ -561,6 +561,11 @@ p, li, .section-copy, .hero-sub, .feature-desc, .workflow-desc, .info-descriptio
   overflow: hidden;
   box-shadow: var(--card-shadow);
   backdrop-filter: blur(18px);
+  transition:
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.24s ease,
+    background 0.24s ease;
 }
 
 :is(
@@ -610,6 +615,123 @@ html[data-theme='light'] :is(
   .seo-cta
 )::before {
   background: linear-gradient(90deg, rgba(112,137,0,0) 0%, rgba(112,137,0,0.4) 22%, rgba(112,137,0,0.14) 100%);
+}
+
+:is(
+  .proof-card,
+  .demo-card,
+  .feature-card,
+  .seo-link-card,
+  .workflow-card,
+  .info-card,
+  .info-section,
+  .info-faq-card,
+  .info-note,
+  .seo-hero-copy,
+  .seo-preview-card,
+  .seo-highlight-card,
+  .seo-prompt-card,
+  .seo-faq-card,
+  .seo-related-card,
+  .idea-group-card,
+  .seo-cta
+):hover {
+  transform: translateY(-6px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--accent-soft-border);
+}
+
+:is(
+  .proof-card,
+  .demo-card,
+  .feature-card,
+  .seo-link-card,
+  .workflow-card,
+  .info-card,
+  .info-section,
+  .info-faq-card,
+  .info-note,
+  .seo-hero-copy,
+  .seo-preview-card,
+  .seo-highlight-card,
+  .seo-prompt-card,
+  .seo-faq-card,
+  .seo-related-card,
+  .idea-group-card,
+  .seo-cta
+):hover::before {
+  background: linear-gradient(90deg, rgba(202,255,0,0) 0%, rgba(202,255,0,0.7) 22%, rgba(202,255,0,0.18) 100%);
+}
+
+html[data-theme='light'] :is(
+  .proof-card,
+  .demo-card,
+  .feature-card,
+  .seo-link-card,
+  .workflow-card,
+  .info-card,
+  .info-section,
+  .info-faq-card,
+  .info-note,
+  .seo-hero-copy,
+  .seo-preview-card,
+  .seo-highlight-card,
+  .seo-prompt-card,
+  .seo-faq-card,
+  .seo-related-card,
+  .idea-group-card,
+  .seo-cta
+):hover::before {
+  background: linear-gradient(90deg, rgba(112,137,0,0) 0%, rgba(112,137,0,0.58) 22%, rgba(112,137,0,0.18) 100%);
+}
+
+.gen-surface-card {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.22s ease,
+    background 0.22s ease;
+}
+
+.gen-surface-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(202,255,0,0.09), transparent 46%);
+  opacity: 0;
+  transition: opacity 0.24s ease;
+  pointer-events: none;
+}
+
+.gen-surface-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover) !important;
+}
+
+.gen-surface-card:hover::after {
+  opacity: 1;
+}
+
+.gen-surface-card--subtle:hover {
+  transform: translateY(-2px);
+}
+
+html[data-theme='light'] .gen-surface-card::after {
+  background: radial-gradient(circle at top right, rgba(112,137,0,0.10), transparent 48%);
+}
+
+.gen-template-card {
+  backdrop-filter: blur(18px);
+}
+
+.gen-template-card:hover {
+  border-color: var(--accent-soft-border) !important;
+}
+
+.gen-result-card:hover {
+  border-color: var(--accent-soft-border) !important;
 }
 
 /* Marquee */

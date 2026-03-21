@@ -991,6 +991,7 @@ export default function GeneratePage() {
 
   const renderTemplateCard = (template, compact = false) => (
     <button
+      className="gen-surface-card gen-template-card"
       key={template.id}
       onClick={() => handleApplyTemplate(template)}
       style={{
@@ -1093,7 +1094,7 @@ export default function GeneratePage() {
   const composerPanel = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {attachment && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: 14, background: t.attBg, border: `1px solid ${t.attBorder}`, borderRadius: 16, padding: 14, boxShadow: t.sectionShadow }}>
+        <div className="gen-surface-card gen-surface-card--subtle" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: 14, background: t.attBg, border: `1px solid ${t.attBorder}`, borderRadius: 16, padding: 14, boxShadow: t.sectionShadow }}>
           {attachmentPreview && (
             <Image
               src={attachmentPreview}
@@ -1119,7 +1120,7 @@ export default function GeneratePage() {
         </div>
       )}
 
-      <div style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 16, padding: '18px 20px 14px', boxShadow: t.sectionShadow }}>
+      <div className="gen-surface-card gen-composer-card" style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, borderRadius: 16, padding: '18px 20px 14px', boxShadow: t.sectionShadow }}>
         <textarea
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -1185,7 +1186,7 @@ export default function GeneratePage() {
   );
 
   const mobileTemplateLibrary = (
-    <div style={sectionCardStyle}>
+    <div className="gen-surface-card" style={sectionCardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div>
           <div style={sectionLabelStyle}>Quick Start Templates</div>
@@ -1255,7 +1256,7 @@ export default function GeneratePage() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }} data-reveal>
-            <div style={sectionCardStyle} data-reveal data-reveal-delay="0.02s">
+            <div className="gen-surface-card" style={sectionCardStyle} data-reveal data-reveal-delay="0.02s">
               <div style={sectionLabelStyle}>Length</div>
               <div style={sectionHelpStyle}>Pick how short or detailed each result should feel.</div>
               <div style={pillRowStyle}>
@@ -1267,7 +1268,7 @@ export default function GeneratePage() {
               </div>
             </div>
 
-            <div style={sectionCardStyle} data-reveal data-reveal-delay="0.06s">
+            <div className="gen-surface-card" style={sectionCardStyle} data-reveal data-reveal-delay="0.06s">
               <div style={sectionLabelStyle}>Options</div>
               <div style={sectionHelpStyle}>Turn on extras like Hinglish, emojis, or hashtags.</div>
               <div style={pillRowStyle}>
@@ -1280,7 +1281,7 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          <div style={sectionCardStyle} data-reveal>
+          <div className="gen-surface-card" style={sectionCardStyle} data-reveal>
             <div style={sectionLabelStyle}>Tone / Vibe</div>
             <div style={sectionHelpStyle}>Choose the mood first, then let the AI shape the language around it.</div>
             <div style={pillRowStyle}>
@@ -1333,7 +1334,7 @@ export default function GeneratePage() {
               const resultCopyKey = `result-${index}`;
 
               return (
-                <div key={item.id || `${resultText}-${index}`} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 18, padding: 20, boxShadow: t.sectionShadow }}>
+                <div className="gen-surface-card gen-result-card" key={item.id || `${resultText}-${index}`} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 18, padding: 20, boxShadow: t.sectionShadow }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
                   <div style={{ minHeight: 18 }}>
                     {pendingResultAction?.index === index ? (
@@ -1432,6 +1433,7 @@ export default function GeneratePage() {
 
                 return (
                   <div
+                    className="gen-surface-card gen-surface-card--subtle"
                     key={entry.id}
                     style={{
                       background:
@@ -1498,7 +1500,7 @@ export default function GeneratePage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
               {history.map((entry) => (
-                <div key={entry.id} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 16, padding: 16, boxShadow: t.sectionShadow }}>
+                <div className="gen-surface-card gen-surface-card--subtle" key={entry.id} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 16, padding: 16, boxShadow: t.sectionShadow }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                     <div style={{ flex: 1, minWidth: 220 }}>
                       <div style={{ fontSize: 14, color: t.text, lineHeight: 1.6, fontWeight: 600 }}>{entry.input}</div>
