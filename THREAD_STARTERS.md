@@ -23,6 +23,14 @@ Bug / issue:
 
 Where it happened:
 
+Route / page:
+
+Severity / impact:
+
+Can reproduce:
+
+Environment:
+
 What I saw:
 
 What I expected:

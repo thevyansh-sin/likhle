@@ -57,6 +57,9 @@ Best report shape:
 - where it broke
 - what was expected
 - how to reproduce it
+- severity / impact
+- can reproduce: always / sometimes / once
+- environment: prod / local / preview
 - browser / device
 - console errors
 - network errors

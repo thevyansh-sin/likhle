@@ -13,6 +13,12 @@ Where it happened:
 
 Route / page:
 
+Severity / impact:
+
+Can reproduce:
+
+Environment:
+
 What I saw:
 
 What I expected:
@@ -38,3 +44,11 @@ Screenshot:
 - If the bug is visual, include a screenshot.
 - If the bug is browser-specific, name the browser and device.
 - If there are console or network errors, include them because they speed up triage a lot.
+- Use simple repro labels when possible:
+  - `always`
+  - `sometimes`
+  - `once`
+- Use simple environment labels when possible:
+  - `prod`
+  - `local`
+  - `preview`

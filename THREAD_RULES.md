@@ -29,6 +29,9 @@ Expected bug report details:
 - where it broke
 - what was expected
 - how to reproduce it
+- severity / impact
+- can reproduce: always / sometimes / once
+- environment: prod / local / preview
 - route or page
 - prompt or input if relevant
 - browser / device details
