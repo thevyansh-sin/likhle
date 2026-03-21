@@ -12,6 +12,56 @@ const MAX_GENERATION_COUNT = 4;
 const MAX_REWRITE_SUGGESTIONS = 3;
 const QUALITY_REVIEW_MIN_CANDIDATES = 3;
 const QUALITY_REVIEW_MAX_CANDIDATES = 6;
+const MIN_REQUIRED_HASHTAGS = 4;
+const MAX_REQUIRED_HASHTAGS = 6;
+const HASHTAG_STOP_WORDS = new Set([
+  'a',
+  'an',
+  'and',
+  'are',
+  'at',
+  'bio',
+  'caption',
+  'captions',
+  'create',
+  'for',
+  'from',
+  'have',
+  'hook',
+  'hooks',
+  'image',
+  'in',
+  'instagram',
+  'is',
+  'it',
+  'its',
+  'keep',
+  'like',
+  'linkedin',
+  'make',
+  'my',
+  'not',
+  'now',
+  'photo',
+  'post',
+  'posts',
+  'reels',
+  'status',
+  'that',
+  'the',
+  'their',
+  'this',
+  'too',
+  'twitter',
+  'use',
+  'want',
+  'warm',
+  'was',
+  'whatsapp',
+  'with',
+  'write',
+  'your',
+]);
 const REWRITE_ACTIONS = {
   shorter: {
     instruction:
@@ -119,6 +169,122 @@ function validateImageFile(imageFile) {
   }
 
   return null;
+}
+
+function extractExistingHashtags(value) {
+  if (typeof value !== 'string') {
+    return [];
+  }
+
+  return Array.from(value.matchAll(/#[A-Za-z0-9_]+/g)).map((match) => match[0]);
+}
+
+function toHashtagLabel(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  const cleanedValue = value.replace(/[^A-Za-z0-9]+/g, ' ').trim();
+
+  if (!cleanedValue) {
+    return '';
+  }
+
+  return cleanedValue
+    .split(/\s+/)
+    .map((word) => word.slice(0, 1).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
+}
+
+function collectHashtagKeywords(value) {
+  if (typeof value !== 'string') {
+    return [];
+  }
+
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]+/g, ' ')
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter(
+      (word) =>
+        word.length >= 3 &&
+        !HASHTAG_STOP_WORDS.has(word) &&
+        !/^\d+$/.test(word)
+    );
+}
+
+function buildHashtagFinish({ input, text, tone, platform, imageDescription }) {
+  const existingHashtags = extractExistingHashtags(text);
+  const seenHashtags = new Set(existingHashtags.map((item) => item.toLowerCase()));
+  const nextHashtags = [...existingHashtags];
+  const candidateWords = [
+    ...collectHashtagKeywords(input),
+    ...collectHashtagKeywords(text),
+    ...collectHashtagKeywords(imageDescription || ''),
+  ];
+  const phraseCandidates = [];
+
+  for (let index = 0; index < candidateWords.length - 1; index += 1) {
+    phraseCandidates.push(`${candidateWords[index]} ${candidateWords[index + 1]}`);
+  }
+
+  const fallbackLabels = [
+    platform && platform !== 'Auto Detect' ? platform : 'Post Ready',
+    tone ? `${tone} Vibes` : '',
+    'Likhle Pick',
+  ];
+  const orderedCandidates = [
+    ...phraseCandidates,
+    ...candidateWords,
+    ...fallbackLabels,
+  ];
+
+  for (const candidate of orderedCandidates) {
+    const nextLabel = toHashtagLabel(candidate);
+
+    if (!nextLabel || nextLabel.length < 3) {
+      continue;
+    }
+
+    const nextHashtag = `#${nextLabel}`;
+    const signature = nextHashtag.toLowerCase();
+
+    if (seenHashtags.has(signature)) {
+      continue;
+    }
+
+    seenHashtags.add(signature);
+    nextHashtags.push(nextHashtag);
+
+    if (nextHashtags.length >= MAX_REQUIRED_HASHTAGS) {
+      break;
+    }
+  }
+
+  return nextHashtags.slice(0, MAX_REQUIRED_HASHTAGS);
+}
+
+function ensureHashtagFinish({ text, hashtags, input, tone, platform, imageDescription }) {
+  if (!hashtags || typeof text !== 'string' || !text.trim()) {
+    return text;
+  }
+
+  const hashtagList = buildHashtagFinish({
+    input,
+    text,
+    tone,
+    platform,
+    imageDescription,
+  });
+
+  if (hashtagList.length < MIN_REQUIRED_HASHTAGS) {
+    return text;
+  }
+
+  const baseText = text.replace(/(\s*#[A-Za-z0-9_]+)+\s*$/g, '').trim();
+
+  return `${baseText}\n${hashtagList.join(' ')}`.trim();
 }
 
 function getHeaderValue(headers, name) {
@@ -541,7 +707,9 @@ function buildPrompt({
     ? 'Write in Hinglish (natural mix of Hindi and English, like how Gen Z Indians actually talk).'
     : 'Write STRICTLY in English only. Do not use any Hindi words at all.';
   const emojiNote = emoji ? 'Include relevant emojis naturally.' : 'Do not use emojis.';
-  const hashtagNote = hashtags ? 'Add 5-8 relevant hashtags at the end if it is a caption.' : 'Do not add hashtags.';
+  const hashtagNote = hashtags
+    ? 'Every final result MUST end with 4-6 relevant hashtags on a separate final line.'
+    : 'Do not add hashtags.';
   const imageNote = imageDescription
     ? `IMPORTANT: The user has uploaded a photo. Here is exactly what the photo shows: ${imageDescription}. You MUST write captions that are specifically about THIS image. The captions should directly reference the mood, style, and elements visible in the photo. Do NOT write generic captions.`
     : '';
@@ -593,6 +761,7 @@ Rules:
 - Do not suggest Hinglish unless Hinglish is enabled
 - Do not suggest emoji changes unless emojis are enabled
 - Do not suggest hashtag changes unless hashtags are enabled
+- If hashtags are enabled, the rewritten result must end with 4-6 relevant hashtags
 - Do not wrap the JSON in markdown fences
 - Return ONLY the JSON object
 
@@ -631,6 +800,7 @@ Rules:
 - Do not suggest Hinglish unless Hinglish is enabled
 - Do not suggest emoji changes unless emojis are enabled
 - Do not suggest hashtag changes unless hashtags are enabled
+- If hashtags are enabled, every result must end with 4-6 relevant hashtags
 - Do not wrap the JSON in markdown fences
 - Return ONLY the JSON object
 
@@ -656,7 +826,9 @@ function buildFallbackPrompt({
     ? 'Write in natural Hinglish with a smooth Hindi-English mix that sounds modern and authentic for Gen Z India.'
     : 'Write strictly in English only. Do not use Hindi words.';
   const emojiNote = emoji ? 'Emojis are allowed when they feel natural.' : 'Do not use emojis.';
-  const hashtagNote = hashtags ? 'If it is a caption, a clean hashtag ending is allowed.' : 'Do not add hashtags.';
+  const hashtagNote = hashtags
+    ? 'Every final result must end with 4-6 relevant hashtags on a separate final line.'
+    : 'Do not add hashtags.';
   const imageNote = imageDescription
     ? `Use this uploaded image context carefully: ${imageDescription}`
     : 'No image context is provided.';
@@ -743,7 +915,7 @@ function buildQualityReviewPrompt({
     ? 'Emojis are allowed, but only when they feel natural and help the post.'
     : 'Do not add emojis.';
   const hashtagNote = hashtags
-    ? 'If the result is a caption, adding a clean 5-8 hashtag finish is allowed when it truly helps.'
+    ? 'Every final result must keep a clean 4-6 hashtag finish on a separate final line.'
     : 'Do not add hashtags.';
   const imageNote = imageDescription
     ? `The final captions must stay faithful to this uploaded image context: ${imageDescription}`
@@ -799,6 +971,7 @@ Selection rules:
 - Do not suggest Hinglish unless Hinglish is enabled
 - Do not suggest emoji changes unless emojis are enabled
 - Do not suggest hashtag changes unless hashtags are enabled
+- If hashtags are enabled, every final result must end with 4-6 relevant hashtags
 - Return valid JSON only
 - Use this exact shape:
 {"results":[{"text":"caption here","rewriteSuggestions":[{"label":"Suggestion label","instruction":"One sentence rewrite instruction"}]}]}
@@ -950,7 +1123,17 @@ async function generateResultsWithRecovery({
     results = results.slice(0, count);
   }
 
-  return results;
+  return results.map((result) => ({
+    ...result,
+    text: ensureHashtagFinish({
+      text: result.text,
+      hashtags,
+      input,
+      tone,
+      platform,
+      imageDescription,
+    }),
+  }));
 }
 
 export async function POST(req) {
