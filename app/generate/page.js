@@ -50,6 +50,17 @@ const PLACEHOLDERS = [
 ];
 
 const TONES = ['Aesthetic', 'Funny', 'Savage', 'Motivational', 'Romantic', 'Professional', 'Desi'];
+const OPTION_LABELS = {
+  hinglish: 'Hinglish 🇮🇳',
+  emojis: 'Emojis ✨',
+  hashtags: 'Hashtags #',
+};
+const LEGACY_OPTION_LABELS = {
+  'Add Emojis ✨': OPTION_LABELS.emojis,
+  'Add Hashtags #': OPTION_LABELS.hashtags,
+  'Hinglish ðŸ‡®ðŸ‡³': OPTION_LABELS.hinglish,
+  'Add Emojis âœ¨': OPTION_LABELS.emojis,
+};
 const OPTIONS = ['Hinglish 🇮🇳', 'Add Emojis ✨', 'Add Hashtags #'];
 const DEFAULT_OPTIONS = ['Add Emojis ✨', 'Add Hashtags #'];
 const PLATFORM_OPTIONS = [
@@ -192,6 +203,18 @@ function normalizeResultItems(results, fallbackActions) {
   return results
     .map((result) => normalizeResultItem(result, fallbackActions))
     .filter(Boolean);
+}
+
+function getOptionDisplayLabel(option) {
+  if (option === 'Add Emojis âœ¨' || option === 'Add Emojis ✨') {
+    return 'Emojis ✨';
+  }
+
+  if (option === 'Add Hashtags #') {
+    return 'Hashtags #';
+  }
+
+  return option;
 }
 
 function getRewriteActionsForContext({ tone, selectedOptions }) {
@@ -1344,7 +1367,7 @@ export default function GeneratePage() {
               <div style={pillRowStyle}>
                 {OPTIONS.map((option) => (
                   <button key={option} onClick={() => toggleOption(option)} style={getPillStyle(selectedOptions.includes(option))}>
-                    {option}
+                    {getOptionDisplayLabel(option)}
                   </button>
                 ))}
               </div>
@@ -1403,7 +1426,7 @@ export default function GeneratePage() {
               <span className="gen-empty-chip">{length}</span>
               <span className="gen-empty-chip">{tone}</span>
               {selectedOptions.slice(0, 2).map((option) => (
-                <span key={option} className="gen-empty-chip gen-empty-chip--muted">{option}</span>
+                <span key={option} className="gen-empty-chip gen-empty-chip--muted">{getOptionDisplayLabel(option)}</span>
               ))}
             </div>
 
