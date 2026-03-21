@@ -113,11 +113,75 @@ html { scroll-behavior: smooth; }
 }
 
 body {
+  position: relative;
+  isolation: isolate;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
   overflow-x: hidden;
   transition: background 0.25s ease, color 0.25s ease;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  width: 38rem;
+  height: 38rem;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(88px);
+  opacity: 0.16;
+  z-index: 0;
+}
+
+body::before {
+  top: -12rem;
+  left: -10rem;
+  background: radial-gradient(circle, rgba(202,255,0,0.22) 0%, rgba(202,255,0,0) 68%);
+  animation: ambientFloatA 24s ease-in-out infinite alternate;
+}
+
+body::after {
+  right: -12rem;
+  bottom: -14rem;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 68%);
+  animation: ambientFloatB 28s ease-in-out infinite alternate;
+}
+
+html[data-theme='light'] body::before {
+  opacity: 0.18;
+  background: radial-gradient(circle, rgba(112,137,0,0.18) 0%, rgba(112,137,0,0) 70%);
+}
+
+html[data-theme='light'] body::after {
+  opacity: 0.14;
+  background: radial-gradient(circle, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0) 72%);
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes ambientFloatA {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  100% {
+    transform: translate3d(4vw, 3vh, 0) scale(1.08);
+  }
+}
+
+@keyframes ambientFloatB {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  100% {
+    transform: translate3d(-4vw, -3vh, 0) scale(1.05);
+  }
 }
 
 .scroll-top-button {
