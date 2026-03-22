@@ -1824,7 +1824,7 @@ export default function GeneratePage() {
           )}
 
           {results.length > 0 && (
-            <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }} data-scroll-top-hide-zone>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Yeh lo {results.length} options 🔥</div>
