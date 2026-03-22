@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram handle: `@likhle.in`
-- Current public version: `v0.2.26`
+- Current public version: `v0.2.27`
 
 ## Tech Stack
 - Next.js 16 App Router
@@ -38,6 +38,11 @@
 - `GEMINI_API_KEY`
 - `NEXT_PUBLIC_SITE_URL`
 - `OWNER_MODE_TOKEN`
+- `INSTAGRAM_ACCESS_TOKEN`
+- `INSTAGRAM_USER_ID`
+- `META_APP_ID`
+- `META_APP_SECRET`
+- `OPENAI_API_KEY`
 
 ## Workflow Rules
 - Meaningful live website changes should usually bump the public version.

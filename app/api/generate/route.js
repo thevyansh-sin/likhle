@@ -846,6 +846,10 @@ function getQualityCandidateCount({ count, rewriteInstruction, currentResult, li
     return count;
   }
 
+  if (count <= 1) {
+    return 1;
+  }
+
   const baseCount = Math.min(
     QUALITY_REVIEW_MAX_CANDIDATES,
     Math.max(QUALITY_REVIEW_MIN_CANDIDATES, count + 2)

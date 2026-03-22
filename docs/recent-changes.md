@@ -15,6 +15,11 @@ Use this file as a quick human-readable memory of meaningful recent project chan
 - A local Meta / Instagram Graph API MCP server now exists for safer Codex-side posting workflows.
 - A local OpenAI media MCP server now exists for image generation and Sora video workflows.
 - QA tooling now includes a Playwright smoke suite, stable smoke server bootstrap, and local dev-origin support for both `localhost` and `127.0.0.1`.
+- Local app stability fixes now include:
+  - template-triggered generation using the template's own override context
+  - owner unlock `DELETE` accepting the request object cleanly
+  - owner cookies using HTTPS-aware secure detection
+  - single-result generate/rewrite flows avoiding unnecessary quality-candidate expansion
 
 ## Recent Repo Process Additions
 - Added `PROJECT_CONTEXT.md`

@@ -741,6 +741,14 @@ export default function GeneratePage() {
     }
 
     const templateOptions = getTemplateOptions(template);
+    const templateRequestContext = {
+      inputOverride: template.prompt,
+      toneOverride: template.tone,
+      platformOverride: template.platform,
+      lengthOverride: template.length,
+      selectedOptionsOverride: templateOptions,
+      attachmentOverride: null,
+    };
 
     flushSync(() => {
       setInput(template.prompt);
@@ -758,14 +766,17 @@ export default function GeneratePage() {
     shouldFocusOutputRef.current = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    const nextResults = await requestGeneration({ count: 3 });
+    const nextResults = await requestGeneration({
+      count: 3,
+      ...templateRequestContext,
+    });
 
     if (!nextResults) {
       return;
     }
 
     setResults(nextResults);
-    syncHistory(nextResults, `likhle-${Date.now()}`);
+    syncHistory(nextResults, `likhle-${Date.now()}`, templateRequestContext);
   };
 
   const showToast = (message, tone = 'success') => {
@@ -824,8 +835,39 @@ export default function GeneratePage() {
     return true;
   };
 
-  const syncHistory = (nextResults, nextId) => {
+  const resolveRequestContext = ({
+    inputOverride,
+    toneOverride,
+    platformOverride,
+    lengthOverride,
+    selectedOptionsOverride,
+    attachmentOverride,
+  } = {}) => {
+    const nextSelectedOptions = normalizeSelectedOptions(
+      Array.isArray(selectedOptionsOverride) ? selectedOptionsOverride : selectedOptions
+    );
+
+    return {
+      nextInput: typeof inputOverride === 'string' ? inputOverride : input,
+      nextTone: typeof toneOverride === 'string' ? toneOverride : tone,
+      nextPlatform: typeof platformOverride === 'string' ? platformOverride : platform,
+      nextLength: typeof lengthOverride === 'string' ? lengthOverride : length,
+      nextSelectedOptions,
+      nextAttachment:
+        attachmentOverride === undefined ? attachment : attachmentOverride,
+    };
+  };
+
+  const syncHistory = (nextResults, nextId, contextOverrides = {}) => {
     const historyId = nextId || sessionId || `likhle-${Date.now()}`;
+    const {
+      nextInput,
+      nextTone,
+      nextPlatform,
+      nextLength,
+      nextSelectedOptions,
+      nextAttachment,
+    } = resolveRequestContext(contextOverrides);
     const normalizedResults = normalizeResultItems(nextResults, visibleRewriteActions).map((item) => ({
       text: item.text,
       rewriteSuggestions: item.rewriteSuggestions.map((suggestion) => ({
@@ -835,14 +877,14 @@ export default function GeneratePage() {
     }));
     const entry = {
       id: historyId,
-      input: input.trim(),
-      tone,
-      platform,
-      length,
-      selectedOptions: normalizeSelectedOptions(selectedOptions),
+      input: nextInput.trim(),
+      tone: nextTone,
+      platform: nextPlatform,
+      length: nextLength,
+      selectedOptions: nextSelectedOptions,
       results: normalizedResults,
       createdAt: Date.now(),
-      hadImage: Boolean(attachment),
+      hadImage: Boolean(nextAttachment),
     };
 
     setSessionId(historyId);
@@ -923,22 +965,43 @@ export default function GeneratePage() {
     rewriteAction = '',
     rewriteInstruction = '',
     currentResult = '',
+    inputOverride,
+    toneOverride,
+    platformOverride,
+    lengthOverride,
+    selectedOptionsOverride,
+    attachmentOverride,
   } = {}) => {
+    const {
+      nextInput,
+      nextTone,
+      nextPlatform,
+      nextLength,
+      nextSelectedOptions,
+      nextAttachment,
+    } = resolveRequestContext({
+      inputOverride,
+      toneOverride,
+      platformOverride,
+      lengthOverride,
+      selectedOptionsOverride,
+      attachmentOverride,
+    });
     const hinglish = selectedOptions.includes('Hinglish 🇮🇳');
     const emoji = selectedOptions.includes('Add Emojis ✨');
     const hashtags = selectedOptions.includes('Add Hashtags #');
     const formData = new FormData();
 
-    formData.append('input', input.trim());
-    formData.append('tone', tone);
-    formData.append('platform', platform);
-    formData.append('length', length);
+    formData.append('input', nextInput.trim());
+    formData.append('tone', nextTone);
+    formData.append('platform', nextPlatform);
+    formData.append('length', nextLength);
     formData.append('count', String(count));
     formData.append('hinglish', String(hinglish));
     formData.append('emoji', String(emoji));
     formData.append('hashtags', String(hashtags));
 
-    const normalizedOptions = normalizeSelectedOptions(selectedOptions);
+    const normalizedOptions = nextSelectedOptions;
     formData.set('hinglish', String(normalizedOptions.includes(OPTION_LABELS.hinglish)));
     formData.set('emoji', String(normalizedOptions.includes(OPTION_LABELS.emojis)));
     formData.set('hashtags', String(normalizedOptions.includes(OPTION_LABELS.hashtags)));
@@ -963,8 +1026,8 @@ export default function GeneratePage() {
       formData.append('sessionKey', sessionKeyRef.current);
     }
 
-    if (attachment) {
-      formData.append('image', attachment);
+    if (nextAttachment) {
+      formData.append('image', nextAttachment);
     }
 
     return formData;
@@ -978,13 +1041,28 @@ export default function GeneratePage() {
     rewriteInstruction = '',
     currentResult = '',
     pendingLabel = 'Refreshing...',
+    inputOverride,
+    toneOverride,
+    platformOverride,
+    lengthOverride,
+    selectedOptionsOverride,
+    attachmentOverride,
   } = {}) => {
-    if (!input.trim()) {
+    const { nextInput, nextAttachment } = resolveRequestContext({
+      inputOverride,
+      toneOverride,
+      platformOverride,
+      lengthOverride,
+      selectedOptionsOverride,
+      attachmentOverride,
+    });
+
+    if (!nextInput.trim()) {
       return null;
     }
 
-    if (attachment) {
-      const validationError = validateAttachment(attachment);
+    if (nextAttachment) {
+      const validationError = validateAttachment(nextAttachment);
 
       if (validationError) {
         setError(validationError);
@@ -1005,7 +1083,19 @@ export default function GeneratePage() {
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
-        body: buildRequestFormData({ count, avoidResults, rewriteAction, rewriteInstruction, currentResult }),
+        body: buildRequestFormData({
+          count,
+          avoidResults,
+          rewriteAction,
+          rewriteInstruction,
+          currentResult,
+          inputOverride,
+          toneOverride,
+          platformOverride,
+          lengthOverride,
+          selectedOptionsOverride,
+          attachmentOverride,
+        }),
       });
       const data = await response.json();
 

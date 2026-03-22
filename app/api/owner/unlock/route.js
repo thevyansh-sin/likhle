@@ -63,7 +63,7 @@ export async function POST(req) {
   return response;
 }
 
-export async function DELETE() {
+export async function DELETE(req) {
   const response = createNoStoreJsonResponse({
     active: false,
   });

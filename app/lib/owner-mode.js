@@ -150,5 +150,21 @@ export function getOwnerModeClearCookieSettings({ secure = true } = {}) {
 }
 
 export function shouldUseSecureOwnerCookie(request) {
+  const forwardedProto = request?.headers?.get?.('x-forwarded-proto')?.split(',')[0]?.trim();
+
+  if (forwardedProto) {
+    return forwardedProto === 'https';
+  }
+
+  const requestUrl = request?.url;
+
+  if (typeof requestUrl === 'string' && requestUrl) {
+    try {
+      return new URL(requestUrl).protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
+
   return false;
 }
