@@ -44,7 +44,7 @@ export default function InfoPageLayout({ eyebrow, title, description, updatedLab
           ))}
         </div>
         <div className="info-footer-note">
-          <span>These pages are here to explain the current product clearly, with the same sharper tone as the tool itself.</span>
+          <span>These pages keep the product clear, useful, and easy to scan.</span>
           <span className="info-footer-version site-version-badge">
             <span className="site-version-prefix">{siteVersionPrefix}</span>
             <span className="site-version-number">{siteVersion}</span>

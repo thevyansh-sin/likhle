@@ -666,24 +666,24 @@ export default function GeneratePage() {
   const sectionCardStyle = {
     background: t.sectionBg,
     border: `1px solid ${t.sectionBorder}`,
-    borderRadius: 18,
-    padding: 18,
+    borderRadius: 22,
+    padding: 20,
     boxShadow: t.sectionShadow,
   };
 
   const sectionLabelStyle = {
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: 700,
     color: t.muted,
-    letterSpacing: '0.08em',
+    letterSpacing: '0.1em',
     textTransform: 'uppercase',
   };
 
   const sectionHelpStyle = {
     fontSize: 13,
     color: t.muted,
-    lineHeight: 1.5,
-    marginTop: 6,
+    lineHeight: 1.65,
+    marginTop: 8,
   };
 
   const pillRowStyle = {
@@ -702,7 +702,7 @@ export default function GeneratePage() {
     padding: '10px 18px',
     borderRadius: 999,
     cursor: 'pointer',
-    transition: 'all 0.15s ease',
+    transition: 'all 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
     fontWeight: isActive ? 700 : 500,
     boxShadow: isActive ? t.chipShadow : 'none',
   });
@@ -1317,15 +1317,16 @@ export default function GeneratePage() {
     border: `1px solid ${t.resultBorder}`,
     color: t.copyText,
     fontSize: 12,
-    fontWeight: 600,
-    padding: '9px 14px',
-    borderRadius: 14,
+    fontWeight: 700,
+    padding: '10px 15px',
+    borderRadius: 999,
     cursor: 'pointer',
-    transition: 'all 0.15s ease',
+    transition: 'all 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
     display: 'inline-flex',
     alignItems: 'center',
     gap: 8,
     letterSpacing: '0.01em',
+    minHeight: 40,
   };
 
   const rewriteButtonStyle = (disabled) => ({
@@ -1335,11 +1336,11 @@ export default function GeneratePage() {
     border: `1px solid ${t.resultBorder}`,
     color: t.copyText,
     fontSize: 11,
-    fontWeight: 600,
-    padding: '10px 12px',
-    borderRadius: 14,
+    fontWeight: 700,
+    padding: '10px 14px',
+    borderRadius: 999,
     cursor: disabled ? 'not-allowed' : 'pointer',
-    transition: 'all 0.15s ease',
+    transition: 'all 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
     opacity: disabled ? 0.55 : 1,
     minHeight: 40,
     display: 'flex',
@@ -1386,7 +1387,7 @@ export default function GeneratePage() {
   const emptyStateCopy = hasPrompt
     ? 'Press Enter or hit Likhle and we will turn this prompt into three stronger directions.'
     : 'Type one clear line, then let the format, tone, and length controls shape the rest for you.';
-  const loadingStateCopy = 'We are reading the prompt, locking the tone, and shaping three cleaner directions for the same post.';
+  const loadingStateCopy = 'We are locking the format, tone, and extras first, then shaping three cleaner directions for the same post.';
   const resultsMetaCopy = [platform, length, tone, attachment ? 'Image-aware' : null].filter(Boolean).join(' · ');
   const showGenerationErrorCard = !loading && results.length === 0 && Boolean(error);
   const showInlineError = Boolean(error) && !showGenerationErrorCard;
@@ -1609,12 +1610,12 @@ export default function GeneratePage() {
   );
 
   const mobileTemplateLibrary = (
-    <div className="gen-surface-card" style={sectionCardStyle}>
+    <div className="gen-surface-card gen-control-group" style={sectionCardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div>
-          <div style={sectionLabelStyle}>Quick Start Templates</div>
+          <div style={sectionLabelStyle}>Quick starts</div>
           <div style={sectionHelpStyle}>
-            Tap one if you want a fast start. Likhle will load the setup and generate results right away.
+            Tap one when you want a cleaner starting stack. Likhle will load the setup and generate right away.
           </div>
         </div>
         <div style={{ fontSize: 12, color: t.muted }}>
@@ -1648,25 +1649,34 @@ export default function GeneratePage() {
       style={{ minHeight: '100vh', background: t.pageBg, transition: 'all 0.3s', fontFamily: 'var(--font-body)' }}
       onClick={() => setShowMenu(false)}
     >
-      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', padding: 'clamp(18px, 2.6vw, 20px) clamp(20px, 4vw, 40px)', borderBottom: `1px solid ${t.border}`, position: 'sticky', top: 0, zIndex: 100, background: t.navBg, backdropFilter: 'blur(12px)' }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, lineHeight: 1 }}>likhle<span style={{ color: t.accentInk }}>.</span></div>
+      <nav className="info-nav gen-nav" style={{ borderBottom: `1px solid ${t.border}`, background: t.navBg, backdropFilter: 'blur(12px)' }}>
+        <Link href="/" className="info-logo" style={{ color: t.text }}>
+          likhle<span className="logo-dot" style={{ color: t.accentInk }}>.</span>
         </Link>
-        <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '8px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s', boxShadow: t.sectionShadow }}>
+        <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '8px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s' }}>
           {dark ? '☀️ Light' : '🌙 Dark'}
         </button>
       </nav>
 
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: 'clamp(40px, 6vw, 60px) clamp(16px, 4vw, 20px)' }}>
-        <div style={{ marginBottom: 48 }} data-reveal>
-          <h1 className="gen-page-title" style={{ color: t.text, marginBottom: 8 }}>Kya likhna hai? ✍️</h1>
-          <p style={{ fontSize: 16, color: t.muted, lineHeight: 1.7 }}>Scene describe karo. Baaki format, vibe, and polish yahan shape ho jayegi.</p>
+      <div className="gen-body">
+        <div className="gen-header" data-reveal>
+          <div className="gen-page-kicker">Built for how India actually posts</div>
+          <h1 className="gen-page-title" style={{ color: t.text, marginBottom: 10 }}>Shape the line before it goes live.</h1>
+          <p className="gen-page-sub" style={{ color: t.muted }}>
+            Describe the post, set the format, vibe, and extras, then take the cleanest direction forward.
+          </p>
+          <div className="gen-proof-row">
+            <span className="gen-proof-chip">Instagram captions</span>
+            <span className="gen-proof-chip">Reels hooks</span>
+            <span className="gen-proof-chip">WhatsApp statuses</span>
+            <span className="gen-proof-chip">Hinglish-ready</span>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="gen-controls-stack">
           <div data-reveal>{composerPanel}</div>
 
-          <div style={sectionCardStyle} data-reveal>
+          <div className="gen-surface-card gen-control-group gen-control-group--wide" style={sectionCardStyle} data-reveal>
             <div style={sectionLabelStyle}>Platform / Format</div>
             <div style={sectionHelpStyle}>Choose exactly where this text will be used so the output fits better.</div>
             <div style={pillRowStyle}>
@@ -1678,8 +1688,8 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }} data-reveal>
-            <div className="gen-surface-card" style={sectionCardStyle} data-reveal data-reveal-delay="0.02s">
+          <div className="gen-controls-grid" data-reveal>
+            <div className="gen-surface-card gen-control-group" style={sectionCardStyle} data-reveal data-reveal-delay="0.02s">
               <div style={sectionLabelStyle}>Length</div>
               <div style={sectionHelpStyle}>Pick how short or detailed each result should feel.</div>
               <div style={pillRowStyle}>
@@ -1691,7 +1701,7 @@ export default function GeneratePage() {
               </div>
             </div>
 
-            <div className="gen-surface-card" style={sectionCardStyle} data-reveal data-reveal-delay="0.06s">
+            <div className="gen-surface-card gen-control-group" style={sectionCardStyle} data-reveal data-reveal-delay="0.06s">
               <div style={sectionLabelStyle}>Options</div>
               <div style={sectionHelpStyle}>Turn on extras like Hinglish, emojis, or hashtags.</div>
               <div style={pillRowStyle}>
@@ -1704,9 +1714,9 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          <div className="gen-surface-card" style={sectionCardStyle} data-reveal>
+          <div className="gen-surface-card gen-control-group" style={sectionCardStyle} data-reveal>
             <div style={sectionLabelStyle}>Tone / Vibe</div>
-            <div style={sectionHelpStyle}>Choose the mood first, then let the AI shape the language around it.</div>
+            <div style={sectionHelpStyle}>Choose the mood first, then let Likhle shape the language around it.</div>
             <div style={pillRowStyle}>
               {TONES.map((option) => (
                 <button key={option} onClick={() => setTone(option)} style={getPillStyle(tone === option)}>
@@ -1939,7 +1949,7 @@ export default function GeneratePage() {
           <div className="gen-collection-shell" data-reveal>
             <div className="gen-collection-head">
               <div>
-                <div className="gen-collection-title">Favorites</div>
+                <div className="gen-collection-title">Saved picks</div>
                 <div className="gen-collection-copy">
                   Your strongest saved lines, kept only in this browser.
                 </div>
@@ -2011,7 +2021,7 @@ export default function GeneratePage() {
           <div className="gen-collection-shell" data-reveal>
             <div className="gen-collection-head">
               <div>
-                <div className="gen-collection-title">Recent history</div>
+                <div className="gen-collection-title">Recent runs</div>
                 <div className="gen-collection-copy">
                   Saved only in this browser, with your latest working stacks.
                 </div>

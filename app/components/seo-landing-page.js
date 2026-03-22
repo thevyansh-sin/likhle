@@ -71,14 +71,14 @@ export default function SEOLandingPage({ page }) {
                 }}
                 className="btn-primary"
               >
-                Try This Generator
+                Open the generator
               </Link>
               <a href="#prompt-ideas" className="btn-ghost">See prompt ideas</a>
             </div>
           </div>
 
           <div className="seo-preview-card" data-reveal data-reveal-delay="0.1s">
-            <div className="seo-preview-head">Quick setup</div>
+            <div className="seo-preview-head">Recommended setup</div>
             <div className="seo-preview-stack">
               <div className="seo-preview-item">
                 <span className="seo-preview-label">Format</span>
@@ -94,7 +94,7 @@ export default function SEOLandingPage({ page }) {
               </div>
             </div>
             <p className="seo-preview-note">
-              Use one of the sample prompts below, then tweak tone, length, or Hinglish inside the main generator.
+              Start here, then adjust tone, length, or Hinglish in the main generator without rebuilding the setup.
             </p>
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function SEOLandingPage({ page }) {
             <span className="section-kicker">Prompt ideas</span>
             <h2 className="section-title">Start faster with prompts that already fit this use case</h2>
             <p className="section-copy">
-              Click any idea below to open the generator with the right format already selected.
+              Use one to open the generator with the right format already loaded.
             </p>
           </div>
 
@@ -162,7 +162,7 @@ export default function SEOLandingPage({ page }) {
         <section className="seo-section" data-reveal>
           <div className="seo-section-head">
             <span className="section-kicker">Related pages</span>
-            <h2 className="section-title">Explore other generator pages</h2>
+            <h2 className="section-title">Explore other writing surfaces</h2>
           </div>
 
           <div className="seo-related-grid">
@@ -182,7 +182,7 @@ export default function SEOLandingPage({ page }) {
               <span className="section-kicker">Idea guides</span>
               <h2 className="section-title">Need inspiration before generating?</h2>
               <p className="section-copy">
-                These pages are more example-heavy, so they work well when someone wants a head start before opening the tool.
+                These pages are more example-led, so they work well when you want a head start before opening the tool.
               </p>
             </div>
 
@@ -199,9 +199,9 @@ export default function SEOLandingPage({ page }) {
         ) : null}
 
         <section className="seo-cta" data-reveal>
-          <h2 className="cta-title">Ready to try {page.shortTitle.toLowerCase()} for real?</h2>
+          <h2 className="cta-title">Ready to turn this into a post-ready line?</h2>
           <p className="cta-sub">
-            Open the main generator with the right format already selected, then adjust tone, length, and extras however you want.
+            Open the generator with this setup loaded, then adjust tone, length, and extras in one clean flow.
           </p>
           <Link
             href={{
@@ -215,7 +215,7 @@ export default function SEOLandingPage({ page }) {
             }}
             className="btn-primary btn-lg"
           >
-            Start with this setup
+            Open this setup
           </Link>
         </section>
       </div>
@@ -230,7 +230,7 @@ export default function SEOLandingPage({ page }) {
           <Link href="/faq" className="info-footer-link">FAQ</Link>
         </div>
         <div className="info-footer-note">
-          <span>Each page targets a real writing use case and routes straight into the live generator flow.</span>
+          <span>Each page is built around one real writing use case and routes straight into the live generator flow.</span>
           <span className="info-footer-version site-version-badge">
             <span className="site-version-prefix">{siteVersionPrefix}</span>
             <span className="site-version-number">{siteVersion}</span>

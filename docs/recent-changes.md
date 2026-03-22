@@ -4,7 +4,9 @@
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.3.1`.
+- Public version is `v0.3.2`.
+- Design consistency pass brought generator, SEO pages, idea pages, and info pages closer to the homepage benchmark through tighter card rhythm, calmer hierarchy, more premium CTA treatment, and stronger shared nav/footer consistency.
+- Generator polish now feels more product-led, with a sharper intro, more cohesive control grouping, a stronger reward state for results, and quieter secondary treatment for saved picks and recent runs.
 - Homepage now leads with a sharper brand promise, a calmer product-proof hero, a compact `Why Likhle wins` section, real output examples, and a more product-confident final CTA instead of the older rotating/changelog-style framing.
 - Mobile homepage headings now stay display-led, and the homepage section rhythm is less equal-weight and less feature-dump-like.
 - Presentation polish pass tightened the homepage promise, unified card/button density, and made generator empty/loading/success/error states feel more premium and consistent across the site.

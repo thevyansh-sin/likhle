@@ -104,14 +104,14 @@ export default function IdeaLandingPage({ page }) {
                 }}
                 className="btn-primary"
               >
-                Open This Setup
+                Open the generator
               </Link>
               <a href="#ideas" className="btn-ghost">Browse ideas</a>
             </div>
           </div>
 
           <div className="seo-preview-card" data-reveal data-reveal-delay="0.1s">
-            <div className="seo-preview-head">How to use this page</div>
+            <div className="seo-preview-head">Best way to use this page</div>
             <div className="seo-preview-stack">
               <div className="seo-preview-item">
                 <span className="seo-preview-label">1</span>
@@ -119,11 +119,11 @@ export default function IdeaLandingPage({ page }) {
               </div>
               <div className="seo-preview-item">
                 <span className="seo-preview-label">2</span>
-                <span className="seo-preview-value">Open it in the generator with the right setup</span>
+                <span className="seo-preview-value">Open it in the generator with the right controls already set</span>
               </div>
               <div className="seo-preview-item">
                 <span className="seo-preview-label">3</span>
-                <span className="seo-preview-value">Make it more personal instead of copy-pasting blind</span>
+                <span className="seo-preview-value">Tweak the line so it still sounds like you</span>
               </div>
             </div>
             <p className="seo-preview-note">{page.intro}</p>
@@ -146,7 +146,7 @@ export default function IdeaLandingPage({ page }) {
             <span className="section-kicker">Idea list</span>
             <h2 className="section-title">{ideaCount} starting lines, grouped by vibe</h2>
             <p className="section-copy">
-              Each one opens directly in Likhle, so you can turn a rough idea into fresher options instead of copying the exact same sentence.
+              Each one opens directly in Likhle, so you can turn a rough idea into fresher options instead of posting the exact same sentence.
             </p>
           </div>
 
@@ -184,9 +184,9 @@ export default function IdeaLandingPage({ page }) {
         <section className="seo-section" data-reveal>
           <div className="seo-section-head">
             <span className="section-kicker">Prompt ideas</span>
-            <h2 className="section-title">Start from a cleaner prompt if you want brand-new options</h2>
+            <h2 className="section-title">Want fresh lines instead of fixed examples?</h2>
             <p className="section-copy">
-              These prompts already match the right use case, tone, and platform so the generator does less guessing.
+              These prompts already match the use case, tone, and platform, so the generator does less guessing.
             </p>
           </div>
 
@@ -213,7 +213,7 @@ export default function IdeaLandingPage({ page }) {
           <section className="seo-section" data-reveal>
             <div className="seo-section-head">
               <span className="section-kicker">Related generators</span>
-              <h2 className="section-title">Use the matching tool when you want fresh variations</h2>
+              <h2 className="section-title">Need fresh variations, not just fixed ideas?</h2>
             </div>
 
             <div className="seo-related-grid">
@@ -231,7 +231,7 @@ export default function IdeaLandingPage({ page }) {
         <section className="seo-section" data-reveal>
           <div className="seo-section-head">
             <span className="section-kicker">FAQ</span>
-            <h2 className="section-title">Common questions about these idea pages</h2>
+            <h2 className="section-title">Common questions about this idea guide</h2>
           </div>
 
           <div className="seo-faq-list">
@@ -247,7 +247,7 @@ export default function IdeaLandingPage({ page }) {
         <section className="seo-section" data-reveal>
           <div className="seo-section-head">
             <span className="section-kicker">More idea pages</span>
-            <h2 className="section-title">Keep exploring other specific writing moods</h2>
+            <h2 className="section-title">Explore other idea surfaces</h2>
           </div>
 
           <div className="seo-related-grid">
@@ -264,7 +264,7 @@ export default function IdeaLandingPage({ page }) {
         <section className="seo-cta" data-reveal>
           <h2 className="cta-title">Want fresh versions instead of a fixed list?</h2>
           <p className="cta-sub">
-            Open the generator with this exact use case already set up, then make the output more personal, more sharp, more soft, or more Hinglish.
+            Open the generator with this setup loaded, then sharpen, soften, or Hinglish the output in one flow.
           </p>
           <Link
             href={{
@@ -273,7 +273,7 @@ export default function IdeaLandingPage({ page }) {
             }}
             className="btn-primary btn-lg"
           >
-            Generate from this idea set
+            Open the generator
           </Link>
         </section>
       </div>
