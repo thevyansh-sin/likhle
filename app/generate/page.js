@@ -1386,6 +1386,8 @@ export default function GeneratePage() {
   const emptyStateCopy = hasPrompt
     ? 'Press Enter or hit Likhle and we will turn this prompt into three stronger directions.'
     : 'Type one clear line, then let the format, tone, and length controls shape the rest for you.';
+  const loadingStateCopy = 'We are reading the prompt, locking the tone, and shaping three cleaner directions for the same post.';
+  const resultsMetaCopy = [platform, length, tone, attachment ? 'Image-aware' : null].filter(Boolean).join(' · ');
   const showGenerationErrorCard = !loading && results.length === 0 && Boolean(error);
   const showInlineError = Boolean(error) && !showGenerationErrorCard;
 
@@ -1599,7 +1601,7 @@ export default function GeneratePage() {
             disabled={controlsDisabled || !input.trim()}
             style={{ background: t.accent, color: '#000', border: 'none', borderRadius: 12, cursor: controlsDisabled || !input.trim() ? 'not-allowed' : 'pointer', opacity: controlsDisabled || !input.trim() ? 0.5 : 1, transition: 'all 0.2s', boxShadow: controlsDisabled || !input.trim() ? 'none' : t.sectionShadow }}
           >
-            {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
+            {loading ? 'Shaping drafts...' : 'Generate drafts'}
           </button>
         </div>
       </div>
@@ -1658,7 +1660,7 @@ export default function GeneratePage() {
       <div style={{ maxWidth: 860, margin: '0 auto', padding: 'clamp(40px, 6vw, 60px) clamp(16px, 4vw, 20px)' }}>
         <div style={{ marginBottom: 48 }} data-reveal>
           <h1 className="gen-page-title" style={{ color: t.text, marginBottom: 8 }}>Kya likhna hai? ✍️</h1>
-          <p style={{ fontSize: 16, color: t.muted }}>Describe karo — AI sab samajh leta hai.</p>
+          <p style={{ fontSize: 16, color: t.muted, lineHeight: 1.7 }}>Scene describe karo. Baaki format, vibe, and polish yahan shape ho jayegi.</p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -1719,34 +1721,37 @@ export default function GeneratePage() {
 
         <div ref={outputSectionRef} style={{ scrollMarginTop: 116 }}>
           {loading && (
-            <div className="gen-loading-shell" style={{ color: t.muted }}>
-              <div className="gen-loading-kicker">Generator working live</div>
-              <div className="gen-loading-title">AI likh raha hai...</div>
-              <div className="gen-loading-stage">{LOADING_STEPS[loadingStageIndex]}</div>
-              <div className="gen-loading-track" aria-hidden="true">
-                <span
-                  className="gen-loading-progress"
-                  style={{ transform: `scaleX(${(loadingStageIndex + 1) / LOADING_STEPS.length})` }}
-                />
-              </div>
-              <div className="gen-loading-steps" aria-hidden="true">
-                {LOADING_STEPS.map((step, index) => (
+            <div className="gen-state-shell gen-state-shell--loading gen-surface-card">
+              <div className="gen-loading-shell" style={{ color: t.muted }}>
+                <div className="gen-loading-kicker">Generator working live</div>
+                <div className="gen-loading-title">Drafts are taking shape...</div>
+                <div className="gen-loading-copy">{loadingStateCopy}</div>
+                <div className="gen-loading-stage">{LOADING_STEPS[loadingStageIndex]}</div>
+                <div className="gen-loading-track" aria-hidden="true">
                   <span
-                    key={step}
-                    className={`gen-loading-step-chip${index === loadingStageIndex ? ' is-active' : ''}`}
-                  >
-                    {step}
-                  </span>
-                ))}
+                    className="gen-loading-progress"
+                    style={{ transform: `scaleX(${(loadingStageIndex + 1) / LOADING_STEPS.length})` }}
+                  />
+                </div>
+                <div className="gen-loading-steps" aria-hidden="true">
+                  {LOADING_STEPS.map((step, index) => (
+                    <span
+                      key={step}
+                      className={`gen-loading-step-chip${index === loadingStageIndex ? ' is-active' : ''}`}
+                    >
+                      {step}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          {showInlineError && <div style={{ marginTop: 24, color: '#FF2D78', fontSize: 14, textAlign: 'center' }}>{error}</div>}
+          {showInlineError && <div className="gen-inline-error">{error}</div>}
 
           {showGenerationErrorCard && (
             <div
-              className="gen-surface-card"
+              className="gen-state-shell gen-state-shell--error gen-surface-card"
               style={{
                 ...sectionCardStyle,
                 marginTop: 40,
@@ -1780,7 +1785,7 @@ export default function GeneratePage() {
                 ))}
               </div>
 
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 22 }}>
+              <div className="gen-state-actions">
                 <button onClick={handleGenerate} disabled={controlsDisabled || !hasPrompt} style={primaryActionButtonStyle}>
                   Try again
                 </button>
@@ -1792,7 +1797,7 @@ export default function GeneratePage() {
           )}
 
           {!loading && results.length === 0 && !error && (
-            <div className="gen-empty-state gen-surface-card" style={{ marginTop: 40 }}>
+            <div className="gen-empty-state gen-state-shell gen-state-shell--empty gen-surface-card" style={{ marginTop: 40 }}>
               <div className="gen-empty-kicker">Ready when you are</div>
               <div className="gen-empty-title">{emptyStateTitle}</div>
               <p className="gen-empty-copy">{emptyStateCopy}</p>
@@ -1824,160 +1829,125 @@ export default function GeneratePage() {
           )}
 
           {results.length > 0 && (
-            <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16 }} data-scroll-top-hide-zone>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-              <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Yeh lo {results.length} options 🔥</div>
-                <div style={{ fontSize: 13, color: t.muted, marginTop: 6 }}>
-                  {platform} · {length} · {tone}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button onClick={handleCopyAll} style={{ ...actionButtonStyle, color: copiedAll ? t.accentInk : actionButtonStyle.color, border: copiedAll ? `1px solid ${t.accentInk}` : actionButtonStyle.border }}>
-                  {copiedAll ? '✓ Copied all' : 'Copy all'}
-                </button>
-                <button onClick={handleDownload} style={actionButtonStyle}>
-                  Download .txt
-                </button>
-              </div>
-            </div>
-
-            {statusNotice && (
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  maxWidth: 'fit-content',
-                  padding: '10px 14px',
-                  borderRadius: 14,
-                  border: `1px solid ${dark ? 'rgba(255,106,149,0.24)' : 'rgba(182,74,102,0.22)'}`,
-                  background: dark
-                    ? 'rgba(255,106,149,0.08)'
-                    : 'rgba(182,74,102,0.08)',
-                  color: dark ? '#FF8AAE' : '#9A4260',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  lineHeight: 1.45,
-                }}
-              >
-                {statusNotice}
-              </div>
-            )}
-
-            {results.map((item, index) => {
-              const resultText = getResultText(item);
-              const rewriteSuggestions = normalizeRewriteSuggestions(item?.rewriteSuggestions, visibleRewriteActions);
-              const favoriteEntry = findFavoriteForResult(item);
-              const isFavorite = Boolean(favoriteEntry);
-              const resultCopyKey = `result-${index}`;
-
-              return (
-                <div
-                  className="gen-surface-card gen-result-card"
-                  key={item.id || `${resultText}-${index}`}
-                  style={{
-                    background: t.resultBg,
-                    border: `1px solid ${t.resultBorder}`,
-                    borderRadius: 18,
-                    padding: 20,
-                    boxShadow: t.sectionShadow,
-                    animationDelay: `${index * 0.08}s`,
-                  }}
-                >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
-                  <div style={{ minHeight: 18 }}>
-                    {pendingResultAction?.index === index ? (
-                      <div style={{ fontSize: 12, color: t.accentInk, fontWeight: 600 }}>
-                        {pendingResultAction.label}
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 12, color: t.muted, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                        Option {index + 1}
-                      </div>
-                    )}
+            <div className="gen-results-shell" data-scroll-top-hide-zone>
+              <div className="gen-results-head">
+                <div className="gen-results-head-main">
+                  <div className="gen-results-kicker">Fresh directions</div>
+                  <div className="gen-results-title">{results.length} post-ready directions</div>
+                  <div className="gen-results-sub">
+                    {resultsMetaCopy}
                   </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
-                  <button
-                    onClick={() => handleToggleFavorite(item)}
-                    aria-label={isFavorite ? 'Saved to favorites' : 'Save to favorites'}
-                    title={isFavorite ? 'Saved to favorites' : 'Save to favorites'}
-                    style={getResultIconButtonStyle({ active: isFavorite })}
-                  >
-                    {isFavorite ? <LuBookmarkCheck size={16} /> : <LuBookmark size={16} />}
+                </div>
+                <div className="gen-results-actions">
+                  <button onClick={handleCopyAll} style={{ ...actionButtonStyle, color: copiedAll ? t.accentInk : actionButtonStyle.color, border: copiedAll ? `1px solid ${t.accentInk}` : actionButtonStyle.border }}>
+                    {copiedAll ? '✓ Copied all' : 'Copy all'}
                   </button>
-                  <button
-                    onClick={() => handleRegenerateOption(index)}
-                    disabled={controlsDisabled}
-                    aria-label={pendingResultAction?.index === index ? 'Refreshing result' : 'Regenerate result'}
-                    title={pendingResultAction?.index === index ? 'Refreshing result' : 'Regenerate result'}
-                    style={getResultIconButtonStyle({
-                      active: pendingResultAction?.index === index && pendingResultAction.label === 'Refreshing...',
-                      disabled: controlsDisabled,
-                    })}
-                  >
-                    <LuRefreshCw size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleCopy(resultText, resultCopyKey)}
-                    aria-label={copied === resultCopyKey ? 'Copied' : 'Copy result'}
-                    title={copied === resultCopyKey ? 'Copied' : 'Copy result'}
-                    style={{ ...getResultIconButtonStyle({ active: copied === resultCopyKey }), fontSize: 0 }}
-                  >
-                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {copied === resultCopyKey ? <LuCheck size={16} /> : <LuCopy size={16} />}
-                    </span>
-                    {copied === index ? '✓ Copied!' : 'Copy'}
+                  <button onClick={handleDownload} style={actionButtonStyle}>
+                    Download .txt
                   </button>
                 </div>
+              </div>
+
+              {statusNotice && (
+                <div className="gen-status-notice">
+                  {statusNotice}
                 </div>
-                <p style={{ fontSize: 15, lineHeight: 1.75, color: t.text, whiteSpace: 'pre-wrap' }}>{resultText}</p>
-                <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${t.resultBorder}` }}>
-                  <div style={{ fontSize: 12, color: t.muted, marginBottom: 10 }}>Quick rewrite</div>
+              )}
+
+              {results.map((item, index) => {
+                const resultText = getResultText(item);
+                const rewriteSuggestions = normalizeRewriteSuggestions(item?.rewriteSuggestions, visibleRewriteActions);
+                const favoriteEntry = findFavoriteForResult(item);
+                const isFavorite = Boolean(favoriteEntry);
+                const resultCopyKey = `result-${index}`;
+
+                return (
                   <div
+                    className="gen-surface-card gen-result-card"
+                    key={item.id || `${resultText}-${index}`}
                     style={{
-                      display: 'flex',
-                      gap: 8,
-                      flexWrap: 'nowrap',
-                      overflowX: 'auto',
-                      overflowY: 'hidden',
-                      paddingBottom: 2,
-                      scrollbarWidth: 'none',
-                      msOverflowStyle: 'none',
+                      background: t.resultBg,
+                      border: `1px solid ${t.resultBorder}`,
+                      borderRadius: 18,
+                      padding: 20,
+                      boxShadow: t.sectionShadow,
+                      animationDelay: `${index * 0.08}s`,
                     }}
                   >
-                    {rewriteSuggestions.map((action) => (
-                      <button
-                        key={action.key}
-                        onClick={() => handleRewriteOption(index, item, action)}
-                        disabled={loading || pendingResultAction !== null}
-                        style={rewriteButtonStyle(loading || pendingResultAction !== null)}
-                      >
-                        <span>{action.label}</span>
-                        <span style={{ color: t.accentInk, fontSize: 12 }}>↗</span>
-                      </button>
-                    ))}
+                    <div className="gen-result-card-head">
+                      <div className={`gen-result-kicker${pendingResultAction?.index === index ? ' is-pending' : ''}`}>
+                        {pendingResultAction?.index === index ? pendingResultAction.label : `Direction ${index + 1}`}
+                      </div>
+                      <div className="gen-result-actions">
+                        <button
+                          onClick={() => handleToggleFavorite(item)}
+                          aria-label={isFavorite ? 'Saved to favorites' : 'Save to favorites'}
+                          title={isFavorite ? 'Saved to favorites' : 'Save to favorites'}
+                          style={getResultIconButtonStyle({ active: isFavorite })}
+                        >
+                          {isFavorite ? <LuBookmarkCheck size={16} /> : <LuBookmark size={16} />}
+                        </button>
+                        <button
+                          onClick={() => handleRegenerateOption(index)}
+                          disabled={controlsDisabled}
+                          aria-label={pendingResultAction?.index === index ? 'Refreshing result' : 'Regenerate result'}
+                          title={pendingResultAction?.index === index ? 'Refreshing result' : 'Regenerate result'}
+                          style={getResultIconButtonStyle({
+                            active: pendingResultAction?.index === index && pendingResultAction.label === 'Refreshing...',
+                            disabled: controlsDisabled,
+                          })}
+                        >
+                          <LuRefreshCw size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleCopy(resultText, resultCopyKey)}
+                          aria-label={copied === resultCopyKey ? 'Copied' : 'Copy result'}
+                          title={copied === resultCopyKey ? 'Copied' : 'Copy result'}
+                          style={{ ...getResultIconButtonStyle({ active: copied === resultCopyKey }), fontSize: 0 }}
+                        >
+                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {copied === resultCopyKey ? <LuCheck size={16} /> : <LuCopy size={16} />}
+                          </span>
+                          {copied === index ? '✓ Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                    </div>
+                    <p className="gen-result-text">{resultText}</p>
+                    <div className="gen-rewrite-bar" style={{ borderTop: `1px solid ${t.resultBorder}` }}>
+                      <div className="gen-rewrite-label">Refine this one</div>
+                      <div className="gen-rewrite-row">
+                        {rewriteSuggestions.map((action) => (
+                          <button
+                            key={action.key}
+                            onClick={() => handleRewriteOption(index, item, action)}
+                            disabled={loading || pendingResultAction !== null}
+                            style={rewriteButtonStyle(loading || pendingResultAction !== null)}
+                          >
+                            <span>{action.label}</span>
+                            <span style={{ color: t.accentInk, fontSize: 12 }}>↗</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
 
         {favorites.length > 0 && (
-          <div style={{ marginTop: 56, borderTop: `1px solid ${t.border}`, paddingTop: 32 }} data-reveal>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div className="gen-collection-shell" data-reveal>
+            <div className="gen-collection-head">
               <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Favorites</div>
-                <div style={{ fontSize: 13, color: t.muted, marginTop: 6 }}>
-                  Your best saved lines, kept only in this browser.
+                <div className="gen-collection-title">Favorites</div>
+                <div className="gen-collection-copy">
+                  Your strongest saved lines, kept only in this browser.
                 </div>
               </div>
               <button onClick={handleClearFavorites} style={actionButtonStyle}>Clear favorites</button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginTop: 16 }}>
+            <div className="gen-collection-grid">
               {favorites.map((entry) => {
                 const favoriteCopyKey = `favorite-${entry.id}`;
 
@@ -2038,20 +2008,20 @@ export default function GeneratePage() {
         </div>
 
         {history.length > 0 && (
-          <div style={{ marginTop: 56, borderTop: `1px solid ${t.border}`, paddingTop: 32 }} data-reveal>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div className="gen-collection-shell" data-reveal>
+            <div className="gen-collection-head">
               <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.5, color: t.text }}>Recent history</div>
-                <div style={{ fontSize: 13, color: t.muted, marginTop: 6 }}>
-                  Saved only in this browser with your latest results.
+                <div className="gen-collection-title">Recent history</div>
+                <div className="gen-collection-copy">
+                  Saved only in this browser, with your latest working stacks.
                 </div>
               </div>
               <button onClick={handleClearHistory} style={actionButtonStyle}>Clear history</button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+            <div className="gen-history-list">
               {history.map((entry) => (
-                <div className="gen-surface-card gen-surface-card--subtle" key={entry.id} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 16, padding: 16, boxShadow: t.sectionShadow }}>
+                <div className="gen-surface-card gen-surface-card--subtle gen-history-card" key={entry.id} style={{ background: t.resultBg, border: `1px solid ${t.resultBorder}`, borderRadius: 16, padding: 16, boxShadow: t.sectionShadow }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                     <div style={{ flex: 1, minWidth: 220 }}>
                       <div style={{ fontSize: 14, color: t.text, lineHeight: 1.6, fontWeight: 600 }}>{entry.input}</div>
@@ -2069,19 +2039,19 @@ export default function GeneratePage() {
           </div>
         )}
 
-        <footer style={{ marginTop: 56, paddingTop: 24, borderTop: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 13, color: t.muted }}>Use Likhle thoughtfully and review AI output before posting.</div>
+        <footer className="gen-footer" style={{ borderTop: `1px solid ${t.border}` }}>
+          <div className="gen-footer-meta">
+            <div className="gen-footer-text">Use Likhle thoughtfully and review AI output before posting.</div>
             <span className="site-version-badge">
               <span className="site-version-prefix">{siteVersionPrefix}</span>
               <span className="site-version-number">{siteVersion}</span>
             </span>
           </div>
-          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-            <Link href="/privacy" style={{ fontSize: 13, color: t.muted, textDecoration: 'none' }}>Privacy</Link>
-            <Link href="/terms" style={{ fontSize: 13, color: t.muted, textDecoration: 'none' }}>Terms</Link>
-            <Link href="/contact" style={{ fontSize: 13, color: t.muted, textDecoration: 'none' }}>Contact</Link>
-            <Link href="/faq" style={{ fontSize: 13, color: t.muted, textDecoration: 'none' }}>FAQ</Link>
+          <div className="gen-footer-links">
+            <Link href="/privacy" className="gen-footer-link">Privacy</Link>
+            <Link href="/terms" className="gen-footer-link">Terms</Link>
+            <Link href="/contact" className="gen-footer-link">Contact</Link>
+            <Link href="/faq" className="gen-footer-link">FAQ</Link>
           </div>
         </footer>
       </div>

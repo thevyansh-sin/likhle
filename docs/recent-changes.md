@@ -4,7 +4,8 @@
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.2.29`.
+- Public version is `v0.2.30`.
+- Presentation polish pass tightened the homepage promise, unified card/button density, and made generator empty/loading/success/error states feel more premium and consistent across the site.
 - Mobile generate results now hide the floating back-to-top control while the results stack is in view, so the first cards and actions stay visually clear.
 - Generator quick-start templates now trigger generation correctly instead of only prefilling the prompt.
 - Owner mode unlock delete flow no longer crashes, and owner cookies now use the secure flag correctly on HTTPS requests.

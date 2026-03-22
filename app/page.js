@@ -23,68 +23,68 @@ const marqueeItems = [
 const featureCards = [
   {
     eyebrow: 'Templates',
-    title: 'Start from ready-made ideas',
-    desc: 'Use built-in templates like Goa sunset, birthday post, gym transformation, study hook, wedding dump, and more to fill the prompt instantly.',
+    title: 'Start from a post-shaped prompt',
+    desc: 'Open with built-in setups like Goa sunset, birthday dump, gym transformation, study hook, or wedding carousel instead of typing from zero every time.',
   },
   {
     eyebrow: 'Precision',
-    title: 'Choose the exact format first',
-    desc: 'Instagram caption, bio, Reels hook, WhatsApp status, LinkedIn bio, or Twitter/X bio. No more hoping the AI guesses correctly.',
+    title: 'Choose the output before the writing',
+    desc: 'Instagram caption, bio, Reels hook, WhatsApp status, LinkedIn bio, or Twitter/X bio. Likhle starts in the right lane instead of guessing after the fact.',
   },
   {
     eyebrow: 'Control',
-    title: 'Dial the length up or down',
-    desc: 'Pick short, medium, or long before you generate, so the result already fits your post instead of needing rewrites.',
+    title: 'Dial the density before you generate',
+    desc: 'Pick short, medium, or long so the first pass already feels closer to your post instead of asking you to trim generic fluff later.',
   },
   {
     eyebrow: 'Speed',
-    title: 'Regenerate only one result',
-    desc: 'If 3 options are good and 1 feels weak, refresh only that card and keep the rest exactly as they are.',
+    title: 'Refresh the weak line, not the whole set',
+    desc: 'If two directions feel close and one misses, regenerate that one card and keep the rest intact.',
   },
   {
     eyebrow: 'Memory',
-    title: 'Your recent ideas stay saved',
-    desc: 'Likhle now keeps recent generations in browser history, so you can come back later and reuse what worked.',
+    title: 'Recent drafts stay within reach',
+    desc: 'Likhle keeps your latest generations in browser history so the good lines stay nearby instead of disappearing after one tab switch.',
   },
   {
     eyebrow: 'Visual',
-    title: 'Add an image reference',
-    desc: 'Upload a photo, preview it first, and let the AI understand the mood, setting, and vibe before writing.',
+    title: 'Use the photo as context, not decoration',
+    desc: 'Upload a photo, preview it first, and let the writing pick up the mood, setting, and energy before the words start.',
   },
   {
     eyebrow: 'Desktop',
-    title: 'Paste screenshots straight in',
-    desc: 'On desktop, copy a screenshot and press Ctrl+V inside the prompt box to attach it instantly without opening the upload menu.',
+    title: 'Paste screenshots straight into the box',
+    desc: 'On desktop, copy a screenshot and hit Ctrl+V inside the prompt area to attach it instantly without extra menu work.',
   },
   {
     eyebrow: 'Rewrite',
-    title: 'Refine one result instantly',
-    desc: 'Make one option shorter, more savage, more aesthetic, more professional, or more Hinglish without regenerating the whole set.',
+    title: 'Refine a single line in place',
+    desc: 'Make one result shorter, sharper, softer, more professional, or more Hinglish without resetting the rest of the stack.',
   },
   {
     eyebrow: 'Output',
-    title: 'Copy everything or download it',
-    desc: 'Take one caption, all captions, or save the full result as a text file without juggling tabs or notes.',
+    title: 'Take the draft and move',
+    desc: 'Copy one result, copy the full set, or download the stack as text without bouncing between notes, tabs, and screenshots.',
   },
 ];
 const workflowSteps = [
   {
     step: '01',
-    title: 'Describe the vibe',
-    desc: 'Write one plain-language prompt about your photo, post, mood, or page.',
+    title: 'Describe the post, not the prompt',
+    desc: 'Write one clear line about the photo, mood, audience, or page you are trying to post.',
   },
   {
     step: '02',
-    title: 'Set the controls',
-    desc: 'Pick platform, length, tone, and extras like Hinglish, emojis, or hashtags.',
+    title: 'Lock the format and tone',
+    desc: 'Choose platform, length, vibe, and extras like Hinglish, emojis, or hashtags before the first output lands.',
   },
   {
     step: '03',
-    title: 'Save the best one',
-    desc: 'Copy, download, regenerate one option, or reopen it later from recent history.',
+    title: 'Polish the strongest direction',
+    desc: 'Copy, refine, regenerate one option, or reopen the full stack later from recent history.',
   },
 ];
-const proofCards = ['Platform-aware output', 'Template starters built in', 'Recent history saved', 'Copy or download fast'];
+const proofCards = ['Platform-aware drafts', 'Image-aware + Hinglish-ready', 'Recent drafts stay saved', 'Refine one card, not all'];
 
 export default function Home() {
   const [wordIndex, setWordIndex] = useState(0);
@@ -124,26 +124,26 @@ export default function Home() {
       <section className="hero" data-reveal>
         <div className="hero-grid">
           <div className="hero-copy" data-reveal data-reveal-delay="0.04s">
-            <div className="hero-badge">🇮🇳 Built for Indian creators and side-hustlers</div>
+            <div className="hero-badge">Built for Indian posts, profiles, and side-hustles</div>
             <h1 className="hero-title">
-              AI-powered
+              Write
               <br />
               <span className="word-swap" style={{ opacity: visible ? 1 : 0 }}>
                 {words[wordIndex]}
               </span>
               <br />
-              that finally feel in your control
+              that sound posted, not prompted
             </h1>
             <p className="hero-sub">
-              Prompt likho. Platform select karo. Length choose karo. Image add karo.
+              Prompt likho. Platform choose karo. Vibe lock karo.
               <br />
-              Likhle ab sirf caption box nahi raha, proper creator tool ban gaya hai.
+              Likhle turns that into cleaner, post-ready writing without the generic AI residue.
             </p>
             <div className="hero-actions">
-              <Link href="/generate" className="btn-primary">Likhna shuru karo 🚀</Link>
-              <a href="#features" className="btn-ghost">See what&apos;s new</a>
+              <Link href="/generate" className="btn-primary">Try the live generator →</Link>
+              <a href="#features" className="btn-ghost">See the flow</a>
             </div>
-            <div className="hero-note">Free • No signup • Hindi + English • Browser history saved</div>
+            <div className="hero-note">Free • No signup • Hinglish-ready • Recent drafts stay saved</div>
 
             <div className="hero-proof-grid">
               {proofCards.map((card) => (
@@ -202,10 +202,10 @@ export default function Home() {
 
       <section className="features" id="features" data-reveal>
         <div className="section-header">
-          <span className="section-kicker">What changed</span>
-          <h2 className="section-title">Likhle now shows the product it was supposed to be</h2>
+          <span className="section-kicker">What is inside</span>
+          <h2 className="section-title">A sharper writing workflow, not just another caption box</h2>
           <p className="section-copy">
-            More control for the user, better output quality, and fewer annoying repeat steps.
+            More control before generation, cleaner output after it, and fewer annoying repeat steps in between.
           </p>
         </div>
 
@@ -229,9 +229,9 @@ export default function Home() {
       <section className="seo-links-section" data-reveal>
         <div className="section-header">
           <span className="section-kicker">Popular Generators</span>
-          <h2 className="section-title">Browse focused pages for the main use cases</h2>
+          <h2 className="section-title">Open the right generator path without wandering first</h2>
           <p className="section-copy">
-            These landing pages target real search intent and drop people into the right generator flow faster.
+            These pages match real search intent and drop people straight into the generator setup that fits the job.
           </p>
         </div>
 
@@ -255,9 +255,9 @@ export default function Home() {
       <section className="idea-links-section" data-reveal>
         <div className="section-header">
           <span className="section-kicker">Idea Guides</span>
-          <h2 className="section-title">Static pages for people who search with a very specific mood in mind</h2>
+          <h2 className="section-title">Example-heavy idea pages for people who already know the mood</h2>
           <p className="section-copy">
-            These pages are packed with real examples first, then push people into the right generator setup when they want fresh options.
+            These pages lead with real examples, then open the matching generator setup when someone wants fresher variations.
           </p>
         </div>
 
@@ -281,9 +281,9 @@ export default function Home() {
       <section className="workflow" id="workflow" data-reveal>
         <div className="section-header">
           <span className="section-kicker">How it works</span>
-          <h2 className="section-title">Simple flow, smarter result</h2>
+          <h2 className="section-title">Three small choices, then the writing gets sharper fast</h2>
           <p className="section-copy">
-            The homepage now explains the actual experience instead of sounding like a generic AI tool.
+            The product should feel direct: describe the post, lock the controls, then keep only the line worth posting.
           </p>
         </div>
 
@@ -306,9 +306,9 @@ export default function Home() {
 
       <section className="cta-section" data-reveal>
         <div className="cta-shell">
-          <h2 className="cta-title">Ready to go from idea to post in one tab?</h2>
+          <h2 className="cta-title">Ready to turn a rough vibe into something worth posting?</h2>
           <p className="cta-sub">
-            Whether it&apos;s a trip dump caption, LinkedIn bio, WhatsApp status, or Reels hook, Likhle gets there faster now.
+            Whether it is a trip dump caption, LinkedIn bio, WhatsApp status, or Reels hook, Likhle keeps the writing tighter and the workflow calmer.
           </p>
           <Link href="/generate" className="btn-primary btn-lg">Start for free →</Link>
         </div>

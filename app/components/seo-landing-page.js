@@ -230,7 +230,7 @@ export default function SEOLandingPage({ page }) {
           <Link href="/faq" className="info-footer-link">FAQ</Link>
         </div>
         <div className="info-footer-note">
-          <span>Each page targets a real generator use case and links directly into the working product.</span>
+          <span>Each page targets a real writing use case and routes straight into the live generator flow.</span>
           <span className="info-footer-version site-version-badge">
             <span className="site-version-prefix">{siteVersionPrefix}</span>
             <span className="site-version-number">{siteVersion}</span>

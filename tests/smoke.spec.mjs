@@ -22,7 +22,7 @@ test('generate page quick-start template prefill auto-generates', async ({ page 
   await page.getByRole('button', { name: /goa sunset dump/i }).click();
 
   await expect(textarea).toHaveValue(/Goa sunset trip photo dump/i);
-  await expect(page.getByText(/Yeh lo 3 options/i)).toBeVisible();
+  await expect(page.getByText(/3 post-ready directions/i)).toBeVisible();
   await expect(page.getByText(/Mock caption 1 \[batch 1\]/i)).toBeVisible();
 });
 
@@ -32,9 +32,9 @@ test('generate page submit, regenerate, and rewrite flows work', async ({ page }
 
   const textarea = page.locator('textarea');
   await textarea.fill('Write a funny Instagram caption for chai at 2am with friends.');
-  await page.getByRole('button', { name: /Likhle!/i }).click();
+  await page.getByRole('button', { name: /Generate drafts/i }).click();
 
-  await expect(page.getByText(/Yeh lo 3 options/i)).toBeVisible();
+  await expect(page.getByText(/3 post-ready directions/i)).toBeVisible();
   await expect(page.getByText(/Mock caption 1 \[batch 1\]/i)).toBeVisible();
 
   await page.getByTitle('Regenerate result').first().click();

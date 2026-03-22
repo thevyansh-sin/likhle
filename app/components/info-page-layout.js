@@ -44,7 +44,7 @@ export default function InfoPageLayout({ eyebrow, title, description, updatedLab
           ))}
         </div>
         <div className="info-footer-note">
-          <span>Likhle is a lightweight AI writing tool. These pages are meant to explain the current product clearly and honestly.</span>
+          <span>These pages are here to explain the current product clearly, with the same sharper tone as the tool itself.</span>
           <span className="info-footer-version site-version-badge">
             <span className="site-version-prefix">{siteVersionPrefix}</span>
             <span className="site-version-number">{siteVersion}</span>

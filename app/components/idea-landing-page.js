@@ -288,7 +288,7 @@ export default function IdeaLandingPage({ page }) {
           <Link href="/faq" className="info-footer-link">FAQ</Link>
         </div>
         <div className="info-footer-note">
-          <span>These idea pages are meant to be useful on their own and even better when connected to the main generator.</span>
+          <span>These idea pages work on their own, but they get stronger when they feed directly into the main generator.</span>
           <span className="info-footer-version site-version-badge">
             <span className="site-version-prefix">{siteVersionPrefix}</span>
             <span className="site-version-number">{siteVersion}</span>
