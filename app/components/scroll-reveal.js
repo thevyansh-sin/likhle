@@ -23,11 +23,23 @@ export default function ScrollReveal() {
       observedElements.add(element);
 
       if (reducedMotion) {
+        element.classList.remove('is-reveal-pending');
+        element.classList.add('is-revealed');
+        return;
+      }
+
+      const rect = element.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      const startsInView = rect.top < viewportHeight * 0.92 && rect.bottom > 0;
+
+      if (startsInView) {
+        element.classList.remove('is-reveal-pending');
         element.classList.add('is-revealed');
         return;
       }
 
       element.classList.remove('is-revealed');
+      element.classList.add('is-reveal-pending');
       observer.observe(element);
     };
 
@@ -54,6 +66,7 @@ export default function ScrollReveal() {
                 return;
               }
 
+              entry.target.classList.remove('is-reveal-pending');
               entry.target.classList.add('is-revealed');
               observer.unobserve(entry.target);
             });
