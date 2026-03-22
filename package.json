@@ -4,9 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:qa": "next dev --hostname 0.0.0.0 --port 3001",
     "build": "next build",
     "start": "next start",
+    "start:smoke": "node ./scripts/start-smoke-server.mjs",
     "lint": "eslint",
+    "smoke:install": "playwright install chromium",
+    "smoke": "playwright test --config=playwright.smoke.config.mjs",
+    "smoke:headed": "playwright test --config=playwright.smoke.config.mjs --headed",
     "instagram:mcp:check": "node ./scripts/meta-instagram-mcp.mjs --check",
     "instagram:validate": "node ./scripts/post-to-instagram.js --validate",
     "openai:media:mcp:check": "node ./scripts/openai-media-mcp.mjs --check",
@@ -24,6 +29,7 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.2.0",

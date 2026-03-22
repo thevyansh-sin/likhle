@@ -47,3 +47,6 @@ next-env.d.ts
 /social-assets/releases/*.jpeg
 /social-assets/openai-media/images/*
 /social-assets/openai-media/videos/*
+/playwright-report/
+/test-results/playwright-smoke/
+/test-results/playwright-report/
