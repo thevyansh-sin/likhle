@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram handle: `@likhle.in`
-- Current public version: `v0.2.30`
+- Current public version: `v0.2.31`
 
 ## Tech Stack
 - Next.js 16 App Router

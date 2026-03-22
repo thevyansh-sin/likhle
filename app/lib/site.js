@@ -1,9 +1,9 @@
 import packageJson from '../../package.json';
 
 export const siteName = 'Likhle';
-export const siteTitle = 'Post-ready writing for Gen Z India';
+export const siteTitle = 'The writing tool for how India actually posts';
 export const siteDescription =
-  'Likhle helps Indian creators turn prompts, moods, and image context into cleaner captions, bios, Reels hooks, statuses, and Hinglish lines without the generic AI feel.';
+  'Likhle helps Indian creators write captions, bios, hooks, and statuses with control over platform, tone, length, Hinglish, hashtags, and image context.';
 export const siteVersion = packageJson.version;
 export const siteVersionLabel = `v${siteVersion}`;
 export const siteVersionPrefix = 'v';

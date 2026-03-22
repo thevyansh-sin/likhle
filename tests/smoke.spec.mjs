@@ -8,8 +8,9 @@ test.describe.configure({ mode: 'serial' });
 test('homepage loads cleanly', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.getByRole('link', { name: /try it free/i })).toBeVisible();
-  await expect(page.locator('h1')).toBeVisible();
+  await expect(page.getByRole('link', { name: /open the generator/i }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /the writing tool for how india actually posts\./i })).toBeVisible();
+  await expect(page.getByText(/Built to match how posting decisions actually happen\./i)).toBeVisible();
 });
 
 test('generate page quick-start template prefill auto-generates', async ({ page }) => {
