@@ -78,20 +78,20 @@ const PLATFORM_OPTIONS = [
   'LinkedIn Bio',
   'Twitter/X Bio',
 ];
-const LOADING_STEPS = ['Reading vibe', 'Shaping tone', 'Final polish'];
+const LOADING_STEPS = ['Vibe read kar raha hai', 'Tone set kar raha hai', 'Final polish aa raha hai'];
 const LENGTH_OPTIONS = ['Short', 'Medium', 'Long'];
 const EMPTY_STATE_IDEAS = [
   {
     title: 'Trip dump',
-    copy: 'Name the place, the mood, and whether you want it aesthetic, funny, or clean.',
+    copy: 'Place, mood, aur vibe batao, phir bolo aesthetic, funny, ya clean mein kya chahiye.',
   },
   {
     title: 'Bio refresh',
-    copy: 'Tell Likhle who you are, what you do, and whether the tone should feel cool or professional.',
+    copy: 'Kaun ho, kya karte ho, aur tone cool chahiye ya professional, seedha bol do.',
   },
   {
     title: 'Reels opener',
-    copy: 'Mention the video topic and ask for a short hook that stops the scroll in one line.',
+    copy: 'Video topic daalo aur ek short hook maango jo ek line mein scroll rok de.',
   },
 ];
 const REWRITE_ACTIONS = {
@@ -1678,7 +1678,7 @@ export default function GeneratePage() {
 
             <div className="gen-surface-card gen-control-group gen-control-group--wide" style={sectionCardStyle} data-reveal>
               <div style={sectionLabelStyle}>Platform / Format</div>
-              <div style={sectionHelpStyle}>Choose exactly where this text will be used so the output fits better.</div>
+              <div style={sectionHelpStyle}>Yeh line exactly kahan jayegi woh pick karo, taaki output seedha fit baithe.</div>
             <div style={pillRowStyle}>
               {PLATFORM_OPTIONS.map((option) => (
                 <button key={option} onClick={() => setPlatform(option)} style={getPillStyle(platform === option)}>
@@ -1691,7 +1691,7 @@ export default function GeneratePage() {
           <div className="gen-controls-grid" data-reveal>
             <div className="gen-surface-card gen-control-group" style={sectionCardStyle} data-reveal data-reveal-delay="0.02s">
               <div style={sectionLabelStyle}>Length</div>
-              <div style={sectionHelpStyle}>Pick how short or detailed each result should feel.</div>
+              <div style={sectionHelpStyle}>Kitna short ya detailed chahiye, pehle decide karo.</div>
               <div style={pillRowStyle}>
                 {LENGTH_OPTIONS.map((option) => (
                   <button key={option} onClick={() => setLength(option)} style={getPillStyle(length === option)}>
@@ -1703,7 +1703,7 @@ export default function GeneratePage() {
 
             <div className="gen-surface-card gen-control-group" style={sectionCardStyle} data-reveal data-reveal-delay="0.06s">
               <div style={sectionLabelStyle}>Options</div>
-              <div style={sectionHelpStyle}>Turn on extras like Hinglish, emojis, or hashtags.</div>
+              <div style={sectionHelpStyle}>Hinglish, emojis, ya hashtags jaise extras on karo.</div>
               <div style={pillRowStyle}>
                 {OPTIONS.map((option) => (
                   <button key={option} onClick={() => toggleOption(option)} style={getPillStyle(selectedOptions.includes(option))}>
@@ -1716,7 +1716,7 @@ export default function GeneratePage() {
 
           <div className="gen-surface-card gen-control-group" style={sectionCardStyle} data-reveal>
             <div style={sectionLabelStyle}>Tone / Vibe</div>
-            <div style={sectionHelpStyle}>Choose the mood first, then let Likhle shape the language around it.</div>
+            <div style={sectionHelpStyle}>Mood pehle pick karo, phir Likhle language uske around shape karega.</div>
             <div style={pillRowStyle}>
               {TONES.map((option) => (
                 <button key={option} onClick={() => setTone(option)} style={getPillStyle(tone === option)}>
@@ -1733,8 +1733,8 @@ export default function GeneratePage() {
           {loading && (
             <div className="gen-state-shell gen-state-shell--loading gen-surface-card">
               <div className="gen-loading-shell" style={{ color: t.muted }}>
-                <div className="gen-loading-kicker">Generator working live</div>
-                <div className="gen-loading-title">Drafts are taking shape...</div>
+                <div className="gen-loading-kicker">Abhi likh raha hai</div>
+                <div className="gen-loading-title">Lines abhi shape ho rahi hain...</div>
                 <div className="gen-loading-copy">{loadingStateCopy}</div>
                 <div className="gen-loading-stage">{LOADING_STEPS[loadingStageIndex]}</div>
                 <div className="gen-loading-track" aria-hidden="true">
@@ -1797,10 +1797,10 @@ export default function GeneratePage() {
 
               <div className="gen-state-actions">
                 <button onClick={handleGenerate} disabled={controlsDisabled || !hasPrompt} style={primaryActionButtonStyle}>
-                  Try again
+                  Ek baar aur try karo
                 </button>
                 <button onClick={() => setError('')} style={actionButtonStyle}>
-                  Dismiss
+                  Theek hai
                 </button>
               </div>
             </div>
@@ -1808,7 +1808,7 @@ export default function GeneratePage() {
 
           {!loading && results.length === 0 && !error && (
             <div className="gen-empty-state gen-state-shell gen-state-shell--empty gen-surface-card" style={{ marginTop: 40 }}>
-              <div className="gen-empty-kicker">Ready when you are</div>
+              <div className="gen-empty-kicker">Ready jab tum ho</div>
               <div className="gen-empty-title">{emptyStateTitle}</div>
               <p className="gen-empty-copy">{emptyStateCopy}</p>
 
@@ -1832,8 +1832,8 @@ export default function GeneratePage() {
 
               <div className="gen-empty-note">
                 {hasPrompt
-                  ? 'You can also add an image or paste a screenshot before generating if the vibe depends on visuals.'
-                  : 'You can still use a template or add an image reference first if you want a faster starting point.'}
+                  ? 'Agar vibe visuals pe depend karti hai, toh generate karne se pehle image add ya screenshot paste bhi kar sakte ho.'
+                  : 'Fast start chahiye toh template use karo ya image reference add karke shuru karo.'}
               </div>
             </div>
           )}
@@ -1842,18 +1842,18 @@ export default function GeneratePage() {
             <div className="gen-results-shell" data-scroll-top-hide-zone>
               <div className="gen-results-head">
                 <div className="gen-results-head-main">
-                  <div className="gen-results-kicker">Fresh directions</div>
-                  <div className="gen-results-title">{results.length} post-ready directions</div>
+                  <div className="gen-results-kicker">Fresh options</div>
+                  <div className="gen-results-title">Yeh lo {results.length} post-ready options</div>
                   <div className="gen-results-sub">
                     {resultsMetaCopy}
                   </div>
                 </div>
                 <div className="gen-results-actions">
                   <button onClick={handleCopyAll} style={{ ...actionButtonStyle, color: copiedAll ? t.accentInk : actionButtonStyle.color, border: copiedAll ? `1px solid ${t.accentInk}` : actionButtonStyle.border }}>
-                    {copiedAll ? '✓ Copied all' : 'Copy all'}
+                    {copiedAll ? '✓ Sab copy ho gaya' : 'Sab copy karo'}
                   </button>
                   <button onClick={handleDownload} style={actionButtonStyle}>
-                    Download .txt
+                    .txt download karo
                   </button>
                 </div>
               </div>
@@ -1924,7 +1924,7 @@ export default function GeneratePage() {
                     </div>
                     <p className="gen-result-text">{resultText}</p>
                     <div className="gen-rewrite-bar" style={{ borderTop: `1px solid ${t.resultBorder}` }}>
-                      <div className="gen-rewrite-label">Refine this one</div>
+                      <div className="gen-rewrite-label">Isko aur sharpen karo</div>
                       <div className="gen-rewrite-row">
                         {rewriteSuggestions.map((action) => (
                           <button
@@ -1951,10 +1951,10 @@ export default function GeneratePage() {
               <div>
                 <div className="gen-collection-title">Saved picks</div>
                 <div className="gen-collection-copy">
-                  Your strongest saved lines, kept only in this browser.
+                  Tumhari strongest saved lines, sirf isi browser mein.
                 </div>
               </div>
-              <button onClick={handleClearFavorites} style={actionButtonStyle}>Clear favorites</button>
+              <button onClick={handleClearFavorites} style={actionButtonStyle}>Favorites clear karo</button>
             </div>
 
             <div className="gen-collection-grid">
@@ -2003,7 +2003,7 @@ export default function GeneratePage() {
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 'auto' }}>
                       <button onClick={() => handleUseFavorite(entry)} style={actionButtonStyle}>
-                        Use again
+                        Dobara use karo
                       </button>
                       <button onClick={() => handleCopy(entry.text, favoriteCopyKey)} style={{ ...actionButtonStyle, color: copied === favoriteCopyKey ? t.accentInk : actionButtonStyle.color, border: copied === favoriteCopyKey ? `1px solid ${t.accentInk}` : actionButtonStyle.border }}>
                         {copied === favoriteCopyKey ? '✓ Copied!' : 'Copy'}
@@ -2023,10 +2023,10 @@ export default function GeneratePage() {
               <div>
                 <div className="gen-collection-title">Recent runs</div>
                 <div className="gen-collection-copy">
-                  Saved only in this browser, with your latest working stacks.
+                  Isi browser mein saved, tumhari latest working stacks ke saath.
                 </div>
               </div>
-              <button onClick={handleClearHistory} style={actionButtonStyle}>Clear history</button>
+              <button onClick={handleClearHistory} style={actionButtonStyle}>History clear karo</button>
             </div>
 
             <div className="gen-history-list">
@@ -2040,7 +2040,7 @@ export default function GeneratePage() {
                       </div>
                     </div>
                     <button onClick={() => handleRestoreHistory(entry)} style={{ ...actionButtonStyle, alignSelf: 'flex-start' }}>
-                      Use again
+                      Dobara use karo
                     </button>
                   </div>
                 </div>
@@ -2051,7 +2051,7 @@ export default function GeneratePage() {
 
         <footer className="gen-footer" style={{ borderTop: `1px solid ${t.border}` }}>
           <div className="gen-footer-meta">
-            <div className="gen-footer-text">Use Likhle thoughtfully and review AI output before posting.</div>
+            <div className="gen-footer-text">Post karne se pehle AI output ek baar review kar lo.</div>
             <span className="site-version-badge">
               <span className="site-version-prefix">{siteVersionPrefix}</span>
               <span className="site-version-number">{siteVersion}</span>
