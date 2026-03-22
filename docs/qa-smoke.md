@@ -37,6 +37,12 @@ Run it in a visible browser:
 npm run smoke:headed
 ```
 
+Run the long-running real-provider stress sweep:
+
+```powershell
+npm run stress:generate
+```
+
 ## Stable local QA server
 
 For manual browser QA in development, use:
@@ -58,3 +64,43 @@ Then open either:
 - Owner unlock uses a dedicated local fallback secret if `OWNER_MODE_TOKEN` is not set.
 - The smoke web server builds and starts a clean local app instance automatically.
 - Results, traces, and failure media go under `test-results/`.
+
+## Long-running generator stress runner
+
+Use this when you want to test the real `/api/generate` path against slow or unstable upstream AI responses.
+
+Recommended flow:
+
+1. Start the app locally:
+
+```powershell
+npm run dev:qa
+```
+
+2. In another terminal, run the stress sweep:
+
+```powershell
+npm run stress:generate
+```
+
+Optional owner-mode unlock for local QA:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\stress-generate.ps1 `
+  -BaseUrl "http://127.0.0.1:3001" `
+  -Iterations 30 `
+  -OwnerSecret "your-owner-secret"
+```
+
+What it does:
+
+- uses `curl.exe` instead of the Node fetch harness
+- cycles through multiple generator presets
+- records per-run status, total time, response body, and headers
+- saves outputs under `test-results/stress/`
+
+If you only want to validate the script wiring without hitting the app, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\stress-generate.ps1 -Iterations 0
+```

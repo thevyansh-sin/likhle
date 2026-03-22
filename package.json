@@ -1,6 +1,6 @@
 {
   "name": "likhle",
-  "version": "0.2.27",
+  "version": "0.2.28",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,6 +12,7 @@
     "smoke:install": "playwright install chromium",
     "smoke": "playwright test --config=playwright.smoke.config.mjs",
     "smoke:headed": "playwright test --config=playwright.smoke.config.mjs --headed",
+    "stress:generate": "powershell -ExecutionPolicy Bypass -File ./scripts/stress-generate.ps1",
     "instagram:mcp:check": "node ./scripts/meta-instagram-mcp.mjs --check",
     "instagram:validate": "node ./scripts/post-to-instagram.js --validate",
     "openai:media:mcp:check": "node ./scripts/openai-media-mcp.mjs --check",

@@ -50,3 +50,4 @@ next-env.d.ts
 /playwright-report/
 /test-results/playwright-smoke/
 /test-results/playwright-report/
+/test-results/stress/

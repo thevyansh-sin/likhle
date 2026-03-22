@@ -4,9 +4,13 @@
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.2.27`.
+- Public version is `v0.2.28`.
 - Generator quick-start templates now trigger generation correctly instead of only prefilling the prompt.
 - Owner mode unlock delete flow no longer crashes, and owner cookies now use the secure flag correctly on HTTPS requests.
+- Single-result generation now returns directly instead of overgenerating extra review candidates, which reduces unnecessary provider usage on `count=1` requests.
+- Hashtag fallback generation now uses safer filtered keywords and curated tone/platform labels instead of awkward generated-text word pairs.
+- Generator provider handling now distinguishes quota, timeout, network/DNS, and unstable-upstream faults more cleanly instead of collapsing them into a generic failure.
+- QA tooling now includes a `curl.exe`-based long-running stress runner for real `/api/generate` sweeps on slow upstream responses.
 - Owner mode was added for the owner's browser with a signed cookie unlock flow.
 - Workflow docs were added to make repo work faster and cleaner.
 - `docs/` source-of-truth files now exist for cross-thread consistency.

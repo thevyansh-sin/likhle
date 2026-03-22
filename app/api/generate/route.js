@@ -23,21 +23,71 @@ const SESSION_COOLDOWN_GENERATE_MS = 2400;
 const SESSION_COOLDOWN_REWRITE_MS = 1600;
 const RETRY_BACKOFF_BASE_MS = 1250;
 const MAX_TRANSIENT_RETRIES = 2;
+const PRIMARY_GROQ_REQUEST_TIMEOUT_MS = 18_000;
+const LIGHT_GROQ_REQUEST_TIMEOUT_MS = 12_000;
+const QUALITY_REVIEW_REQUEST_TIMEOUT_MS = 10_000;
 const MIN_REQUIRED_HASHTAGS = 4;
 const MAX_REQUIRED_HASHTAGS = 6;
+const PROVIDER_CONNECTION_RETRY_AFTER_SECONDS = 20;
+const PROVIDER_TIMEOUT_RETRY_AFTER_SECONDS = 45;
+const PROVIDER_CONNECTION_RETRY_DELAY_MS = 1500;
+const PROVIDER_TIMEOUT_RETRY_DELAY_MS = 2200;
+const PROVIDER_UNSTABLE_RETRY_DELAY_MS = 1800;
+const PROVIDER_TIMEOUT_SIGNAL_PATTERNS = [
+  /timed out/i,
+  /\btimeout\b/i,
+  /headers timeout/i,
+  /connect timeout/i,
+  /request timeout/i,
+  /response timeout/i,
+  /und_err_headers_timeout/i,
+  /und_err_connect_timeout/i,
+];
+const PROVIDER_CONNECTION_SIGNAL_PATTERNS = [
+  /connection error/i,
+  /fetch failed/i,
+  /\benotfound\b/i,
+  /\beai_again\b/i,
+  /dns/i,
+  /getaddrinfo/i,
+  /\beconnreset\b/i,
+  /\beconnrefused\b/i,
+  /socket hang up/i,
+  /client network socket disconnected/i,
+  /unable to connect/i,
+  /network error/i,
+];
+const PROVIDER_UNSTABLE_SIGNAL_PATTERNS = [
+  /temporar/i,
+  /overloaded/i,
+  /\bbusy\b/i,
+  /unavailable/i,
+  /service unavailable/i,
+  /upstream/i,
+];
 const HASHTAG_STOP_WORDS = new Set([
   'a',
   'an',
   'and',
   'are',
+  'after',
+  'all',
+  'another',
   'at',
   'bio',
   'caption',
   'captions',
+  'cheesy',
+  'clean',
+  'credible',
   'create',
+  'day',
+  'during',
+  'everyone',
   'for',
   'from',
   'have',
+  'human',
   'hook',
   'hooks',
   'image',
@@ -46,18 +96,36 @@ const HASHTAG_STOP_WORDS = new Set([
   'is',
   'it',
   'its',
+  'just',
   'keep',
+  'late',
   'like',
   'linkedin',
+  'long',
+  'loud',
   'make',
+  'medium',
+  'midnight',
   'my',
+  'night',
   'not',
   'now',
   'photo',
   'post',
   'posts',
+  'posting',
+  'quiet',
+  'really',
+  'reactions',
   'reels',
+  'scroll',
+  'short',
+  'sound',
   'status',
+  'stopping',
+  'strong',
+  'student',
+  'semester',
   'that',
   'the',
   'their',
@@ -70,9 +138,72 @@ const HASHTAG_STOP_WORDS = new Set([
   'was',
   'whatsapp',
   'with',
+  'wrong',
   'write',
   'your',
 ]);
+const WEAK_SINGLE_WORD_HASHTAGS = new Set([
+  'bio',
+  'caption',
+  'captions',
+  'fun',
+  'hook',
+  'hooks',
+  'life',
+  'mood',
+  'moment',
+  'moments',
+  'pick',
+  'post',
+  'posts',
+  'proving',
+  'ready',
+  'story',
+  'stories',
+  'thing',
+  'things',
+  'vibe',
+  'vibes',
+]);
+const SEMANTIC_HASHTAG_RULES = [
+  { test: /\bgoa\b/i, tags: ['GoaDiaries', 'GoaVibes'] },
+  { test: /\b(sunset|golden hour|sun down)\b/i, tags: ['GoldenHour', 'SunsetMood'] },
+  { test: /\b(beach|sea|ocean|coast|shore)\b/i, tags: ['BeachVibes', 'CoastalMood'] },
+  { test: /\b(travel|trip|road trip|vacation|vacay)\b/i, tags: ['TravelDiaries', 'TripMood'] },
+  { test: /\b(mountain|hills|trek|trekking)\b/i, tags: ['MountainMood', 'WanderMood'] },
+  { test: /\b(rain|rainy|monsoon)\b/i, tags: ['RainyMood', 'MonsoonVibes'] },
+  { test: /\b(chai|coffee|cafe)\b/i, tags: ['CafeScenes', 'ChaiTime'] },
+  { test: /\b(birthday|bday)\b/i, tags: ['BirthdayPost', 'BirthdayVibes'] },
+  { test: /\b(best friend|bestie|friends|squad)\b/i, tags: ['BestieEnergy', 'SquadMoments'] },
+  { test: /\b(gym|fitness|workout|transformation)\b/i, tags: ['GymLife', 'FitnessJourney'] },
+  { test: /\b(study|exam|college|notes)\b/i, tags: ['StudyMode', 'ExamSeason'] },
+  { test: /\b(reels|hook|scroll)\b/i, tags: ['ScrollStopper', 'ReelsHook'] },
+  { test: /\b(linkedin|career|placement|job|internship)\b/i, tags: ['CareerUpdate', 'LinkedInPost'] },
+  { test: /\b(whatsapp|status)\b/i, tags: ['StatusUpdate', 'MoodLine'] },
+  { test: /\b(wedding|shaadi|bride|baraat)\b/i, tags: ['WeddingDump', 'ShaadiVibes'] },
+  { test: /\b(cricket|match|watch party)\b/i, tags: ['CricketNight', 'MatchMood'] },
+  { test: /\b(love|romantic|anniversary|date)\b/i, tags: ['SoftMoments', 'LoveNotes'] },
+  { test: /\b(diwali)\b/i, tags: ['DiwaliNights', 'FestivalGlow'] },
+  { test: /\b(holi)\b/i, tags: ['HoliVibes', 'ColorSplash'] },
+  { test: /\b(photo dump|dump)\b/i, tags: ['PhotoDump', 'DumpDiary'] },
+  { test: /\b(party|night out|club|dance floor|celebrate)\b/i, tags: ['PartyNight', 'NightOutMood'] },
+  { test: /\b(outfit|ootd|fit check|fashion)\b/i, tags: ['OutfitCheck', 'StyleMood'] },
+  { test: /\b(food|foodie|dessert|dinner|lunch|brunch)\b/i, tags: ['FoodieMoments', 'EatRepeat'] },
+  { test: /\b(startup|build|launch|shipping|project)\b/i, tags: ['BuildInPublic', 'LaunchMode'] },
+  { test: /\b(sad|heartbreak|missing|alone|healing)\b/i, tags: ['LateNightFeels', 'SadHours'] },
+];
+const SEMANTIC_HASHTAG_KEYWORD_GROUPS = [
+  { keywords: ['selfie', 'portrait'], tags: ['SelfieMood', 'FaceCard'] },
+  { keywords: ['night', 'late'], tags: ['LateNightMood'] },
+  { keywords: ['girl', 'girls'], tags: ['GirlsNight'] },
+  { keywords: ['boy', 'boys'], tags: ['BoysNight'] },
+  { keywords: ['glow', 'glowup'], tags: ['GlowUpCheck'] },
+  { keywords: ['roadtrip', 'road'], tags: ['RoadTripMode'] },
+  { keywords: ['beach', 'wave'], tags: ['BeachDay'] },
+  { keywords: ['sunset', 'golden'], tags: ['SunsetLover'] },
+  { keywords: ['study', 'library'], tags: ['CampusDiary'] },
+  { keywords: ['career', 'internship'], tags: ['CareerMoves'] },
+];
 const REWRITE_ACTIONS = {
   shorter: {
     instruction:
@@ -328,7 +459,7 @@ function toHashtagLabel(value) {
     .join('');
 }
 
-function collectHashtagKeywords(value) {
+function collectHashtagTokens(value) {
   if (typeof value !== 'string') {
     return [];
   }
@@ -338,6 +469,11 @@ function collectHashtagKeywords(value) {
     .replace(/[^a-z0-9\s]+/g, ' ')
     .split(/\s+/)
     .map((word) => word.trim())
+    .filter(Boolean);
+}
+
+function collectHashtagKeywords(value) {
+  return collectHashtagTokens(value)
     .filter(
       (word) =>
         word.length >= 3 &&
@@ -346,36 +482,107 @@ function collectHashtagKeywords(value) {
     );
 }
 
-function buildHashtagFinish({ input, text, tone, platform, imageDescription }) {
-  const existingHashtags = extractExistingHashtags(text);
-  const seenHashtags = new Set(existingHashtags.map((item) => item.toLowerCase()));
-  const nextHashtags = [...existingHashtags];
-  const candidateWords = [
-    ...collectHashtagKeywords(input),
-    ...collectHashtagKeywords(text),
-    ...collectHashtagKeywords(imageDescription || ''),
-  ];
-  const phraseCandidates = [];
+function collectHashtagPhrases(value) {
+  const meaningfulTokens = collectHashtagTokens(value).filter(
+    (word) =>
+      word.length >= 4 &&
+      !HASHTAG_STOP_WORDS.has(word) &&
+      !WEAK_SINGLE_WORD_HASHTAGS.has(word) &&
+      !/^\d+$/.test(word)
+  );
+  const phrases = [];
 
-  for (let index = 0; index < candidateWords.length - 1; index += 1) {
-    phraseCandidates.push(`${candidateWords[index]} ${candidateWords[index + 1]}`);
+  for (let index = 0; index < meaningfulTokens.length - 1; index += 1) {
+    phrases.push(`${meaningfulTokens[index]} ${meaningfulTokens[index + 1]}`);
   }
 
-  const fallbackLabels = [
-    platform && platform !== 'Auto Detect' ? platform : 'Post Ready',
-    tone ? `${tone} Vibes` : '',
-    'Likhle Pick',
-  ];
+  return Array.from(new Set(phrases)).slice(0, 8);
+}
+
+function isWeakHashtagLabel(label) {
+  if (typeof label !== 'string') {
+    return true;
+  }
+
+  const normalizedLabel = label.replace(/^#/, '');
+  const splitWords =
+    normalizedLabel.match(/[A-Z]?[a-z0-9]+/g)?.map((word) => word.toLowerCase()) || [];
+
+  return splitWords.length === 1 && WEAK_SINGLE_WORD_HASHTAGS.has(splitWords[0]);
+}
+
+function getFallbackToneHashtags(tone) {
+  return {
+    Aesthetic: ['AestheticMood'],
+    Funny: ['FunnyEnergy'],
+    Savage: ['SavageMode'],
+    Motivational: ['MotivationDaily'],
+    Romantic: ['SoftMoments'],
+    Professional: ['CareerReady'],
+    Desi: ['DesiMood'],
+  }[tone] || ['GenZIndia'];
+}
+
+function getFallbackPlatformHashtags(platform) {
+  return {
+    'Instagram Caption': ['InstagramPost'],
+    'Instagram Bio': ['InstagramBio'],
+    'Reels Hook': ['ReelsHook'],
+    'WhatsApp Status': ['StatusUpdate'],
+    'LinkedIn Bio': ['LinkedInPost'],
+    'Twitter/X Bio': ['TwitterBio'],
+    'Auto Detect': ['PostReady'],
+  }[platform] || ['PostReady'];
+}
+
+function getSemanticHashtagCandidates({ input, imageDescription, platform, tone }) {
+  const contextText = `${input || ''}\n${imageDescription || ''}`.toLowerCase();
+  const contextKeywords = new Set([
+    ...collectHashtagKeywords(input),
+    ...collectHashtagKeywords(imageDescription || ''),
+  ]);
+  const semanticTags = [];
+
+  for (const rule of SEMANTIC_HASHTAG_RULES) {
+    if (rule.test.test(contextText)) {
+      semanticTags.push(...rule.tags);
+    }
+  }
+
+  for (const group of SEMANTIC_HASHTAG_KEYWORD_GROUPS) {
+    if (group.keywords.some((keyword) => contextKeywords.has(keyword))) {
+      semanticTags.push(...group.tags);
+    }
+  }
+
+  semanticTags.push(...getFallbackToneHashtags(tone));
+  semanticTags.push(...getFallbackPlatformHashtags(platform));
+  semanticTags.push('GenZIndia', 'LikhlePick');
+
+  return Array.from(new Set(semanticTags));
+}
+
+function buildHashtagFinish({ input, text, tone, platform, imageDescription }) {
+  const existingHashtags = extractExistingHashtags(text).filter(
+    (hashtag) => !isWeakHashtagLabel(hashtag)
+  );
+  const seenHashtags = new Set(existingHashtags.map((item) => item.toLowerCase()));
+  const nextHashtags = [...existingHashtags];
+  const candidatePhrases = Array.from(
+    new Set([
+      ...collectHashtagPhrases(input),
+      ...collectHashtagPhrases(imageDescription || ''),
+    ])
+  );
   const orderedCandidates = [
-    ...phraseCandidates,
-    ...candidateWords,
-    ...fallbackLabels,
+    ...getSemanticHashtagCandidates({ input, imageDescription, platform, tone }),
+    ...candidatePhrases,
   ];
 
   for (const candidate of orderedCandidates) {
     const nextLabel = toHashtagLabel(candidate);
 
-    if (!nextLabel || nextLabel.length < 3) {
+    if (!nextLabel || nextLabel.length < 3 || isWeakHashtagLabel(nextLabel)) {
       continue;
     }
 
@@ -458,17 +665,47 @@ function formatRetryDelay(retryAfterSeconds) {
   return minutes === 1 ? 'about 1 minute' : `about ${minutes} minutes`;
 }
 
-function normalizeProviderError(error) {
+function getProviderErrorSignals(error) {
   const status = Number(error?.status);
+  const errorName = typeof error?.name === 'string' ? error.name : '';
   const providerMessage =
     error?.error?.error?.message ||
     error?.error?.message ||
     error?.message ||
     '';
   const providerCode = error?.error?.error?.code || error?.error?.code || '';
+  const causeCode =
+    error?.cause?.code ||
+    error?.cause?.cause?.code ||
+    error?.error?.code ||
+    '';
+  const causeMessage =
+    error?.cause?.message ||
+    error?.cause?.cause?.message ||
+    '';
+  const signalText =
+    `${providerMessage} ${causeMessage} ${providerCode} ${causeCode} ${errorName}`.toLowerCase();
   const retryAfterSeconds = parseRetryAfterSeconds(
     getHeaderValue(error?.headers, 'retry-after')
   );
+
+  return {
+    status,
+    providerMessage,
+    providerCode,
+    causeCode,
+    signalText,
+    retryAfterSeconds,
+  };
+}
+
+function hasProviderSignal(signalText, patterns) {
+  return patterns.some((pattern) => pattern.test(signalText));
+}
+
+function normalizeProviderError(error) {
+  const { status, providerMessage, providerCode, signalText, retryAfterSeconds } =
+    getProviderErrorSignals(error);
 
   if (
     status === 429 ||
@@ -480,9 +717,58 @@ function normalizeProviderError(error) {
       : 'Try again in 30-60 seconds.';
 
     return {
+      kind: 'quota',
       status: 429,
       retryAfterSeconds,
+      retryDelayMs: Math.min(
+        Math.max(RETRY_BACKOFF_BASE_MS, (retryAfterSeconds || 2) * 1000),
+        6000
+      ),
       message: `Likhle is hitting the current AI quota right now. ${retryMessage}`,
+    };
+  }
+
+  if (
+    (typeof Groq.APIConnectionTimeoutError === 'function' &&
+      error instanceof Groq.APIConnectionTimeoutError) ||
+    hasProviderSignal(signalText, PROVIDER_TIMEOUT_SIGNAL_PATTERNS)
+  ) {
+    return {
+      kind: 'timeout',
+      status: 504,
+      retryAfterSeconds: PROVIDER_TIMEOUT_RETRY_AFTER_SECONDS,
+      retryDelayMs: PROVIDER_TIMEOUT_RETRY_DELAY_MS,
+      message: `The AI provider took too long to respond that time. Likhle will stop waiting and let you retry instead. Try again in ${formatRetryDelay(PROVIDER_TIMEOUT_RETRY_AFTER_SECONDS)}.`,
+    };
+  }
+
+  if (
+    (typeof Groq.APIConnectionError === 'function' &&
+      error instanceof Groq.APIConnectionError) ||
+    hasProviderSignal(signalText, PROVIDER_CONNECTION_SIGNAL_PATTERNS)
+  ) {
+    return {
+      kind: 'connection',
+      status: 503,
+      retryAfterSeconds: PROVIDER_CONNECTION_RETRY_AFTER_SECONDS,
+      retryDelayMs: PROVIDER_CONNECTION_RETRY_DELAY_MS,
+      message: `Likhle could not reach the AI provider right now. This looks like a temporary network issue. Try again in ${formatRetryDelay(PROVIDER_CONNECTION_RETRY_AFTER_SECONDS)}.`,
+    };
+  }
+
+  if (
+    status === 502 ||
+    status === 503 ||
+    status === 504 ||
+    /temporar/i.test(providerMessage) ||
+    hasProviderSignal(signalText, PROVIDER_UNSTABLE_SIGNAL_PATTERNS)
+  ) {
+    return {
+      kind: 'unstable',
+      status: 503,
+      retryAfterSeconds: PROVIDER_CONNECTION_RETRY_AFTER_SECONDS,
+      retryDelayMs: PROVIDER_UNSTABLE_RETRY_DELAY_MS,
+      message: `The AI provider is unstable right now. Try again in ${formatRetryDelay(PROVIDER_CONNECTION_RETRY_AFTER_SECONDS)}.`,
     };
   }
 
@@ -491,32 +777,30 @@ function normalizeProviderError(error) {
 
 function isTransientProviderError(error) {
   const providerError = normalizeProviderError(error);
-  const status = Number(error?.status);
-  const providerMessage =
-    error?.error?.error?.message ||
-    error?.error?.message ||
-    error?.message ||
-    '';
+
+  if (providerError) {
+    return providerError.kind !== 'quota';
+  }
+
+  const { status, providerMessage, signalText } = getProviderErrorSignals(error);
 
   return Boolean(
-    providerError ||
-      status === 502 ||
+    status === 502 ||
       status === 503 ||
       status === 504 ||
       /temporar/i.test(providerMessage) ||
       /timeout/i.test(providerMessage) ||
-      /overloaded/i.test(providerMessage) ||
-      /busy/i.test(providerMessage) ||
-      /unavailable/i.test(providerMessage)
+      hasProviderSignal(signalText, PROVIDER_CONNECTION_SIGNAL_PATTERNS) ||
+      hasProviderSignal(signalText, PROVIDER_UNSTABLE_SIGNAL_PATTERNS) ||
+      hasProviderSignal(signalText, PROVIDER_TIMEOUT_SIGNAL_PATTERNS)
   );
 }
 
 function getRetryDelayMs(error, attemptIndex) {
   const providerError = normalizeProviderError(error);
-  const retryAfterSeconds = providerError?.retryAfterSeconds;
 
-  if (retryAfterSeconds) {
-    return Math.max(RETRY_BACKOFF_BASE_MS, retryAfterSeconds * 1000);
+  if (providerError?.retryDelayMs) {
+    return providerError.retryDelayMs;
   }
 
   return RETRY_BACKOFF_BASE_MS * (attemptIndex + 1);
@@ -1177,12 +1461,21 @@ Selection rules:
 Return the JSON now:`;
 }
 
-async function requestGroqJson({ prompt, maxTokens, temperature, model = PRIMARY_GROQ_MODEL }) {
+async function requestGroqJson({
+  prompt,
+  maxTokens,
+  temperature,
+  model = PRIMARY_GROQ_MODEL,
+  timeoutMs = PRIMARY_GROQ_REQUEST_TIMEOUT_MS,
+}) {
   const completion = await groq.chat.completions.create({
     model,
     messages: [{ role: 'user', content: prompt }],
     max_tokens: maxTokens,
     temperature,
+  }, {
+    timeout: timeoutMs,
+    maxRetries: 0,
   });
 
   return completion.choices[0]?.message?.content || '';
@@ -1205,6 +1498,7 @@ async function runGenerationAttempt({
   lightMode = false,
   model = PRIMARY_GROQ_MODEL,
   skipQualityReview = false,
+  timeoutMs = PRIMARY_GROQ_REQUEST_TIMEOUT_MS,
 }) {
   const qualityCandidateCount = getQualityCandidateCount({
     count,
@@ -1241,6 +1535,7 @@ async function runGenerationAttempt({
     maxTokens: completionTokenBudget,
     temperature: rewriteInstruction && currentResult ? (lightMode ? 0.66 : 0.72) : (lightMode ? 0.72 : 0.82),
     model,
+    timeoutMs,
   });
 
   let results = parseStructuredResults(primaryRaw, {
@@ -1273,6 +1568,7 @@ async function runGenerationAttempt({
       maxTokens: completionTokenBudget,
       temperature: rewriteInstruction && currentResult ? (lightMode ? 0.58 : 0.64) : (lightMode ? 0.68 : 0.74),
       model,
+      timeoutMs,
     });
 
     results = parseStructuredResults(fallbackRaw, {
@@ -1305,6 +1601,7 @@ async function runGenerationAttempt({
         maxTokens: getQualityReviewMaxTokens({ count, lightMode }),
         temperature: 0.35,
         model,
+        timeoutMs: Math.min(timeoutMs, QUALITY_REVIEW_REQUEST_TIMEOUT_MS),
       });
       const reviewedResults = parseStructuredResults(reviewedRaw, {
         count,
@@ -1363,18 +1660,21 @@ async function generateResultsWithRecovery({
       lightMode: false,
       skipQualityReview: false,
       model: PRIMARY_GROQ_MODEL,
+      timeoutMs: PRIMARY_GROQ_REQUEST_TIMEOUT_MS,
     },
     {
       count: lighterCount,
       lightMode: true,
       skipQualityReview: true,
       model: PRIMARY_GROQ_MODEL,
+      timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
     },
     {
       count: lighterCount,
       lightMode: true,
       skipQualityReview: true,
       model: FALLBACK_GROQ_MODEL,
+      timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
     },
   ].slice(0, MAX_TRANSIENT_RETRIES + 1);
   let lastTransientError = null;
@@ -1400,6 +1700,7 @@ async function generateResultsWithRecovery({
         lightMode: attemptPlan.lightMode,
         skipQualityReview: attemptPlan.skipQualityReview,
         model: attemptPlan.model,
+        timeoutMs: attemptPlan.timeoutMs,
       });
     } catch (error) {
       if (!isTransientProviderError(error) || attemptIndex >= attemptPlans.length - 1) {
