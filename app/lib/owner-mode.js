@@ -1,16 +1,33 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-export const OWNER_MODE_COOKIE_NAME = 'likhle_owner';
-export const OWNER_MODE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
-const OWNER_MODE_MAX_AGE_MS = OWNER_MODE_MAX_AGE_SECONDS * 1000;
-const OWNER_MODE_COOKIE_PREFIX = 'likhle-owner';
+const DAY_IN_SECONDS = 60 * 60 * 24;
 
-export function getOwnerModeSecret() {
-  return process.env.OWNER_MODE_TOKEN?.trim() || '';
+const ACCESS_MODE_CONFIG = {
+  owner: {
+    cookieName: 'likhle_owner',
+    cookiePrefix: 'likhle-owner',
+    envKey: 'OWNER_MODE_TOKEN',
+    maxAgeSeconds: DAY_IN_SECONDS * 30,
+  },
+  admin: {
+    cookieName: 'likhle_admin',
+    cookiePrefix: 'likhle-admin',
+    envKey: 'ADMIN_MODE_TOKEN',
+    maxAgeSeconds: DAY_IN_SECONDS * 10,
+  },
+};
+
+export const OWNER_MODE_COOKIE_NAME = ACCESS_MODE_CONFIG.owner.cookieName;
+export const OWNER_MODE_MAX_AGE_SECONDS = ACCESS_MODE_CONFIG.owner.maxAgeSeconds;
+export const ADMIN_MODE_COOKIE_NAME = ACCESS_MODE_CONFIG.admin.cookieName;
+export const ADMIN_MODE_MAX_AGE_SECONDS = ACCESS_MODE_CONFIG.admin.maxAgeSeconds;
+
+function getAccessModeConfig(mode = 'owner') {
+  return ACCESS_MODE_CONFIG[mode] || ACCESS_MODE_CONFIG.owner;
 }
 
-export function isOwnerModeConfigured() {
-  return Boolean(getOwnerModeSecret());
+function getAccessModeMaxAgeMs(mode = 'owner') {
+  return getAccessModeConfig(mode).maxAgeSeconds * 1000;
 }
 
 function safeCompare(a, b) {
@@ -24,13 +41,15 @@ function safeCompare(a, b) {
   return timingSafeEqual(left, right);
 }
 
-function signOwnerModeValue(expiresAt, secret = getOwnerModeSecret()) {
+function signAccessModeValue(mode, expiresAt, secret = getAccessModeSecret(mode)) {
   if (!secret) {
     return '';
   }
 
+  const { cookiePrefix } = getAccessModeConfig(mode);
+
   return createHmac('sha256', secret)
-    .update(`${OWNER_MODE_COOKIE_PREFIX}:${expiresAt}`)
+    .update(`${cookiePrefix}:${expiresAt}`)
     .digest('base64url');
 }
 
@@ -59,8 +78,17 @@ function parseCookieHeader(cookieHeader) {
   );
 }
 
-export function hasMatchingOwnerSecret(submittedSecret) {
-  const configuredSecret = getOwnerModeSecret();
+export function getAccessModeSecret(mode = 'owner') {
+  const { envKey } = getAccessModeConfig(mode);
+  return process.env[envKey]?.trim() || '';
+}
+
+export function isAccessModeConfigured(mode = 'owner') {
+  return Boolean(getAccessModeSecret(mode));
+}
+
+export function hasMatchingAccessSecret(mode = 'owner', submittedSecret) {
+  const configuredSecret = getAccessModeSecret(mode);
 
   if (!configuredSecret || typeof submittedSecret !== 'string') {
     return false;
@@ -69,17 +97,17 @@ export function hasMatchingOwnerSecret(submittedSecret) {
   return safeCompare(submittedSecret.trim(), configuredSecret);
 }
 
-export function createOwnerModeSession() {
-  const expiresAt = Date.now() + OWNER_MODE_MAX_AGE_MS;
+export function createAccessModeSession(mode = 'owner') {
+  const expiresAt = Date.now() + getAccessModeMaxAgeMs(mode);
 
   return {
     expiresAt,
-    cookieValue: `${expiresAt}.${signOwnerModeValue(expiresAt)}`,
+    cookieValue: `${expiresAt}.${signAccessModeValue(mode, expiresAt)}`,
   };
 }
 
-export function verifyOwnerModeCookieValue(cookieValue) {
-  if (!isOwnerModeConfigured() || typeof cookieValue !== 'string' || !cookieValue.trim()) {
+export function verifyAccessModeCookieValue(mode = 'owner', cookieValue) {
+  if (!isAccessModeConfigured(mode) || typeof cookieValue !== 'string' || !cookieValue.trim()) {
     return {
       active: false,
       expiresAt: null,
@@ -96,7 +124,7 @@ export function verifyOwnerModeCookieValue(cookieValue) {
     };
   }
 
-  const expectedSignature = signOwnerModeValue(expiresAt);
+  const expectedSignature = signAccessModeValue(mode, expiresAt);
 
   if (!expectedSignature || !safeCompare(signature, expectedSignature)) {
     return {
@@ -111,34 +139,69 @@ export function verifyOwnerModeCookieValue(cookieValue) {
   };
 }
 
-export function getOwnerModeStateFromRequest(request) {
+export function getAccessModeStateFromRequest(mode = 'owner', request) {
   const cookieHeader = request?.headers?.get?.('cookie') || '';
   const cookies = parseCookieHeader(cookieHeader);
-  const ownerCookieValue = cookies.get(OWNER_MODE_COOKIE_NAME);
+  const { cookieName } = getAccessModeConfig(mode);
+  const cookieValue = cookies.get(cookieName);
 
-  return verifyOwnerModeCookieValue(ownerCookieValue);
+  return verifyAccessModeCookieValue(mode, cookieValue);
 }
 
-export function isOwnerModeRequest(request) {
-  return getOwnerModeStateFromRequest(request).active;
+export function isAccessModeRequest(mode = 'owner', request) {
+  return getAccessModeStateFromRequest(mode, request).active;
 }
 
-export function getOwnerModeCookieSettings({ value, expiresAt, secure = true }) {
+export function getPrivilegedAccessStateFromRequest(request) {
+  const ownerState = getAccessModeStateFromRequest('owner', request);
+
+  if (ownerState.active) {
+    return {
+      mode: 'owner',
+      ...ownerState,
+    };
+  }
+
+  const adminState = getAccessModeStateFromRequest('admin', request);
+
+  if (adminState.active) {
+    return {
+      mode: 'admin',
+      ...adminState,
+    };
+  }
+
   return {
-    name: OWNER_MODE_COOKIE_NAME,
+    mode: null,
+    active: false,
+    expiresAt: null,
+  };
+}
+
+export function isPrivilegedAccessRequest(request) {
+  return getPrivilegedAccessStateFromRequest(request).active;
+}
+
+export function getAccessModeCookieSettings(mode = 'owner', { value, expiresAt, secure = true }) {
+  const { cookieName, maxAgeSeconds } = getAccessModeConfig(mode);
+
+  return {
+    name: cookieName,
     value,
     httpOnly: true,
     sameSite: 'lax',
     secure,
     path: '/',
-    maxAge: OWNER_MODE_MAX_AGE_SECONDS,
+    maxAge: maxAgeSeconds,
     expires: new Date(expiresAt),
   };
 }
 
-export function getOwnerModeClearCookieSettings({ secure = true } = {}) {
+export function getAccessModeClearCookieSettings(mode = 'owner', { secure = true } = {}) {
+  const { cookieName } = getAccessModeConfig(mode);
+
   return {
-    name: OWNER_MODE_COOKIE_NAME,
+    name: cookieName,
     value: '',
     httpOnly: true,
     sameSite: 'lax',
@@ -149,7 +212,7 @@ export function getOwnerModeClearCookieSettings({ secure = true } = {}) {
   };
 }
 
-export function shouldUseSecureOwnerCookie(request) {
+export function shouldUseSecureAccessCookie(request) {
   const forwardedProto = request?.headers?.get?.('x-forwarded-proto')?.split(',')[0]?.trim();
 
   if (forwardedProto) {
@@ -167,4 +230,84 @@ export function shouldUseSecureOwnerCookie(request) {
   }
 
   return false;
+}
+
+export function getOwnerModeSecret() {
+  return getAccessModeSecret('owner');
+}
+
+export function isOwnerModeConfigured() {
+  return isAccessModeConfigured('owner');
+}
+
+export function hasMatchingOwnerSecret(submittedSecret) {
+  return hasMatchingAccessSecret('owner', submittedSecret);
+}
+
+export function createOwnerModeSession() {
+  return createAccessModeSession('owner');
+}
+
+export function verifyOwnerModeCookieValue(cookieValue) {
+  return verifyAccessModeCookieValue('owner', cookieValue);
+}
+
+export function getOwnerModeStateFromRequest(request) {
+  return getAccessModeStateFromRequest('owner', request);
+}
+
+export function isOwnerModeRequest(request) {
+  return isAccessModeRequest('owner', request);
+}
+
+export function getOwnerModeCookieSettings({ value, expiresAt, secure = true }) {
+  return getAccessModeCookieSettings('owner', { value, expiresAt, secure });
+}
+
+export function getOwnerModeClearCookieSettings({ secure = true } = {}) {
+  return getAccessModeClearCookieSettings('owner', { secure });
+}
+
+export function shouldUseSecureOwnerCookie(request) {
+  return shouldUseSecureAccessCookie(request);
+}
+
+export function getAdminModeSecret() {
+  return getAccessModeSecret('admin');
+}
+
+export function isAdminModeConfigured() {
+  return isAccessModeConfigured('admin');
+}
+
+export function hasMatchingAdminSecret(submittedSecret) {
+  return hasMatchingAccessSecret('admin', submittedSecret);
+}
+
+export function createAdminModeSession() {
+  return createAccessModeSession('admin');
+}
+
+export function verifyAdminModeCookieValue(cookieValue) {
+  return verifyAccessModeCookieValue('admin', cookieValue);
+}
+
+export function getAdminModeStateFromRequest(request) {
+  return getAccessModeStateFromRequest('admin', request);
+}
+
+export function isAdminModeRequest(request) {
+  return isAccessModeRequest('admin', request);
+}
+
+export function getAdminModeCookieSettings({ value, expiresAt, secure = true }) {
+  return getAccessModeCookieSettings('admin', { value, expiresAt, secure });
+}
+
+export function getAdminModeClearCookieSettings({ secure = true } = {}) {
+  return getAccessModeClearCookieSettings('admin', { secure });
+}
+
+export function shouldUseSecureAdminCookie(request) {
+  return shouldUseSecureAccessCookie(request);
 }

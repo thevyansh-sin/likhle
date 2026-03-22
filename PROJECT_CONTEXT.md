@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram: `@likhle.in`
-- Current public version: `v0.3.7`
+- Current public version: `v0.3.10`
 
 ## Core Brand Rules
 - Keep the site premium, sharp, dark, and modern.
@@ -37,7 +37,7 @@
 - Generator page: `app/generate/page.js`
 - Main API route: `app/api/generate/route.js`
 - Shared site config: `app/lib/site.js`
-- Owner mode helpers: `app/lib/owner-mode.js`
+- Owner/admin access helpers: `app/lib/owner-mode.js`
 - PWA/service worker: `public/sw.js`
 
 ## Environment Variables
@@ -45,12 +45,14 @@
 - `GEMINI_API_KEY`
 - `NEXT_PUBLIC_SITE_URL`
 - `OWNER_MODE_TOKEN`
+- `ADMIN_MODE_TOKEN`
 
 ## Workflow Rules
 - Meaningful live website changes should usually bump the public version.
 - Future ideas should go into `later upgrades/`.
 - This repo has a public footer version, so version updates should stay intentional.
 - Owner mode exists for the owner's browser and should not be removed casually.
+- Admin mode exists for one trusted tester browser and should stay separate from owner mode.
 
 ## Current Collaboration Split
 - `coding` thread:

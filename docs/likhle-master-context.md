@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram handle: `@likhle.in`
-- Current public version: `v0.3.7`
+- Current public version: `v0.3.10`
 
 ## Tech Stack
 - Next.js 16 App Router
@@ -30,7 +30,7 @@
 - Generator page: `app/generate/page.js`
 - Main API route: `app/api/generate/route.js`
 - Shared site config: `app/lib/site.js`
-- Owner mode logic: `app/lib/owner-mode.js`
+- Owner/admin access mode logic: `app/lib/owner-mode.js`
 - PWA/service worker: `public/sw.js`
 
 ## Environment Variables
@@ -38,6 +38,7 @@
 - `GEMINI_API_KEY`
 - `NEXT_PUBLIC_SITE_URL`
 - `OWNER_MODE_TOKEN`
+- `ADMIN_MODE_TOKEN`
 - `INSTAGRAM_ACCESS_TOKEN`
 - `INSTAGRAM_USER_ID`
 - `META_APP_ID`
@@ -48,7 +49,8 @@
 - Meaningful live website changes should usually bump the public version.
 - Future ideas should go into `later upgrades/`.
 - Version changes should stay intentional because the footer shows the public version.
-- Owner mode exists and should not be removed casually.
+- Owner mode exists for the owner's browser and should not be removed casually.
+- Admin mode exists for one trusted tester browser and should stay separate from owner mode.
 
 ## Thread Split
 - `coding`

@@ -40,6 +40,7 @@ export default defineConfig({
       PORT: String(port),
       NEXT_TELEMETRY_DISABLED: '1',
       OWNER_MODE_TOKEN: process.env.OWNER_MODE_TOKEN || 'likhle-owner-test-secret',
+      ADMIN_MODE_TOKEN: process.env.ADMIN_MODE_TOKEN || 'likhle-admin-test-secret',
     },
   },
 });

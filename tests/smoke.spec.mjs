@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { installGenerateApiMock } from './helpers/mock-generate-api.mjs';
 
 const ownerSecret = process.env.OWNER_MODE_TOKEN || 'likhle-owner-test-secret';
+const adminSecret = process.env.ADMIN_MODE_TOKEN || 'likhle-admin-test-secret';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -71,6 +72,22 @@ test('owner unlock and lock flow works', async ({ page }) => {
 
   await page.getByRole('button', { name: /Turn off/i }).click();
   await expect(ownerStatusLabel).toHaveText('Owner mode locked');
+});
+
+test('admin unlock and lock flow works', async ({ page }) => {
+  await page.goto('/admin/unlock');
+
+  const adminStatusLabel = page.locator('.owner-unlock-status-label');
+  await expect(adminStatusLabel).toHaveText('Admin mode locked');
+
+  await page.getByLabel(/Admin secret/i).fill(adminSecret);
+  await page.getByRole('button', { name: /Unlock admin mode/i }).click();
+
+  await expect(adminStatusLabel).toHaveText('Admin mode active');
+  await expect(page.getByText(/next 10 days/i)).toBeVisible();
+
+  await page.getByRole('button', { name: /Turn off/i }).click();
+  await expect(adminStatusLabel).toHaveText('Admin mode locked');
 });
 
 test('manifest, robots, and sitemap endpoints respond', async ({ request }) => {

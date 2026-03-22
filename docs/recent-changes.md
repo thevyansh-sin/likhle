@@ -4,7 +4,10 @@
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.3.7`.
+- Public version is `v0.3.10`.
+- Trusted tester browsers can now use a separate admin-mode unlock with its own secret and a 10-day signed cookie instead of sharing the owner-mode secret.
+- Local Instagram container-status polling now uses the fields Meta currently accepts, so post flows no longer break on the deprecated `error_message` lookup during readiness checks.
+- Local Instagram validation now uses the fields Meta currently accepts for the connected Instagram business account lookup, so a valid token/IG user pair no longer fails on the deprecated `account_type` field.
 - Homepage `What changed` now stays tighter at 6 feature tiles in a 3x2 desktop grid, and the hero proof/demo labels now carry proper supporting text instead of reading like empty placeholders.
 - Homepage and `/generate` now restore the older Likhle personality and format from the pre-repositioning direction, including the rotating-word homepage hero, the `What changed` framing, and the simpler `Kya likhna hai?` generator intro while keeping the later functional fixes and QA-safe polish.
 - Homepage and generator copy now lean back into a stronger Hinglish-first voice across the hero, nav, proof labels, loading/empty states, and key actions so Likhle sounds more Gen Z India again without losing the premium polish.
@@ -16,6 +19,7 @@ Use this file as a quick human-readable memory of meaningful recent project chan
 - Mobile generate results now hide the floating back-to-top control while the results stack is in view, so the first cards and actions stay visually clear.
 - Generator quick-start templates now trigger generation correctly instead of only prefilling the prompt.
 - Owner mode unlock delete flow no longer crashes, and owner cookies now use the secure flag correctly on HTTPS requests.
+- Admin mode now exists alongside owner mode, uses its own hidden unlock page, and skips the same app-side testing waits for one trusted tester browser at a time.
 - Single-result generation now returns directly instead of overgenerating extra review candidates, which reduces unnecessary provider usage on `count=1` requests.
 - Hashtag fallback generation now uses safer filtered keywords and curated tone/platform labels instead of awkward generated-text word pairs.
 - Generator provider handling now distinguishes quota, timeout, network/DNS, and unstable-upstream faults more cleanly instead of collapsing them into a generic failure.

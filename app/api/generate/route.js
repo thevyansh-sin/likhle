@@ -1,7 +1,7 @@
 import Groq from 'groq-sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createHash } from 'node:crypto';
-import { isOwnerModeRequest } from '../../lib/owner-mode';
+import { isPrivilegedAccessRequest } from '../../lib/owner-mode';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -1717,8 +1717,8 @@ async function generateResultsWithRecovery({
 
 export async function POST(req) {
   try {
-    const ownerMode = isOwnerModeRequest(req);
-    const retryAfterSeconds = ownerMode ? null : consumeRateLimit(req);
+    const privilegedAccess = isPrivilegedAccessRequest(req);
+    const retryAfterSeconds = privilegedAccess ? null : consumeRateLimit(req);
 
     if (retryAfterSeconds) {
       return Response.json(
@@ -1841,7 +1841,7 @@ export async function POST(req) {
       return Response.json({ results: cachedResults, cached: true });
     }
 
-    const activeSessionRetryAfterSeconds = ownerMode
+    const activeSessionRetryAfterSeconds = privilegedAccess
       ? null
       : consumeSessionCooldown(req, sessionKey, rewriteAction);
 
