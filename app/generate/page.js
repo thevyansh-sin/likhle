@@ -1602,7 +1602,7 @@ export default function GeneratePage() {
             disabled={controlsDisabled || !input.trim()}
             style={{ background: t.accent, color: '#000', border: 'none', borderRadius: 12, cursor: controlsDisabled || !input.trim() ? 'not-allowed' : 'pointer', opacity: controlsDisabled || !input.trim() ? 0.5 : 1, transition: 'all 0.2s', boxShadow: controlsDisabled || !input.trim() ? 'none' : t.sectionShadow }}
           >
-            {loading ? 'Drafts aa rahe hain...' : 'Drafts nikalo'}
+            {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
           </button>
         </div>
       </div>
@@ -1610,12 +1610,12 @@ export default function GeneratePage() {
   );
 
   const mobileTemplateLibrary = (
-    <div className="gen-surface-card gen-control-group" style={sectionCardStyle}>
+    <div className="gen-surface-card" style={sectionCardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div>
-          <div style={sectionLabelStyle}>Quick starts</div>
+          <div style={sectionLabelStyle}>Quick Start Templates</div>
           <div style={sectionHelpStyle}>
-            Tap one when you want a cleaner starting stack. Likhle will load the setup and generate right away.
+            Tap one if you want a fast start. Likhle will load the setup and generate results right away.
           </div>
         </div>
         <div style={{ fontSize: 12, color: t.muted }}>
@@ -1649,36 +1649,27 @@ export default function GeneratePage() {
       style={{ minHeight: '100vh', background: t.pageBg, transition: 'all 0.3s', fontFamily: 'var(--font-body)' }}
       onClick={() => setShowMenu(false)}
     >
-      <nav className="info-nav gen-nav" style={{ borderBottom: `1px solid ${t.border}`, background: t.navBg, backdropFilter: 'blur(12px)' }}>
-        <Link href="/" className="info-logo" style={{ color: t.text }}>
-          likhle<span className="logo-dot" style={{ color: t.accentInk }}>.</span>
+      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', padding: 'clamp(18px, 2.6vw, 20px) clamp(20px, 4vw, 40px)', borderBottom: `1px solid ${t.border}`, position: 'sticky', top: 0, zIndex: 100, background: t.navBg, backdropFilter: 'blur(12px)' }}>
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, letterSpacing: -1, color: t.text, lineHeight: 1 }}>likhle<span style={{ color: t.accentInk }}>.</span></div>
         </Link>
-        <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '8px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s' }}>
+        <button onClick={() => setDark(!dark)} style={{ background: t.toggleBg, border: `1px solid ${t.border}`, borderRadius: 100, padding: '8px 16px', cursor: 'pointer', fontSize: 13, color: t.toggleText, fontWeight: 500, transition: 'all 0.2s', boxShadow: t.sectionShadow }}>
           {dark ? '☀️ Light' : '🌙 Dark'}
         </button>
       </nav>
 
-      <div className="gen-body">
-        <div className="gen-header" data-reveal>
-          <div className="gen-page-kicker">India ke posting vibe ke liye built</div>
-          <h1 className="gen-page-title" style={{ color: t.text, marginBottom: 10 }}>Post live hone se pehle line shape karo.</h1>
-          <p className="gen-page-sub" style={{ color: t.muted }}>
-            Post ka scene likho, format aur vibe set karo, phir sabse clean line choose karo.
-          </p>
-          <div className="gen-proof-row">
-            <span className="gen-proof-chip">Instagram captions</span>
-            <span className="gen-proof-chip">Reels hooks</span>
-            <span className="gen-proof-chip">WhatsApp statuses</span>
-            <span className="gen-proof-chip">Hinglish-ready</span>
-          </div>
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: 'clamp(40px, 6vw, 60px) clamp(16px, 4vw, 20px)' }}>
+        <div style={{ marginBottom: 48 }} data-reveal>
+          <h1 className="gen-page-title" style={{ color: t.text, marginBottom: 8 }}>Kya likhna hai? ✍️</h1>
+          <p style={{ fontSize: 16, color: t.muted }}>Describe karo — AI sab samajh leta hai.</p>
         </div>
 
-        <div className="gen-controls-stack">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div data-reveal>{composerPanel}</div>
 
-            <div className="gen-surface-card gen-control-group gen-control-group--wide" style={sectionCardStyle} data-reveal>
-              <div style={sectionLabelStyle}>Platform / Format</div>
-              <div style={sectionHelpStyle}>Yeh line exactly kahan jayegi woh pick karo, taaki output seedha fit baithe.</div>
+          <div style={sectionCardStyle} data-reveal>
+            <div style={sectionLabelStyle}>Platform / Format</div>
+            <div style={sectionHelpStyle}>Choose exactly where this text will be used so the output fits better.</div>
             <div style={pillRowStyle}>
               {PLATFORM_OPTIONS.map((option) => (
                 <button key={option} onClick={() => setPlatform(option)} style={getPillStyle(platform === option)}>
@@ -1688,10 +1679,10 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          <div className="gen-controls-grid" data-reveal>
-            <div className="gen-surface-card gen-control-group" style={sectionCardStyle} data-reveal data-reveal-delay="0.02s">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }} data-reveal>
+            <div className="gen-surface-card" style={sectionCardStyle} data-reveal data-reveal-delay="0.02s">
               <div style={sectionLabelStyle}>Length</div>
-              <div style={sectionHelpStyle}>Kitna short ya detailed chahiye, pehle decide karo.</div>
+              <div style={sectionHelpStyle}>Pick how short or detailed each result should feel.</div>
               <div style={pillRowStyle}>
                 {LENGTH_OPTIONS.map((option) => (
                   <button key={option} onClick={() => setLength(option)} style={getPillStyle(length === option)}>
@@ -1701,9 +1692,9 @@ export default function GeneratePage() {
               </div>
             </div>
 
-            <div className="gen-surface-card gen-control-group" style={sectionCardStyle} data-reveal data-reveal-delay="0.06s">
+            <div className="gen-surface-card" style={sectionCardStyle} data-reveal data-reveal-delay="0.06s">
               <div style={sectionLabelStyle}>Options</div>
-              <div style={sectionHelpStyle}>Hinglish, emojis, ya hashtags jaise extras on karo.</div>
+              <div style={sectionHelpStyle}>Turn on extras like Hinglish, emojis, or hashtags.</div>
               <div style={pillRowStyle}>
                 {OPTIONS.map((option) => (
                   <button key={option} onClick={() => toggleOption(option)} style={getPillStyle(selectedOptions.includes(option))}>
@@ -1714,9 +1705,9 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          <div className="gen-surface-card gen-control-group" style={sectionCardStyle} data-reveal>
+          <div className="gen-surface-card" style={sectionCardStyle} data-reveal>
             <div style={sectionLabelStyle}>Tone / Vibe</div>
-            <div style={sectionHelpStyle}>Mood pehle pick karo, phir Likhle language uske around shape karega.</div>
+            <div style={sectionHelpStyle}>Choose the mood first, then let the AI shape the language around it.</div>
             <div style={pillRowStyle}>
               {TONES.map((option) => (
                 <button key={option} onClick={() => setTone(option)} style={getPillStyle(tone === option)}>

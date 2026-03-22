@@ -9,8 +9,8 @@ test('homepage loads cleanly', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.getByRole('link', { name: /likhna shuru karo/i }).first()).toBeVisible();
-  await expect(page.getByRole('heading', { level: 1, name: /india ke posting vibe ko samajhne wala writing tool\./i })).toBeVisible();
-  await expect(page.getByText(/posting ka real decision flow isi tarah chalta hai\./i)).toBeVisible();
+  await expect(page.getByText(/proper creator tool ban gaya hai\./i)).toBeVisible();
+  await expect(page.getByText(/Likhle now shows the product it was supposed to be/i)).toBeVisible();
 });
 
 test('generate page quick-start template prefill auto-generates', async ({ page }) => {
@@ -33,7 +33,7 @@ test('generate page submit, regenerate, and rewrite flows work', async ({ page }
 
   const textarea = page.locator('textarea');
   await textarea.fill('Write a funny Instagram caption for chai at 2am with friends.');
-  await page.getByRole('button', { name: /Drafts nikalo/i }).click();
+  await page.getByRole('button', { name: /Likhle!/i }).click();
 
   await expect(page.getByText(/Yeh lo 3 post-ready options/i)).toBeVisible();
   await expect(page.getByText(/Mock caption 1 \[batch 1\]/i)).toBeVisible();

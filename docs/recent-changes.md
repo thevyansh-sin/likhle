@@ -4,8 +4,8 @@
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.3.5`.
-- `/generate` now keeps the newer layout and polish, while leaning back into the stronger Hinglish-first voice across controls, states, results, saved picks, and footer guidance so the page feels more like core Likhle again.
+- Public version is `v0.3.6`.
+- Homepage and `/generate` now restore the older Likhle personality and format from the pre-repositioning direction, including the rotating-word homepage hero, the `What changed` framing, and the simpler `Kya likhna hai?` generator intro while keeping the later functional fixes and QA-safe polish.
 - Homepage and generator copy now lean back into a stronger Hinglish-first voice across the hero, nav, proof labels, loading/empty states, and key actions so Likhle sounds more Gen Z India again without losing the premium polish.
 - Design consistency pass brought generator, SEO pages, idea pages, and info pages closer to the homepage benchmark through tighter card rhythm, calmer hierarchy, more premium CTA treatment, and stronger shared nav/footer consistency.
 - Generator polish now feels more product-led, with a sharper intro, more cohesive control grouping, a stronger reward state for results, and quieter secondary treatment for saved picks and recent runs.
