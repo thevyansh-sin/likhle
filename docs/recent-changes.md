@@ -4,7 +4,8 @@
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.3.6`.
+- Public version is `v0.3.7`.
+- Homepage `What changed` now stays tighter at 6 feature tiles in a 3x2 desktop grid, and the hero proof/demo labels now carry proper supporting text instead of reading like empty placeholders.
 - Homepage and `/generate` now restore the older Likhle personality and format from the pre-repositioning direction, including the rotating-word homepage hero, the `What changed` framing, and the simpler `Kya likhna hai?` generator intro while keeping the later functional fixes and QA-safe polish.
 - Homepage and generator copy now lean back into a stronger Hinglish-first voice across the hero, nav, proof labels, loading/empty states, and key actions so Likhle sounds more Gen Z India again without losing the premium polish.
 - Design consistency pass brought generator, SEO pages, idea pages, and info pages closer to the homepage benchmark through tighter card rhythm, calmer hierarchy, more premium CTA treatment, and stronger shared nav/footer consistency.

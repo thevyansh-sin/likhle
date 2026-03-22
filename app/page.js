@@ -32,9 +32,9 @@ const featureCards = [
     desc: 'Instagram caption, bio, Reels hook, WhatsApp status, LinkedIn bio, or Twitter/X bio. No more hoping the AI guesses correctly.',
   },
   {
-    eyebrow: 'Control',
-    title: 'Dial the length up or down',
-    desc: 'Pick short, medium, or long before you generate, so the result already fits your post instead of needing rewrites.',
+    eyebrow: 'Visual',
+    title: 'Add an image reference first',
+    desc: 'Upload a photo, preview it, or paste a screenshot so Likhle catches the mood, setting, and style before writing.',
   },
   {
     eyebrow: 'Speed',
@@ -45,21 +45,6 @@ const featureCards = [
     eyebrow: 'Memory',
     title: 'Your recent ideas stay saved',
     desc: 'Likhle now keeps recent generations in browser history, so you can come back later and reuse what worked.',
-  },
-  {
-    eyebrow: 'Visual',
-    title: 'Add an image reference',
-    desc: 'Upload a photo, preview it first, and let the AI understand the mood, setting, and vibe before writing.',
-  },
-  {
-    eyebrow: 'Desktop',
-    title: 'Paste screenshots straight in',
-    desc: 'On desktop, copy a screenshot and press Ctrl+V inside the prompt box to attach it instantly without opening the upload menu.',
-  },
-  {
-    eyebrow: 'Rewrite',
-    title: 'Refine one result instantly',
-    desc: 'Make one option shorter, more savage, more aesthetic, more professional, or more Hinglish without regenerating the whole set.',
   },
   {
     eyebrow: 'Output',
@@ -84,7 +69,24 @@ const workflowSteps = [
     desc: 'Copy, download, regenerate one option, or reopen it later from recent history.',
   },
 ];
-const proofCards = ['Platform-aware output', 'Template starters built in', 'Recent history saved', 'Copy or download fast'];
+const proofCards = [
+  {
+    title: 'Platform-aware output',
+    note: 'Caption, bio, hook, ya status ke hisaab se line shape hoti hai.',
+  },
+  {
+    title: 'Template starters built in',
+    note: 'Quick starts se blank box ka pressure kam ho jata hai.',
+  },
+  {
+    title: 'Recent history saved',
+    note: 'Jo kaam ki line thi, woh browser mein ready rehti hai.',
+  },
+  {
+    title: 'Copy or download fast',
+    note: 'Best option uthao ya poora batch ek shot mein save karo.',
+  },
+];
 
 export default function Home() {
   const [wordIndex, setWordIndex] = useState(0);
@@ -147,7 +149,10 @@ export default function Home() {
 
             <div className="hero-proof-grid">
               {proofCards.map((card) => (
-                <div key={card} className="proof-card">{card}</div>
+                <div key={card.title} className="proof-card">
+                  <span className="proof-card-title">{card.title}</span>
+                  <span className="proof-card-note">{card.note}</span>
+                </div>
               ))}
             </div>
           </div>
@@ -167,9 +172,9 @@ export default function Home() {
               </div>
 
               <div className="demo-chip-row">
-                <span className="demo-chip demo-chip-active">Instagram Caption</span>
-                <span className="demo-chip">Medium</span>
-                <span className="demo-chip">Aesthetic</span>
+                <span className="demo-chip demo-chip-active">Instagram caption</span>
+                <span className="demo-chip">Medium length</span>
+                <span className="demo-chip">Aesthetic tone</span>
               </div>
 
               <div className="demo-result-card">
@@ -183,9 +188,9 @@ export default function Home() {
               </div>
 
               <div className="demo-meta-row">
-                <span className="demo-meta-pill">Regenerate one</span>
-                <span className="demo-meta-pill">Save history</span>
-                <span className="demo-meta-pill">Copy all</span>
+                <span className="demo-meta-pill">Regenerate one result</span>
+                <span className="demo-meta-pill">Save in recent history</span>
+                <span className="demo-meta-pill">Copy the full set</span>
               </div>
             </div>
           </div>
@@ -209,7 +214,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="features-grid">
+        <div className="features-grid features-grid--three">
           {featureCards.map((feature) => (
             <div key={feature.title} className="feature-card" data-reveal data-reveal-delay="0.02s">
               <span className="feature-eyebrow">{feature.eyebrow}</span>
