@@ -1,6 +1,6 @@
 {
   "name": "likhle",
-  "version": "0.2.26",
+  "version": "0.2.27",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "instagram:mcp:check": "node ./scripts/meta-instagram-mcp.mjs --check",
-    "instagram:validate": "node ./scripts/post-to-instagram.js --validate"
+    "instagram:validate": "node ./scripts/post-to-instagram.js --validate",
+    "openai:media:mcp:check": "node ./scripts/openai-media-mcp.mjs --check",
+    "openai:media:validate": "node ./scripts/openai-media-cli.mjs --validate"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -25,6 +27,7 @@
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.2.0",
+    "openai": "^6.32.0",
     "tailwindcss": "^4",
     "zod": "^4.3.6"
   }

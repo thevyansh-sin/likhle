@@ -45,3 +45,5 @@ next-env.d.ts
 /social-assets/releases/*.png
 /social-assets/releases/*.jpg
 /social-assets/releases/*.jpeg
+/social-assets/openai-media/images/*
+/social-assets/openai-media/videos/*
