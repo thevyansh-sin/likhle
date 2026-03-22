@@ -74,8 +74,24 @@ Goal:
 Tone:
 ```
 
+## 5. Upgrades Strategy
+```text
+mode: brainstorm only
+
+Area:
+
+What feels limited right now:
+
+What should improve later:
+
+Why it matters:
+
+Should this be saved for later upgrades:
+```
+
 ## Quick Router
 - `code / commit / push` -> `coding`
 - `bugs / QA / server / testing` -> `website bugs and testing`
 - `visual direction / branding / design taste` -> `branding and design`
 - `captions / reels / launch posts / social plan` -> `socials`
+- `future upgrades / roadmap / what to add later / strategy` -> `upgrades strategy`

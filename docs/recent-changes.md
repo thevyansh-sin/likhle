@@ -5,6 +5,7 @@ Use this file as a quick human-readable memory of meaningful recent project chan
 
 ## Current Snapshot
 - Public version is `v0.3.10`.
+- Repo workflow now includes an `upgrades strategy` thread lane with shared read-order docs and a pinned prompt file so long-term planning stays aligned with coding, testing, branding, and socials.
 - Trusted tester browsers can now use a separate admin-mode unlock with its own secret and a 10-day signed cookie instead of sharing the owner-mode secret.
 - Local Instagram container-status polling now uses the fields Meta currently accepts, so post flows no longer break on the deprecated `error_message` lookup during readiness checks.
 - Local Instagram validation now uses the fields Meta currently accepts for the connected Instagram business account lookup, so a valid token/IG user pair no longer fails on the deprecated `account_type` field.

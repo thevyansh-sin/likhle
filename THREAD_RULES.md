@@ -64,6 +64,21 @@ Do not use this thread for:
 - live website bug fixing
 - repo refactors
 
+## 5. Upgrades Strategy
+Use this thread for:
+- future upgrades
+- what to add later
+- what to remove later
+- long-term website/product ideas
+- roadmap thinking
+- priority discussions
+
+Do not use this thread for:
+- direct code implementation
+- bug fixing
+- social post writing
+- narrow visual-only reviews
+
 ## Shared Rule For All Threads
 - If something is for later, save it in `later upgrades/`.
 - Keep one thread focused on one kind of work.
@@ -79,6 +94,8 @@ Do not use this thread for:
   - send to `website bugs and testing`
 - `feature build / code edit / refactor / commit / push / repo docs`
   - send to `coding`
+- `future roadmap / what to build later / what should change next / upgrade planning`
+  - send to `upgrades strategy`
 
 ## Coding Thread Enforcement
 Default rule for the `coding` thread:
@@ -109,6 +126,7 @@ Use one short line at the top of a message when possible:
 - `this belongs in branding and design thread`
 - `this belongs in website bugs and testing thread`
 - `this belongs in coding thread`
+- `this belongs in upgrades strategy thread`
 
 ## Repo Memory Rule
 - Shared repo memory now lives mainly in:
@@ -117,3 +135,4 @@ Use one short line at the top of a message when possible:
   - `docs/recent-changes.md`
   - `docs/thread-read-order.md`
   - `docs/known-risk-areas.md`
+  - `docs/upgrades-strategy-thread-prompt.md`

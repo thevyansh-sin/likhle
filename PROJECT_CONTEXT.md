@@ -71,6 +71,11 @@
   - posts
   - reels
   - launch content
+- `upgrades strategy` thread:
+  - future upgrades
+  - roadmap thinking
+  - what to add later
+  - priority planning
 
 ## Notes
 - If a future idea is not for immediate implementation, save it in `later upgrades/`.

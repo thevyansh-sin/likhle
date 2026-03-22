@@ -69,6 +69,11 @@
   - posts
   - reels
   - launch content
+- `upgrades strategy`
+  - future upgrades
+  - roadmap thinking
+  - what to add later
+  - priority planning
 
 ## Current Working Rule
 - In the coding thread:

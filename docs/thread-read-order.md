@@ -1,6 +1,6 @@
 # Thread Read Order
 
-Use this file to keep all 4 threads aligned with the same repo memory.
+Use this file to keep all active threads aligned with the same repo memory.
 
 ## 1. Coding Thread
 Read first:
@@ -64,6 +64,28 @@ Best report shape:
 - console errors
 - network errors
 - screenshot if helpful
+
+## 5. Upgrades Strategy Thread
+Read first:
+1. `docs/likhle-master-context.md`
+2. `docs/brand-rules.md`
+3. `docs/recent-changes.md`
+4. `docs/upgrades-strategy-thread-prompt.md`
+
+Main job:
+- future upgrade ideas
+- roadmap thinking
+- what to add later
+- what to remove later
+- prioritization
+
+Important rule:
+- this thread discusses what should happen later
+- confirmed ideas should be saved into `later upgrades/`
+- actual implementation should go to the `coding` thread
+- bug validation should go to `website bugs and testing`
+- pure visual direction should go to `branding and design`
+- social rollouts should go to `socials`
 
 ## Shared Rule
 - If something is for later, save it in `later upgrades/`.
