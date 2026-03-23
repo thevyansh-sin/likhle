@@ -1,0 +1,31 @@
+# Likhle
+
+> AI writing tool for Gen Z India with Hinglish + Desi tone
+
+## Core Features
+1. **Multi-Platform Generation:** Generates aesthetic content natively for Instagram Captions, Reels Hooks, WhatsApp Statuses, LinkedIn Bios, and X/Twitter.
+2. **Cultural Tones:** Specializes in Desi, Savage, Aesthetic, Motivational, Funny, Romantic, and Professional tones.
+3. **Smart Vision Integration:** Users upload images. The system extracts aesthetic vibes, color palettes, and lighting data via Gemini to write hyper-specific captions that match the photo perfectly.
+4. **Iterative Rewriting:** 1-click modifiers (Shorter, More Emoji, Better Hashtags, More Hinglish).
+
+## Tone
+- Hinglish
+- Gen Z Indian
+- Bold, sharp, non-generic
+
+## Target Users
+- Indian creators
+- Students
+- Instagram-first audience
+
+## Tech Stack
+- Frontend: Next.js 16 App Router, React 19, Tailwind CSS
+- Backend API: Groq (Llama-3.3-70b) Primary, Google Gemini (1.5 Flash) Fallback
+- Infrastructure: Upstash Redis for global persistent caching and rate limiting
+
+## Rules for AI Agents
+- Do not generate generic western tone
+- Always use desi relatability
+- Keep content short, punchy, viral-ready
+- Do not invent features or architecture components not listed here
+- Treat this document as the absolute ground-truth architecture for the Likhle App
