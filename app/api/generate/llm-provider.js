@@ -98,6 +98,7 @@ export async function runGenerationAttempt({
   model = PRIMARY_GROQ_MODEL,
   skipQualityReview = false,
   timeoutMs = PRIMARY_GROQ_REQUEST_TIMEOUT_MS,
+  userStyleProfile = null,
 }) {
   const requestFn = provider === 'gemini' ? requestGeminiJson : requestGroqJson;
 
@@ -129,6 +130,7 @@ export async function runGenerationAttempt({
     rewriteAction,
     rewriteInstruction,
     currentResult,
+    userStyleProfile,
   });
 
   const primaryRaw = await requestFn({
@@ -162,6 +164,7 @@ export async function runGenerationAttempt({
       rewriteAction,
       rewriteInstruction,
       currentResult,
+      userStyleProfile,
     });
 
     const fallbackRaw = await requestFn({
@@ -252,6 +255,7 @@ export async function generateResultsWithRecovery({
   rewriteAction,
   rewriteInstruction,
   currentResult,
+  userStyleProfile,
 }) {
   const isRewriteFlow = Boolean(rewriteInstruction && currentResult);
   const lighterCount = isRewriteFlow ? count : Math.min(count, LIGHT_MODE_MAX_GENERATION_COUNT);
@@ -314,6 +318,7 @@ export async function generateResultsWithRecovery({
         skipQualityReview: attemptPlan.skipQualityReview,
         model: attemptPlan.model,
         timeoutMs: attemptPlan.timeoutMs,
+        userStyleProfile,
       });
     } catch (error) {
       if (!isTransientProviderError(error) || attemptIndex >= attemptPlans.length - 1) {

@@ -21,6 +21,7 @@ import {
   parseSessionKey,
 } from './prompt-builder';
 import { generateResultsWithRecovery } from './llm-provider';
+import { getStyleProfile, updateStyleProfile } from './style-memory';
 import { env } from '../../../lib/env.js';
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
@@ -209,6 +210,8 @@ export async function POST(req) {
       );
     }
 
+    const userStyleProfile = await getStyleProfile(sessionKey);
+
     const results = await generateResultsWithRecovery({
       input,
       tone,
@@ -223,6 +226,7 @@ export async function POST(req) {
       rewriteAction,
       rewriteInstruction,
       currentResult,
+      userStyleProfile,
     });
 
     if (results.length === 0) {
@@ -234,7 +238,15 @@ export async function POST(req) {
 
     await writeCachedValue(generationCacheStore, generationCacheKey, results, GENERATION_CACHE_TTL_MS);
 
-    return Response.json({ results });
+    // Fire and forget: update the style profile asynchronously
+    updateStyleProfile(sessionKey, results, tone, rewriteAction).catch(err => {
+      console.error('Style update failed:', err);
+    });
+
+    return Response.json({ 
+      results,
+      learnedVibe: userStyleProfile?.generation_count >= 3 
+    });
   } catch (err) {
     console.error('Error:', err);
     const providerError = normalizeProviderError(err);

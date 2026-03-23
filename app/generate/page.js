@@ -379,6 +379,7 @@ export default function GeneratePage() {
   const [copied, setCopied] = useState(null);
   const [copiedAll, setCopiedAll] = useState(false);
   const [dark, setDark] = useState(true);
+  const [learnedVibe, setLearnedVibe] = useState(false);
   const [error, setError] = useState('');
   const [attachment, setAttachment] = useState(null);
   const [attachmentPreview, setAttachmentPreview] = useState('');
@@ -1127,6 +1128,9 @@ export default function GeneratePage() {
       }
 
       setStatusNotice('');
+      if (typeof data.learnedVibe === 'boolean') {
+        setLearnedVibe(data.learnedVibe);
+      }
       return normalizedResults;
     } catch {
       setError('Server se connection nahi hua. Try again!');
@@ -1706,7 +1710,14 @@ export default function GeneratePage() {
           </div>
 
           <div className="gen-surface-card" style={sectionCardStyle} data-reveal>
-            <div style={sectionLabelStyle}>Tone / Vibe</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <div style={sectionLabelStyle}>Tone / Vibe</div>
+              {learnedVibe && (
+                <div style={{ fontSize: 11, fontWeight: 700, color: t.accentInk, background: dark ? 'rgba(202,255,0,0.1)' : 'rgba(111,133,0,0.1)', padding: '4px 10px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  We&apos;ve learned your vibe ⚡
+                </div>
+              )}
+            </div>
             <div style={sectionHelpStyle}>Choose the mood first, then let the AI shape the language around it.</div>
             <div style={pillRowStyle}>
               {TONES.map((option) => (

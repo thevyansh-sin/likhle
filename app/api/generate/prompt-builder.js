@@ -365,6 +365,7 @@ export function getQualityReviewMaxTokens({ count, lightMode = false }) {
 export function buildPrompt({
   input, tone, hinglish, emoji, hashtags, imageDescription, platform,
   length, count, avoidResults, rewriteAction, rewriteInstruction, currentResult,
+  userStyleProfile,
 }) {
   const langNote = hinglish
     ? 'Write in Hinglish (natural mix of Hindi and English, like how Gen Z Indians actually talk).'
@@ -385,6 +386,19 @@ export function buildPrompt({
   const rewriteConfig = rewriteAction ? REWRITE_ACTIONS[rewriteAction] : null;
   const rewriteInstructionText = rewriteInstruction || rewriteConfig?.instruction || '';
 
+  let stylePreferenceNote = '';
+  if (userStyleProfile) {
+    const { emoji_density, hinglish_ratio, avg_length, structure } = userStyleProfile;
+    stylePreferenceNote = `
+User Writing Style Profile (Contextual markers):
+- Historical Emoji Density: ${emoji_density.toFixed(2)} (0 = none, 1 = heavy)
+- Historical Hinglish Blending: ${hinglish_ratio.toFixed(2)} (0 = pure English, 1 = heavy Hinglish)
+- Average Sentence Length: ${Math.round(avg_length)} characters
+- Structural Preference: ${structure}
+
+You MUST intelligently blend these historical markers into the CURRENT generation. If the user's current request or selected tone strongly contradicts this profile, prioritize the current request, otherwise maintain this consistent "user voice".`;
+  }
+
   if (rewriteInstructionText && currentResult) {
     const rewriteLanguageNote = rewriteAction === 'moreHinglish'
       ? 'Write in natural Hinglish (a smooth Hindi-English mix that sounds like real Gen Z Indian conversation).'
@@ -400,6 +414,7 @@ The user already has a draft and wants it rewritten in one specific direction.
 Original user request: ${input}
 Current draft to rewrite: ${currentResult}
 ${imageNote}
+${stylePreferenceNote}
 
 ${platformNote}
 ${rewriteLengthNote}
@@ -440,6 +455,7 @@ The user will describe what they want in plain language. You must:
 
 User's request: ${input}
 ${imageNote}
+${stylePreferenceNote}
 
 ${platformNote}
 ${getLengthNote(length)}
@@ -473,6 +489,7 @@ Return the JSON now:`;
 export function buildFallbackPrompt({
   input, tone, hinglish, emoji, hashtags, imageDescription, platform,
   length, count, avoidResults, rewriteAction, rewriteInstruction, currentResult,
+  userStyleProfile,
 }) {
   const langNote = hinglish
     ? 'Write in natural Hinglish with a smooth Hindi-English mix that sounds modern and authentic for Gen Z India.'
@@ -527,6 +544,7 @@ Write ${count} strong, distinct options for this request.
 
 User request: ${input}
 Tone: ${tone}
+${userStyleProfile ? `User Style Profile: ${userStyleProfile.structure}, ${userStyleProfile.hinglish_ratio > 0.5 ? 'Hinglish heavy' : 'English leaning'}.` : ''}
 ${imageNote}
 ${platformNote}
 ${getLengthNote(length)}
