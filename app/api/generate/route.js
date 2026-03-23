@@ -211,6 +211,7 @@ export async function POST(req) {
       );
     }
 
+    const userStyleProfile = await getStyleProfile(sessionKey);
     const isStreamRequested = formData.get('stream') === 'true';
 
     if (isStreamRequested && !cachedResults) {

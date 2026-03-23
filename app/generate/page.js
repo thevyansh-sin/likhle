@@ -405,6 +405,7 @@ export default function GeneratePage() {
   const [themeReady, setThemeReady] = useState(false);
   const [toast, setToast] = useState(null);
   const [statusNotice, setStatusNotice] = useState('');
+  const [pendingResultAction, setPendingResultAction] = useState(null);
   const fileRef = useRef(null);
   const toastTimeoutRef = useRef(null);
   const outputSectionRef = useRef(null);
