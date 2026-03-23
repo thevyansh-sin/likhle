@@ -10,6 +10,10 @@ import {
   GENERATION_CACHE_TTL_MS,
   readCachedValue,
   writeCachedValue,
+  acquireInflightLock,
+  releaseInflightLock,
+  waitForInflightResult,
+  logMetric,
 } from './rate-limit';
 import { normalizeProviderError } from './provider-error';
 import {
@@ -64,9 +68,11 @@ function validateImageFile(imageFile) {
 }
 
 export async function POST(req) {
+  const requestStartMs = Date.now();
   try {
     const privilegedAccess = isPrivilegedAccessRequest(req);
-    const retryAfterSeconds = privilegedAccess ? null : await consumeRateLimit(req);
+    const isRewrite = Boolean(req.headers.get('x-rewrite-action'));
+    const retryAfterSeconds = privilegedAccess ? null : await consumeRateLimit(req, { isRewrite });
 
     if (retryAfterSeconds) {
       return Response.json(
@@ -189,7 +195,21 @@ export async function POST(req) {
     const cachedResults = await readCachedValue(generationCacheStore, generationCacheKey);
 
     if (cachedResults) {
+      logMetric({ event: 'generate', cached: true, latencyMs: Date.now() - requestStartMs });
       return Response.json({ results: cachedResults, cached: true });
+    }
+
+    // ── In-flight deduplication ──────────────────────────────────────────────
+    const lockAcquired = await acquireInflightLock(generationCacheKey);
+    if (!lockAcquired) {
+      // Another request is generating the same thing — wait for its result
+      const inflightResult = await waitForInflightResult(generationCacheKey);
+      if (inflightResult) {
+        logMetric({ event: 'generate', cached: true, latencyMs: Date.now() - requestStartMs });
+        return Response.json({ results: inflightResult, cached: true });
+      }
+      // Other request failed — let this one through as a fresh attempt
+      await acquireInflightLock(generationCacheKey); // re-acquire
     }
 
     const activeSessionRetryAfterSeconds = privilegedAccess
@@ -214,12 +234,20 @@ export async function POST(req) {
     const userStyleProfile = await getStyleProfile(sessionKey);
     const isStreamRequested = formData.get('stream') === 'true';
 
-    if (isStreamRequested && !cachedResults) {
+    if (isStreamRequested) {
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         async start(controller) {
           let fullText = '';
           try {
+            // Stage 1: signal analyzing (image context already fetched above)
+            if (imageDescription) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ stage: 'analyzing' })}\n\n`));
+            }
+
+            // Stage 2: signal generating
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ stage: 'generating' })}\n\n`));
+
             const generator = generateResultsStream({
               input,
               tone,
@@ -260,6 +288,7 @@ export async function POST(req) {
               updateStyleProfile(sessionKey, parsedResults, tone, rewriteAction).catch((profileErr) => {
                 console.error('Style update failed in stream:', profileErr);
               });
+              logMetric({ event: 'generate', provider: 'groq', latencyMs: Date.now() - requestStartMs });
 
               controller.enqueue(
                 encoder.encode(
@@ -278,6 +307,7 @@ export async function POST(req) {
           } catch (streamErr) {
             console.error('Stream generation error:', streamErr);
             const providerError = normalizeProviderError(streamErr);
+            logMetric({ event: 'stream_error', provider: 'groq', latencyMs: Date.now() - requestStartMs });
             controller.enqueue(
               encoder.encode(
                 `data: ${JSON.stringify({
@@ -287,6 +317,7 @@ export async function POST(req) {
               )
             );
           } finally {
+            await releaseInflightLock(generationCacheKey);
             controller.close();
           }
         },
@@ -319,6 +350,7 @@ export async function POST(req) {
     });
 
     if (results.length === 0) {
+      await releaseInflightLock(generationCacheKey);
       return Response.json(
         { error: 'AI returned an empty response. Please try again.' },
         { status: 502 }
@@ -326,6 +358,9 @@ export async function POST(req) {
     }
 
     await writeCachedValue(generationCacheStore, generationCacheKey, results, GENERATION_CACHE_TTL_MS);
+    await releaseInflightLock(generationCacheKey);
+
+    logMetric({ event: 'generate', provider: 'groq', latencyMs: Date.now() - requestStartMs });
 
     // Fire and forget: update the style profile asynchronously
     updateStyleProfile(sessionKey, results, tone, rewriteAction).catch(err => {

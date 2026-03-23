@@ -11,7 +11,9 @@ import {
 } from './prompt-builder';
 import { ensureHashtagFinish } from './hashtags';
 import { isTransientProviderError, getRetryDelayMs } from './provider-error';
+import { isCircuitOpen, recordProviderFailure, recordProviderSuccess } from './rate-limit';
 import { env } from '../../../lib/env.js';
+
 
 const groq = new Groq({ apiKey: env.GROQ_API_KEY });
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
@@ -363,47 +365,65 @@ export async function generateResultsWithRecovery({
 }) {
   const isRewriteFlow = Boolean(rewriteInstruction && currentResult);
   const lighterCount = isRewriteFlow ? count : Math.min(count, LIGHT_MODE_MAX_GENERATION_COUNT);
-  const attemptPlans = [
-    {
-      count,
-      lightMode: false,
-      skipQualityReview: false,
-      provider: 'groq',
-      model: PRIMARY_GROQ_MODEL,
-      timeoutMs: PRIMARY_GROQ_REQUEST_TIMEOUT_MS,
-    },
-    {
-      count: lighterCount,
-      lightMode: true,
-      skipQualityReview: true,
-      provider: 'groq',
-      model: PRIMARY_GROQ_MODEL,
-      timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
-    },
-    {
-      count: lighterCount,
-      lightMode: true,
-      skipQualityReview: true,
-      provider: 'groq',
-      model: FALLBACK_GROQ_MODEL,
-      timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
-    },
-    {
-      count: lighterCount,
-      lightMode: true,
-      skipQualityReview: true,
-      provider: 'gemini',
-      model: GEMINI_TEXT_MODEL,
-      timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
-    },
-  ].slice(0, MAX_TRANSIENT_RETRIES + 1);
+
+  // Check circuit breaker before building the attempt plan
+  const groqCircuitOpen = await isCircuitOpen('groq');
+
+  const fullAttemptPlans = groqCircuitOpen
+    ? [
+        // Groq is tripped — go straight to Gemini
+        {
+          count: lighterCount,
+          lightMode: true,
+          skipQualityReview: true,
+          provider: 'gemini',
+          model: GEMINI_TEXT_MODEL,
+          timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
+        },
+      ]
+    : [
+        {
+          count,
+          lightMode: false,
+          skipQualityReview: isRewriteFlow, // skip QR on rewrites always
+          provider: 'groq',
+          model: PRIMARY_GROQ_MODEL,
+          timeoutMs: PRIMARY_GROQ_REQUEST_TIMEOUT_MS,
+        },
+        {
+          count: lighterCount,
+          lightMode: true,
+          skipQualityReview: true,
+          provider: 'groq',
+          model: PRIMARY_GROQ_MODEL,
+          timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
+        },
+        {
+          count: lighterCount,
+          lightMode: true,
+          skipQualityReview: true,
+          provider: 'groq',
+          model: FALLBACK_GROQ_MODEL,
+          timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
+        },
+        {
+          count: lighterCount,
+          lightMode: true,
+          skipQualityReview: true,
+          provider: 'gemini',
+          model: GEMINI_TEXT_MODEL,
+          timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
+        },
+      ];
+
+  const attemptPlans = fullAttemptPlans.slice(0, MAX_TRANSIENT_RETRIES + 1);
   let lastTransientError = null;
 
   for (let attemptIndex = 0; attemptIndex < attemptPlans.length; attemptIndex += 1) {
     const attemptPlan = attemptPlans[attemptIndex];
 
     try {
-      return await runGenerationAttempt({
+      const result = await runGenerationAttempt({
         input,
         tone,
         hinglish,
@@ -424,7 +444,15 @@ export async function generateResultsWithRecovery({
         timeoutMs: attemptPlan.timeoutMs,
         userStyleProfile,
       });
+
+      // Record success to reset circuit breaker
+      await recordProviderSuccess(attemptPlan.provider);
+
+      return result;
     } catch (error) {
+      // Record failure for circuit breaker tracking
+      await recordProviderFailure(attemptPlan.provider);
+
       if (!isTransientProviderError(error) || attemptIndex >= attemptPlans.length - 1) {
         throw error;
       }
@@ -436,3 +464,4 @@ export async function generateResultsWithRecovery({
 
   throw lastTransientError || new Error('Generation failed');
 }
+

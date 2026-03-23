@@ -1,12 +1,30 @@
 import { Redis } from '@upstash/redis';
 
+// ─── Rate Limiting ─────────────────────────────────────────────────────────
 export const RATE_LIMIT_WINDOW_MS = 60 * 1000;
-export const RATE_LIMIT_MAX_REQUESTS = 6;
+export const RATE_LIMIT_GENERATE_MAX = 10; // fresh generations per min per IP
+export const RATE_LIMIT_REWRITE_MAX = 20;  // rewrites per min per IP (cheaper)
+/** @deprecated use RATE_LIMIT_GENERATE_MAX / RATE_LIMIT_REWRITE_MAX */
+export const RATE_LIMIT_MAX_REQUESTS = 10;
+
+// ─── Session Cooldowns ──────────────────────────────────────────────────────
 export const SESSION_COOLDOWN_GENERATE_MS = 2400;
 export const SESSION_COOLDOWN_REWRITE_MS = 1600;
+
+// ─── Cache TTLs ─────────────────────────────────────────────────────────────
 export const GENERATION_CACHE_TTL_MS = 10 * 60 * 1000;
 export const IMAGE_CONTEXT_CACHE_TTL_MS = 60 * 60 * 1000;
 
+// ─── In-flight Dedup ────────────────────────────────────────────────────────
+export const INFLIGHT_LOCK_TTL_MS = 20_000;
+export const INFLIGHT_POLL_INTERVAL_MS = 300;
+export const INFLIGHT_MAX_WAIT_MS = 8_000;
+
+// ─── Circuit Breaker ────────────────────────────────────────────────────────
+export const CIRCUIT_BREAKER_TTL_MS = 30_000;       // how long circuit stays open
+export const CIRCUIT_BREAKER_THRESHOLD = 3;          // consecutive fails to open
+
+// ─── In-Memory Fallback Stores ──────────────────────────────────────────────
 export const rateLimitStore = globalThis.__likhleRateLimitStore || new Map();
 export const generationCacheStore = globalThis.__likhleGenerationCacheStore || new Map();
 export const imageContextCacheStore = globalThis.__likhleImageContextCacheStore || new Map();
@@ -17,16 +35,17 @@ if (!globalThis.__likhleGenerationCacheStore) globalThis.__likhleGenerationCache
 if (!globalThis.__likhleImageContextCacheStore) globalThis.__likhleImageContextCacheStore = imageContextCacheStore;
 if (!globalThis.__likhleSessionCooldownStore) globalThis.__likhleSessionCooldownStore = sessionCooldownStore;
 
+// ─── Redis Client ───────────────────────────────────────────────────────────
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 export const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null;
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 export function getClientKey(req) {
   const forwardedFor = req.headers.get('x-forwarded-for');
   const realIp = req.headers.get('x-real-ip');
   const userAgent = req.headers.get('user-agent') || 'unknown-agent';
   const ip = forwardedFor?.split(',')[0]?.trim() || realIp || 'unknown-ip';
-
   return `${ip}:${userAgent}`;
 }
 
@@ -39,49 +58,44 @@ function pruneTimedStore(store) {
   }
 }
 
-export async function consumeRateLimit(req) {
+// ─── Rate Limiting ───────────────────────────────────────────────────────────
+export async function consumeRateLimit(req, { isRewrite = false } = {}) {
   const clientKey = getClientKey(req);
+  const actionSuffix = isRewrite ? 'rw' : 'gen';
+  const maxRequests = isRewrite ? RATE_LIMIT_REWRITE_MAX : RATE_LIMIT_GENERATE_MAX;
 
   if (redis) {
     try {
-      const redisKey = `ratelimit:${clientKey}`;
+      const redisKey = `ratelimit:${clientKey}:${actionSuffix}`;
       const count = await redis.incr(redisKey);
-      
       if (count === 1) {
         await redis.pexpire(redisKey, RATE_LIMIT_WINDOW_MS);
       }
-      
-      if (count > RATE_LIMIT_MAX_REQUESTS) {
+      if (count > maxRequests) {
         const ttl = await redis.pttl(redisKey);
         return Math.max(1, Math.ceil(ttl / 1000));
       }
       return null;
     } catch (err) {
       console.error('Redis consumeRateLimit error:', err);
-      // Fallback natively to local maps if Redis chokes
     }
   }
 
   // Memory Fallback
   const now = Date.now();
+  const memKey = `${clientKey}:${actionSuffix}`;
   for (const [key, value] of rateLimitStore.entries()) {
-    if (value.resetAt <= now) {
-      rateLimitStore.delete(key);
-    }
+    if (value.resetAt <= now) rateLimitStore.delete(key);
   }
-
-  const currentEntry = rateLimitStore.get(clientKey);
-
+  const currentEntry = rateLimitStore.get(memKey);
   if (!currentEntry) {
-    rateLimitStore.set(clientKey, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    rateLimitStore.set(memKey, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
     return null;
   }
-
-  if (currentEntry.count >= RATE_LIMIT_MAX_REQUESTS) {
+  if (currentEntry.count >= maxRequests) {
     return Math.max(1, Math.ceil((currentEntry.resetAt - now) / 1000));
   }
-
-  rateLimitStore.set(clientKey, { ...currentEntry, count: currentEntry.count + 1 });
+  rateLimitStore.set(memKey, { ...currentEntry, count: currentEntry.count + 1 });
   return null;
 }
 
@@ -115,15 +129,14 @@ export async function consumeSessionCooldown(req, rawSessionKey, rewriteAction) 
   pruneTimedStore(sessionCooldownStore);
   const now = Date.now();
   const existingEntry = sessionCooldownStore.get(cooldownKey);
-
   if (existingEntry && existingEntry.expiresAt > now) {
     return Math.max(1, Math.ceil((existingEntry.expiresAt - now) / 1000));
   }
-
   sessionCooldownStore.set(cooldownKey, { expiresAt: now + cooldownMs });
   return null;
 }
 
+// ─── Result Cache ─────────────────────────────────────────────────────────────
 export async function readCachedValue(store, key) {
   if (redis) {
     try {
@@ -141,12 +154,10 @@ export async function readCachedValue(store, key) {
   // Memory Fallback
   pruneTimedStore(store);
   const cachedEntry = store.get(key);
-
   if (!cachedEntry || cachedEntry.expiresAt <= Date.now()) {
     store.delete(key);
     return null;
   }
-
   return cachedEntry.value;
 }
 
@@ -162,8 +173,121 @@ export async function writeCachedValue(store, key, value, ttlMs) {
   }
 
   // Memory Fallback
-  store.set(key, {
-    value,
-    expiresAt: Date.now() + ttlMs,
-  });
+  store.set(key, { value, expiresAt: Date.now() + ttlMs });
 }
+
+// ─── In-Flight Deduplication ─────────────────────────────────────────────────
+/**
+ * Try to acquire the inflight lock for a given cache key.
+ * Returns true if lock was acquired (safe to proceed with generation).
+ * Returns false if another request already holds the lock (caller should wait).
+ */
+export async function acquireInflightLock(cacheKey) {
+  if (!redis) return true; // no Redis → always proceed
+  try {
+    const acquired = await redis.set(`inflight:${cacheKey}`, '1', { nx: true, px: INFLIGHT_LOCK_TTL_MS });
+    return !!acquired;
+  } catch (err) {
+    console.error('Redis acquireInflightLock error:', err);
+    return true; // fail open
+  }
+}
+
+/**
+ * Release the inflight lock after generation completes (success or failure).
+ */
+export async function releaseInflightLock(cacheKey) {
+  if (!redis) return;
+  try {
+    await redis.del(`inflight:${cacheKey}`);
+  } catch (err) {
+    console.error('Redis releaseInflightLock error:', err);
+  }
+}
+
+/**
+ * Poll for a cached result while another request holds the inflight lock.
+ * Returns the result if it appears within INFLIGHT_MAX_WAIT_MS, otherwise null.
+ */
+export async function waitForInflightResult(cacheKey) {
+  if (!redis) return null;
+  const deadline = Date.now() + INFLIGHT_MAX_WAIT_MS;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, INFLIGHT_POLL_INTERVAL_MS));
+    try {
+      const cached = await redis.get(`gen:${cacheKey}`);
+      if (cached) return typeof cached === 'string' ? JSON.parse(cached) : cached;
+      // If lock is gone and no result, the other request failed
+      const lock = await redis.get(`inflight:${cacheKey}`);
+      if (!lock) return null;
+    } catch (err) {
+      console.error('Redis waitForInflightResult error:', err);
+      return null;
+    }
+  }
+  return null;
+}
+
+// ─── Circuit Breaker ──────────────────────────────────────────────────────────
+/**
+ * Returns true if the circuit for `provider` is open (i.e. skip that provider).
+ */
+export async function isCircuitOpen(provider) {
+  if (!redis) return false;
+  try {
+    return !!(await redis.get(`circuit:${provider}`));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Record a provider failure. After CIRCUIT_BREAKER_THRESHOLD consecutive
+ * failures, the circuit opens for CIRCUIT_BREAKER_TTL_MS.
+ */
+export async function recordProviderFailure(provider) {
+  if (!redis) return;
+  try {
+    const failKey = `circuit:${provider}:failures`;
+    const count = await redis.incr(failKey);
+    if (count === 1) await redis.pexpire(failKey, 60_000);
+    if (count >= CIRCUIT_BREAKER_THRESHOLD) {
+      await redis.set(`circuit:${provider}`, 'open', { px: CIRCUIT_BREAKER_TTL_MS });
+    }
+  } catch (err) {
+    console.error('Redis recordProviderFailure error:', err);
+  }
+}
+
+/**
+ * Reset the circuit after a successful generation.
+ */
+export async function recordProviderSuccess(provider) {
+  if (!redis) return;
+  try {
+    await redis.del(`circuit:${provider}`);
+    await redis.del(`circuit:${provider}:failures`);
+  } catch (err) {
+    console.error('Redis recordProviderSuccess error:', err);
+  }
+}
+
+// ─── Metrics ──────────────────────────────────────────────────────────────────
+/**
+ * Fire-and-forget metric logging into Redis hashes keyed by day.
+ * Data expires after 7 days. Read via GET /api/admin/metrics.
+ */
+export function logMetric({ event, provider = 'none', latencyMs = null, cached = false, attemptIndex = 0 }) {
+  if (!redis) return;
+  const day = new Date().toISOString().slice(0, 10);
+  const key = `metrics:${day}`;
+  const field = cached ? 'cache_hit' : `${event}:${provider}:attempt${attemptIndex}`;
+  redis.hincrby(key, field, 1).catch(() => {});
+  if (latencyMs !== null) {
+    redis.lpush(`latency:${day}`, String(Math.round(latencyMs))).catch(() => {});
+    redis.ltrim(`latency:${day}`, 0, 1999).catch(() => {}); // keep last 2000 samples
+  }
+  redis.expire(key, 7 * 24 * 3600).catch(() => {});
+  redis.expire(`latency:${day}`, 7 * 24 * 3600).catch(() => {});
+}
+
