@@ -63,7 +63,7 @@ function validateImageFile(imageFile) {
 export async function POST(req) {
   try {
     const privilegedAccess = isPrivilegedAccessRequest(req);
-    const retryAfterSeconds = privilegedAccess ? null : consumeRateLimit(req);
+    const retryAfterSeconds = privilegedAccess ? null : await consumeRateLimit(req);
 
     if (retryAfterSeconds) {
       return Response.json(
@@ -121,7 +121,7 @@ export async function POST(req) {
           mimeType,
           size: imageFile.size,
         });
-        imageDescription = readCachedValue(imageContextCacheStore, imageCacheKey);
+        imageDescription = await readCachedValue(imageContextCacheStore, imageCacheKey);
 
         if (!imageDescription) {
           const base64Image = Buffer.from(imageBytes).toString('base64');
@@ -139,7 +139,7 @@ export async function POST(req) {
           imageDescription = result.response.text();
 
           if (imageDescription) {
-            writeCachedValue(
+            await writeCachedValue(
               imageContextCacheStore,
               imageCacheKey,
               imageDescription,
@@ -180,7 +180,7 @@ export async function POST(req) {
       rewriteInstruction,
       currentResult,
     });
-    const cachedResults = readCachedValue(generationCacheStore, generationCacheKey);
+    const cachedResults = await readCachedValue(generationCacheStore, generationCacheKey);
 
     if (cachedResults) {
       return Response.json({ results: cachedResults, cached: true });
@@ -188,7 +188,7 @@ export async function POST(req) {
 
     const activeSessionRetryAfterSeconds = privilegedAccess
       ? null
-      : consumeSessionCooldown(req, sessionKey, rewriteAction);
+      : await consumeSessionCooldown(req, sessionKey, rewriteAction);
 
     if (activeSessionRetryAfterSeconds) {
       return Response.json(
@@ -228,7 +228,7 @@ export async function POST(req) {
       );
     }
 
-    writeCachedValue(generationCacheStore, generationCacheKey, results, GENERATION_CACHE_TTL_MS);
+    await writeCachedValue(generationCacheStore, generationCacheKey, results, GENERATION_CACHE_TTL_MS);
 
     return Response.json({ results });
   } catch (err) {
