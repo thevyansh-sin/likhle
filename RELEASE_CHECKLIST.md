@@ -28,6 +28,14 @@
   - saved ideas
   - repo-only organization files
 
+### Where version lives (single source of truth)
+1. **`package.json` → `"version"`** — bump this (semver patch/minor as appropriate).
+2. **Website footers and badges** — read `siteVersion` / `siteVersionPrefix` from `app/lib/site.js` (imported from `package.json`). Do not hardcode version strings in UI.
+3. **Backend** — `GET /api/version` returns JSON `{ name, version, label }` and header `X-Likhle-Version`. Any new API that should advertise build identity can import from `app/lib/site.js` or add the same header.
+4. **`package-lock.json`** — after changing `package.json`, run `npm install` so the lockfile root `version` stays aligned.
+5. **Docs** — if a doc states the current public version (for example `docs/likhle-master-context.md`, `docs/recent-changes.md`), update that line when you bump.
+6. **Service worker** — if you change PWA caching behavior, bump `CACHE_NAME` in `public/sw.js` when needed (independent of semver, but often bumped together).
+
 ## Commit And Push Rule
 - Use a clean commit message.
 - Push after the change is complete.
