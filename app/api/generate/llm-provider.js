@@ -1,4 +1,5 @@
 import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
   getQualityCandidateCount,
   getCompletionMaxTokens,
@@ -12,11 +13,14 @@ import { ensureHashtagFinish } from './hashtags';
 import { isTransientProviderError, getRetryDelayMs } from './provider-error';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
 export const PRIMARY_GROQ_MODEL = process.env.GROQ_PRIMARY_MODEL || 'llama-3.3-70b-versatile';
 export const FALLBACK_GROQ_MODEL = process.env.GROQ_FALLBACK_MODEL || 'llama-3.1-8b-instant';
+export const GEMINI_TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash';
 
 export const LIGHT_MODE_MAX_GENERATION_COUNT = 3;
-export const MAX_TRANSIENT_RETRIES = 2;
+export const MAX_TRANSIENT_RETRIES = 3;
 export const PRIMARY_GROQ_REQUEST_TIMEOUT_MS = 18_000;
 export const LIGHT_GROQ_REQUEST_TIMEOUT_MS = 12_000;
 export const QUALITY_REVIEW_REQUEST_TIMEOUT_MS = 10_000;
@@ -47,6 +51,33 @@ export async function requestGroqJson({
   return completion.choices[0]?.message?.content || '';
 }
 
+export async function requestGeminiJson({
+  prompt,
+  maxTokens,
+  temperature,
+  model = GEMINI_TEXT_MODEL,
+  timeoutMs = LIGHT_GROQ_REQUEST_TIMEOUT_MS,
+}) {
+  const generativeModel = genAI.getGenerativeModel({
+    model,
+    generationConfig: {
+      maxOutputTokens: maxTokens,
+      temperature,
+    }
+  });
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Google AI timeout')), timeoutMs)
+  );
+
+  const result = await Promise.race([
+    generativeModel.generateContent(prompt),
+    timeoutPromise
+  ]);
+
+  return result.response.text();
+}
+
 export async function runGenerationAttempt({
   input,
   tone,
@@ -62,10 +93,13 @@ export async function runGenerationAttempt({
   rewriteInstruction,
   currentResult,
   lightMode = false,
+  provider = 'groq',
   model = PRIMARY_GROQ_MODEL,
   skipQualityReview = false,
   timeoutMs = PRIMARY_GROQ_REQUEST_TIMEOUT_MS,
 }) {
+  const requestFn = provider === 'gemini' ? requestGeminiJson : requestGroqJson;
+
   const qualityCandidateCount = getQualityCandidateCount({
     count,
     rewriteInstruction,
@@ -96,7 +130,7 @@ export async function runGenerationAttempt({
     currentResult,
   });
 
-  const primaryRaw = await requestGroqJson({
+  const primaryRaw = await requestFn({
     prompt: primaryPrompt,
     maxTokens: completionTokenBudget,
     temperature: rewriteInstruction && currentResult ? (lightMode ? 0.66 : 0.72) : (lightMode ? 0.72 : 0.82),
@@ -129,7 +163,7 @@ export async function runGenerationAttempt({
       currentResult,
     });
 
-    const fallbackRaw = await requestGroqJson({
+    const fallbackRaw = await requestFn({
       prompt: fallbackPrompt,
       maxTokens: completionTokenBudget,
       temperature: rewriteInstruction && currentResult ? (lightMode ? 0.58 : 0.64) : (lightMode ? 0.68 : 0.74),
@@ -162,7 +196,7 @@ export async function runGenerationAttempt({
     });
 
     try {
-      const reviewedRaw = await requestGroqJson({
+      const reviewedRaw = await requestFn({
         prompt: qualityReviewPrompt,
         maxTokens: getQualityReviewMaxTokens({ count, lightMode }),
         temperature: 0.35,
@@ -225,6 +259,7 @@ export async function generateResultsWithRecovery({
       count,
       lightMode: false,
       skipQualityReview: false,
+      provider: 'groq',
       model: PRIMARY_GROQ_MODEL,
       timeoutMs: PRIMARY_GROQ_REQUEST_TIMEOUT_MS,
     },
@@ -232,6 +267,7 @@ export async function generateResultsWithRecovery({
       count: lighterCount,
       lightMode: true,
       skipQualityReview: true,
+      provider: 'groq',
       model: PRIMARY_GROQ_MODEL,
       timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
     },
@@ -239,7 +275,16 @@ export async function generateResultsWithRecovery({
       count: lighterCount,
       lightMode: true,
       skipQualityReview: true,
+      provider: 'groq',
       model: FALLBACK_GROQ_MODEL,
+      timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
+    },
+    {
+      count: lighterCount,
+      lightMode: true,
+      skipQualityReview: true,
+      provider: 'gemini',
+      model: GEMINI_TEXT_MODEL,
       timeoutMs: LIGHT_GROQ_REQUEST_TIMEOUT_MS,
     },
   ].slice(0, MAX_TRANSIENT_RETRIES + 1);
@@ -264,6 +309,7 @@ export async function generateResultsWithRecovery({
         rewriteInstruction,
         currentResult,
         lightMode: attemptPlan.lightMode,
+        provider: attemptPlan.provider,
         skipQualityReview: attemptPlan.skipQualityReview,
         model: attemptPlan.model,
         timeoutMs: attemptPlan.timeoutMs,
