@@ -1108,27 +1108,36 @@ export default function GeneratePage() {
     setError('');
 
     try {
+      const formData = buildRequestFormData({
+        count,
+        avoidResults,
+        rewriteAction,
+        rewriteInstruction,
+        currentResult,
+        inputOverride,
+        toneOverride,
+        platformOverride,
+        lengthOverride,
+        selectedOptionsOverride,
+        attachmentOverride,
+      });
+
+      // Enable streaming for new generations if not a single result refresh
+      const shouldStream = resultIndex === null;
+      if (shouldStream) {
+        formData.append('stream', 'true');
+      }
+
       const response = await fetch('/api/generate', {
         method: 'POST',
-        body: buildRequestFormData({
-          count,
-          avoidResults,
-          rewriteAction,
-          rewriteInstruction,
-          currentResult,
-          inputOverride,
-          toneOverride,
-          platformOverride,
-          lengthOverride,
-          selectedOptionsOverride,
-          attachmentOverride,
-        }),
+        body: formData,
       });
-      const data = await response.json();
 
       if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
         const nextError = data.error || 'Kuch gadbad ho gayi 😅 Try again!';
-        const shouldKeepCurrentResults = response.status === 429 && (resultIndex !== null || results.length > 0);
+        const shouldKeepCurrentResults =
+          response.status === 429 && (resultIndex !== null || results.length > 0);
 
         if (shouldKeepCurrentResults) {
           setStatusNotice(nextError);
@@ -1140,6 +1149,70 @@ export default function GeneratePage() {
         setError(nextError);
         return null;
       }
+
+      const contentType = response.headers.get('Content-Type');
+      if (contentType && contentType.includes('text/event-stream')) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let streamedRaw = '';
+        let lastExtractedText = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) {
+              continue;
+            }
+
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.chunk) {
+                streamedRaw += data.chunk;
+                // Best-effort extraction of the first result text from partial JSON
+                const textMatch = streamedRaw.match(/"text"\s*:\s*"((?:\\.|[^"\\])*)/);
+                if (textMatch && textMatch[1]) {
+                  const cleaned = textMatch[1]
+                    .replace(/\\n/g, '\n')
+                    .replace(/\\r/g, '')
+                    .replace(/\\"/g, '"')
+                    .replace(/\\t/g, '  ');
+
+                  if (cleaned !== lastExtractedText) {
+                    lastExtractedText = cleaned;
+                    setResults([
+                      {
+                        id: 'streaming-active',
+                        text: cleaned,
+                        rewriteSuggestions: [],
+                      },
+                    ]);
+                  }
+                }
+              } else if (data.done) {
+                if (typeof data.learnedVibe === 'boolean') {
+                  setLearnedVibe(data.learnedVibe);
+                  if (data.learnedVibe) fetchStyleDNA();
+                }
+                return normalizeResultItems(data.results, visibleRewriteActions);
+              } else if (data.error) {
+                setError(data.error);
+                return null;
+              }
+            } catch (jsonErr) {
+              console.warn('Partial JSON line parse failed:', jsonErr);
+            }
+          }
+        }
+      }
+
+      const data = await response.json();
 
       if (!Array.isArray(data.results) || data.results.length === 0) {
         setError('AI ne abhi kuch nahi likha. Please try again!');
@@ -1159,7 +1232,8 @@ export default function GeneratePage() {
         if (data.learnedVibe) fetchStyleDNA();
       }
       return normalizedResults;
-    } catch {
+    } catch (err) {
+      console.error('Fetch error:', err);
       setError('Server se connection nahi hua. Try again!');
       return null;
     } finally {

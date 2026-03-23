@@ -19,8 +19,9 @@ import {
   parseRewriteInstruction,
   parseCurrentResult,
   parseSessionKey,
+  parseStructuredResults,
 } from './prompt-builder';
-import { generateResultsWithRecovery } from './llm-provider';
+import { generateResultsWithRecovery, generateResultsStream } from './llm-provider';
 import { getStyleProfile, updateStyleProfile } from './style-memory';
 import { env } from '../../../lib/env.js';
 
@@ -210,7 +211,94 @@ export async function POST(req) {
       );
     }
 
-    const userStyleProfile = await getStyleProfile(sessionKey);
+    const isStreamRequested = formData.get('stream') === 'true';
+
+    if (isStreamRequested && !cachedResults) {
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          let fullText = '';
+          try {
+            const generator = generateResultsStream({
+              input,
+              tone,
+              hinglish,
+              emoji,
+              hashtags,
+              imageDescription,
+              platform,
+              length,
+              count,
+              avoidResults,
+              rewriteAction,
+              rewriteInstruction,
+              currentResult,
+              userStyleProfile,
+            });
+
+            for await (const chunk of generator) {
+              fullText += chunk;
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`));
+            }
+
+            const parsedResults = parseStructuredResults(fullText, {
+              count,
+              tone,
+              hinglish,
+              emoji,
+              hashtags,
+            });
+
+            if (parsedResults.length > 0) {
+              await writeCachedValue(
+                generationCacheStore,
+                generationCacheKey,
+                parsedResults,
+                GENERATION_CACHE_TTL_MS
+              );
+              updateStyleProfile(sessionKey, parsedResults, tone, rewriteAction).catch((profileErr) => {
+                console.error('Style update failed in stream:', profileErr);
+              });
+
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({
+                    done: true,
+                    results: parsedResults,
+                    learnedVibe: userStyleProfile?.generation_count >= 3,
+                  })}\n\n`
+                )
+              );
+            } else {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ error: 'AI returned an empty response. Please try again.' })}\n\n`)
+              );
+            }
+          } catch (streamErr) {
+            console.error('Stream generation error:', streamErr);
+            const providerError = normalizeProviderError(streamErr);
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({
+                  error: providerError?.message || 'Generation failed',
+                  retryAfterSeconds: providerError?.retryAfterSeconds || null,
+                })}\n\n`
+              )
+            );
+          } finally {
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    }
 
     const results = await generateResultsWithRecovery({
       input,

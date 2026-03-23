@@ -52,6 +52,28 @@ export async function requestGroqJson({
   return completion.choices[0]?.message?.content || '';
 }
 
+export async function* requestGroqStream({
+  prompt,
+  maxTokens,
+  temperature,
+  model = PRIMARY_GROQ_MODEL,
+}) {
+  const stream = await groq.chat.completions.create({
+    model,
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: maxTokens,
+    temperature,
+    stream: true,
+  });
+
+  for await (const chunk of stream) {
+    const content = chunk.choices[0]?.delta?.content || '';
+    if (content) {
+      yield content;
+    }
+  }
+}
+
 export async function requestGeminiJson({
   prompt,
   maxTokens,
@@ -77,6 +99,30 @@ export async function requestGeminiJson({
   ]);
 
   return result.response.text();
+}
+
+export async function* requestGeminiStream({
+  prompt,
+  maxTokens,
+  temperature,
+  model = GEMINI_TEXT_MODEL,
+}) {
+  const generativeModel = genAI.getGenerativeModel({
+    model,
+    generationConfig: {
+      maxOutputTokens: maxTokens,
+      temperature,
+    }
+  });
+
+  const result = await generativeModel.generateContentStream(prompt);
+
+  for await (const chunk of result.stream) {
+    const chunkText = chunk.text();
+    if (chunkText) {
+      yield chunkText;
+    }
+  }
 }
 
 export async function runGenerationAttempt({
@@ -239,6 +285,64 @@ export async function runGenerationAttempt({
       imageDescription,
     }),
   }));
+}
+
+export async function* generateResultsStream({
+  input,
+  tone,
+  hinglish,
+  emoji,
+  hashtags,
+  imageDescription,
+  platform,
+  length,
+  count,
+  avoidResults,
+  rewriteAction,
+  rewriteInstruction,
+  currentResult,
+  userStyleProfile,
+}) {
+  const qualityCandidateCount = getQualityCandidateCount({
+    count,
+    rewriteInstruction,
+    currentResult,
+  });
+  const completionTokenBudget = getCompletionMaxTokens({
+    count: qualityCandidateCount,
+    hashtags,
+    rewriteInstruction,
+    currentResult,
+  });
+
+  const primaryPrompt = buildPrompt({
+    input,
+    tone,
+    hinglish,
+    emoji,
+    hashtags,
+    imageDescription,
+    platform,
+    length,
+    count: qualityCandidateCount,
+    avoidResults,
+    rewriteAction,
+    rewriteInstruction,
+    currentResult,
+    userStyleProfile,
+  });
+
+  const streamFn = requestGroqStream; // Default to Groq for streaming
+  const generator = streamFn({
+    prompt: primaryPrompt,
+    maxTokens: completionTokenBudget,
+    temperature: rewriteInstruction && currentResult ? 0.72 : 0.82,
+    model: PRIMARY_GROQ_MODEL,
+  });
+
+  for await (const chunk of generator) {
+    yield chunk;
+  }
 }
 
 export async function generateResultsWithRecovery({
