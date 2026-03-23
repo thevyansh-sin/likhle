@@ -11,9 +11,10 @@ import {
 } from './prompt-builder';
 import { ensureHashtagFinish } from './hashtags';
 import { isTransientProviderError, getRetryDelayMs } from './provider-error';
+import { env } from '../../../lib/env.js';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const groq = new Groq({ apiKey: env.GROQ_API_KEY });
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 
 export const PRIMARY_GROQ_MODEL = process.env.GROQ_PRIMARY_MODEL || 'llama-3.3-70b-versatile';
 export const FALLBACK_GROQ_MODEL = process.env.GROQ_FALLBACK_MODEL || 'llama-3.1-8b-instant';
