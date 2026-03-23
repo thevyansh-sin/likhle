@@ -100,3 +100,52 @@ export async function updateStyleProfile(sessionKey, results, selectedTone, rewr
     console.error('Error updating style profile:', err);
   }
 }
+/**
+ * Transforms raw profile data into human-readable Style DNA labels and a vibe summary.
+ */
+export function getStyleDNA(profile) {
+  if (!profile || (profile.generation_count || 0) < 3) return null;
+
+  const { emoji_density, hinglish_ratio, avg_length, structure, preferred_tone } = profile;
+
+  // Language mapping
+  let languageLabel = 'English Leaning';
+  if (hinglish_ratio > 0.45) languageLabel = 'Hinglish Heavy';
+  else if (hinglish_ratio > 0.15) languageLabel = 'Balanced';
+
+  // Emoji mapping
+  let emojiLabel = 'Minimal';
+  if (emoji_density > 0.18) emojiLabel = 'Emoji Heavy';
+  else if (emoji_density > 0.06) emojiLabel = 'Expressive';
+
+  // Structure mapping
+  let lengthLabel = 'Short Punchlines';
+  if (avg_length > 180) lengthLabel = 'Long Form';
+  else if (avg_length > 85) lengthLabel = 'Balanced';
+
+  const structureLabel = structure === 'multi-line' ? 'Structured Paragraphs' : 'Clean Single Line';
+
+  // Vibe Summary generation
+  const summaries = {
+    Aesthetic: (hinglish) => hinglish ? 'desi aesthetic wave' : 'silent flex energy',
+    Savage: (hinglish) => hinglish ? 'hardcore desi savage' : 'clinical savage energy',
+    Hinglish: () => 'pure local main character',
+    Professional: () => 'sharp corporate flex',
+    Funny: () => 'natural wit presence',
+    Motivational: () => 'high octane energy',
+    Romantic: () => 'soft poet energy',
+  };
+
+  const vibeBase = summaries[preferred_tone] || (() => 'unique writer identity');
+  const vibeSummary = vibeBase(hinglish_ratio > 0.3);
+
+  return {
+    tone: preferred_tone,
+    language: languageLabel,
+    emoji: emojiLabel,
+    length: lengthLabel,
+    structure: structureLabel,
+    vibe: vibeSummary,
+    generationCount: profile.generation_count
+  };
+}

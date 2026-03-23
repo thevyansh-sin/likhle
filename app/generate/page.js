@@ -380,6 +380,7 @@ export default function GeneratePage() {
   const [copiedAll, setCopiedAll] = useState(false);
   const [dark, setDark] = useState(true);
   const [learnedVibe, setLearnedVibe] = useState(false);
+  const [styleDNA, setStyleDNA] = useState(null);
   const [error, setError] = useState('');
   const [attachment, setAttachment] = useState(null);
   const [attachmentPreview, setAttachmentPreview] = useState('');
@@ -1130,6 +1131,7 @@ export default function GeneratePage() {
       setStatusNotice('');
       if (typeof data.learnedVibe === 'boolean') {
         setLearnedVibe(data.learnedVibe);
+        if (data.learnedVibe) fetchStyleDNA();
       }
       return normalizedResults;
     } catch {
@@ -1143,6 +1145,21 @@ export default function GeneratePage() {
       }
     }
   };
+
+  const fetchStyleDNA = async () => {
+    if (!sessionKeyRef.current) return;
+    try {
+      const resp = await fetch(`/api/style-dna?sessionKey=${sessionKeyRef.current}`);
+      const data = await resp.json();
+      if (data.dna) setStyleDNA(data.dna);
+    } catch (e) {
+      console.error('Failed to fetch Style DNA:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (historyReady) fetchStyleDNA();
+  }, [historyReady]);
 
   const handleFile = (event) => {
     const file = event.target.files[0];
@@ -1708,6 +1725,63 @@ export default function GeneratePage() {
               </div>
             </div>
           </div>
+
+          {styleDNA && (
+            <div 
+              className="gen-surface-card" 
+              data-reveal
+              style={{
+                ...sectionCardStyle,
+                background: dark 
+                  ? 'linear-gradient(180deg, rgba(202,255,0,0.05) 0%, rgba(20,20,20,1) 100%)' 
+                  : 'linear-gradient(180deg, rgba(147,181,0,0.04) 0%, rgba(255,255,255,1) 100%)',
+                border: `1px solid ${dark ? 'rgba(202,255,0,0.15)' : 'rgba(147,181,0,0.15)'}`,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div style={{ ...sectionLabelStyle, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  Your Style DNA <span style={{ opacity: 0.6 }}>🧬</span>
+                </div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: t.accentInk, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  {styleDNA.generationCount} Generations
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px 20px', marginBottom: 20 }}>
+                {[
+                  { label: 'Tone', value: styleDNA.tone },
+                  { label: 'Language', value: styleDNA.language },
+                  { label: 'Emoji Style', value: styleDNA.emoji },
+                  { label: 'Structure', value: styleDNA.structure },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <div style={{ fontSize: 11, color: t.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+                      {item.label}
+                    </div>
+                    <div style={{ fontSize: 14, color: t.text, fontWeight: 700 }}>
+                      {item.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ borderTop: `1px solid ${t.resultBorder}`, paddingTop: 16 }}>
+                <div style={{ fontSize: 11, color: t.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                  Your vibe
+                </div>
+                <div style={{ 
+                  fontFamily: 'var(--font-display)', 
+                  fontSize: 22, 
+                  fontWeight: 800, 
+                  color: t.accentInk,
+                  letterSpacing: -0.5,
+                  textShadow: dark ? '0 0 20px rgba(202,255,0,0.2)' : 'none'
+                }}>
+                  “{styleDNA.vibe}”
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="gen-surface-card" style={sectionCardStyle} data-reveal>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
