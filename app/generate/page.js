@@ -78,7 +78,15 @@ const PLATFORM_OPTIONS = [
   'LinkedIn Bio',
   'Twitter/X Bio',
 ];
-const LOADING_STEPS = ['Vibe read kar raha hai', 'Tone set kar raha hai', 'Final polish aa raha hai'];
+const LOADING_STEPS = ['Vibe check', 'Tone matching', 'Final touch'];
+const LOADING_PHRASES = [
+  'Cooking something savage...',
+  'Tera vibe match kar rahe hain...',
+  'Hold up... this one’s fire.',
+  'Caption ko aura de rahe hain...',
+  'Bas thoda sa... scene ban raha hai.',
+  'Noise hata ke vibe likh rahe hain...',
+];
 const LENGTH_OPTIONS = ['Short', 'Medium', 'Long'];
 const EMPTY_STATE_IDEAS = [
   {
@@ -376,7 +384,7 @@ export default function GeneratePage() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingStageIndex, setLoadingStageIndex] = useState(0);
-  const [pendingResultAction, setPendingResultAction] = useState(null);
+  const [loadingPhraseIndex, setLoadingPhraseIndex] = useState(0);
   const [copied, setCopied] = useState(null);
   const [copiedAll, setCopiedAll] = useState(false);
   const [dark, setDark] = useState(true);
@@ -596,19 +604,24 @@ export default function GeneratePage() {
   useEffect(() => {
     if (!loading) {
       setLoadingStageIndex(0);
+      setLoadingPhraseIndex(0);
       return undefined;
     }
 
     setLoadingStageIndex(0);
+    setLoadingPhraseIndex(0);
 
-    const timeouts = LOADING_STEPS.slice(1).map((_, index) =>
-      window.setTimeout(() => {
-        setLoadingStageIndex(index + 1);
-      }, (index + 1) * 1100)
-    );
+    const stepInterval = window.setInterval(() => {
+      setLoadingStageIndex((prev) => (prev + 1) % LOADING_STEPS.length);
+    }, 2500);
+
+    const phraseInterval = window.setInterval(() => {
+      setLoadingPhraseIndex((prev) => (prev + 1) % LOADING_PHRASES.length);
+    }, 2000);
 
     return () => {
-      timeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      window.clearInterval(stepInterval);
+      window.clearInterval(phraseInterval);
     };
   }, [loading]);
 
@@ -1658,9 +1671,21 @@ export default function GeneratePage() {
             className="gen-submit-button"
             onClick={handleGenerate}
             disabled={controlsDisabled || !input.trim()}
-            style={{ background: t.accent, color: '#000', border: 'none', borderRadius: 12, cursor: controlsDisabled || !input.trim() ? 'not-allowed' : 'pointer', opacity: controlsDisabled || !input.trim() ? 0.5 : 1, transition: 'all 0.2s', boxShadow: controlsDisabled || !input.trim() ? 'none' : t.sectionShadow }}
+            style={{ 
+              background: loading ? (dark ? '#222' : '#eee') : t.accent, 
+              color: loading ? t.muted : '#000', 
+              border: loading ? `1px solid ${t.border}` : 'none', 
+              borderRadius: 12, 
+              cursor: controlsDisabled || !input.trim() ? 'not-allowed' : 'pointer', 
+              opacity: !input.trim() ? 0.5 : 1, 
+              transition: 'all 0.2s', 
+              boxShadow: (controlsDisabled || !input.trim()) ? 'none' : t.sectionShadow,
+              height: 48,
+              fontWeight: 700,
+              fontSize: 15
+            }}
           >
-            {loading ? 'Likh raha hai...' : 'Likhle! 🚀'}
+            {loading ? 'Cooking... 🔥' : 'Likhle! 🚀'}
           </button>
         </div>
       </div>
@@ -1865,29 +1890,61 @@ export default function GeneratePage() {
 
         <div ref={outputSectionRef} style={{ scrollMarginTop: 116 }}>
           {loading && (
-            <div className="gen-state-shell gen-state-shell--loading gen-surface-card">
-              <div className="gen-loading-shell" style={{ color: t.muted }}>
-                <div className="gen-loading-kicker">Abhi likh raha hai</div>
-                <div className="gen-loading-title">Lines abhi shape ho rahi hain...</div>
-                <div className="gen-loading-copy">{loadingStateCopy}</div>
-                <div className="gen-loading-stage">{LOADING_STEPS[loadingStageIndex]}</div>
-                <div className="gen-loading-track" aria-hidden="true">
-                  <span
-                    className="gen-loading-progress"
-                    style={{ transform: `scaleX(${(loadingStageIndex + 1) / LOADING_STEPS.length})` }}
-                  />
+            <div className="gen-state-shell gen-state-shell--loading gen-surface-card" style={{ ...sectionCardStyle, padding: '32px 24px', overflow: 'hidden', position: 'relative' }}>
+              <div className="gen-loading-shell" style={{ color: t.text, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <div style={{ background: dark ? 'rgba(202,255,0,0.1)' : 'rgba(111,133,0,0.08)', color: t.accentInk, padding: '4px 12px', borderRadius: 99, fontSize: 11, fontWeight: 700, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.05em', border: `1px solid ${dark ? 'rgba(202,255,0,0.15)' : 'rgba(111,133,0,0.12)'}` }}>
+                  {learnedVibe ? 'Writing in your style ⚡' : 'Crafting your vibe'}
                 </div>
-                <div className="gen-loading-steps" aria-hidden="true">
+                
+                <div key={loadingPhraseIndex} className="fade-in-up" style={{ fontSize: 22, fontWeight: 700, marginBottom: 8, color: t.text, minHeight: 32 }}>
+                  {LOADING_PHRASES[loadingPhraseIndex]}
+                </div>
+                
+                <div style={{ fontSize: 13, color: t.muted, marginBottom: 32 }}>
+                  Hang tight, we&apos;re matching your aura.
+                </div>
+
+                <div style={{ width: '100%', maxWidth: 300, display: 'flex', flexDirection: 'column', gap: 12, opacity: 0.4 }}>
+                  <div style={{ height: 10, background: t.border, borderRadius: 5, width: '100%', animation: 'shimmer 2s infinite linear' }} />
+                  <div style={{ height: 10, background: t.border, borderRadius: 5, width: '80%', animation: 'shimmer 2s infinite linear 0.4s' }} />
+                  <div style={{ height: 10, background: t.border, borderRadius: 5, width: '90%', animation: 'shimmer 2s infinite linear 0.8s' }} />
+                </div>
+
+                <div style={{ marginTop: 40, width: '100%', display: 'flex', justifyContent: 'center', gap: 6 }}>
                   {LOADING_STEPS.map((step, index) => (
-                    <span
-                      key={step}
-                      className={`gen-loading-step-chip${index === loadingStageIndex ? ' is-active' : ''}`}
+                    <div 
+                      key={step} 
+                      style={{ 
+                        padding: '6px 14px', 
+                        borderRadius: 10, 
+                        fontSize: 11, 
+                        fontWeight: index === loadingStageIndex ? 700 : 500,
+                        background: index === loadingStageIndex ? (dark ? '#222' : '#f0f0f0') : 'transparent',
+                        color: index === loadingStageIndex ? t.accentInk : t.muted,
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        border: `1px solid ${index === loadingStageIndex ? (dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : 'transparent'}`
+                      }}
                     >
                       {step}
-                    </span>
+                    </div>
                   ))}
                 </div>
               </div>
+
+              <style jsx>{`
+                @keyframes shimmer {
+                  0% { opacity: 0.3; transform: translateX(-10%); }
+                  50% { opacity: 0.7; transform: translateX(0); }
+                  100% { opacity: 0.3; transform: translateX(10%); }
+                }
+                .fade-in-up {
+                  animation: fadeInUp 0.5s ease-out forwards;
+                }
+                @keyframes fadeInUp {
+                  from { opacity: 0; transform: translateY(10px); }
+                  to { opacity: 1; transform: translateY(0); }
+                }
+              `}</style>
             </div>
           )}
 
