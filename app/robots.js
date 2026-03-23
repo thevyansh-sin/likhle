@@ -8,6 +8,14 @@ export default function robots() {
         allow: '/',
         disallow: '/api/',
       },
+      {
+        userAgent: 'GPTBot',
+        allow: ['/', '/llms.txt'],
+      },
+      {
+        userAgent: 'ChatGPT-User',
+        allow: ['/', '/llms.txt'],
+      }
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
     host: siteUrl,
