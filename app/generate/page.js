@@ -113,6 +113,7 @@ const IMAGE_ACCEPT = SUPPORTED_IMAGE_TYPES.join(',');
 const HISTORY_STORAGE_KEY = 'likhle-generation-history';
 const FAVORITES_STORAGE_KEY = 'likhle-favorite-results';
 const SESSION_KEY_STORAGE_KEY = 'likhle-session-key';
+const REVEAL_SHOWN_STORAGE_KEY = 'likhle-reveal-shown';
 const MAX_HISTORY_ITEMS = 10;
 const MAX_FAVORITES_ITEMS = 24;
 
@@ -381,6 +382,8 @@ export default function GeneratePage() {
   const [dark, setDark] = useState(true);
   const [learnedVibe, setLearnedVibe] = useState(false);
   const [styleDNA, setStyleDNA] = useState(null);
+  const [isRevealModalOpen, setIsRevealModalOpen] = useState(false);
+  const [revealShown, setRevealShown] = useState(true);
   const [error, setError] = useState('');
   const [attachment, setAttachment] = useState(null);
   const [attachmentPreview, setAttachmentPreview] = useState('');
@@ -486,6 +489,15 @@ export default function GeneratePage() {
       console.error('Favorites load failed:', favoritesError);
     } finally {
       setFavoritesReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const storedReveal = window.localStorage.getItem(REVEAL_SHOWN_STORAGE_KEY);
+      setRevealShown(storedReveal === 'true');
+    } catch (e) {
+      console.error('Reveal state load failed:', e);
     }
   }, []);
 
@@ -1146,15 +1158,40 @@ export default function GeneratePage() {
     }
   };
 
-  const fetchStyleDNA = async () => {
+  const fetchStyleDNA = async (forceReveal = false) => {
     if (!sessionKeyRef.current) return;
     try {
       const resp = await fetch(`/api/style-dna?sessionKey=${sessionKeyRef.current}`);
       const data = await resp.json();
-      if (data.dna) setStyleDNA(data.dna);
+      if (data.dna) {
+        setStyleDNA(data.dna);
+        
+        // Trigger reveal if not shown and enough data
+        if (!revealShown && data.dna.generationCount >= 3) {
+          setIsRevealModalOpen(true);
+        }
+      }
     } catch (e) {
       console.error('Failed to fetch Style DNA:', e);
     }
+  };
+
+  const handleShareVibe = () => {
+    if (!styleDNA) return;
+    
+    const shareText = `My writing style: ${styleDNA.tone} ⚡\n${styleDNA.language}. ${styleDNA.emoji}.\nMade with Likhle`;
+    
+    navigator.clipboard.writeText(shareText).then(() => {
+      setToast({ message: 'Vibe copied! Go share it 🚀', type: 'success' });
+    }).catch(() => {
+      setToast({ message: 'Copy failed. Try again!', type: 'error' });
+    });
+  };
+
+  const dismissReveal = () => {
+    setIsRevealModalOpen(false);
+    setRevealShown(true);
+    window.localStorage.setItem(REVEAL_SHOWN_STORAGE_KEY, 'true');
   };
 
   useEffect(() => {
@@ -1765,20 +1802,41 @@ export default function GeneratePage() {
                 ))}
               </div>
 
-              <div style={{ borderTop: `1px solid ${t.resultBorder}`, paddingTop: 16 }}>
-                <div style={{ fontSize: 11, color: t.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-                  Your vibe
+              <div style={{ borderTop: `1px solid ${t.resultBorder}`, paddingTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: t.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                    Your vibe
+                  </div>
+                  <div style={{ 
+                    fontFamily: 'var(--font-display)', 
+                    fontSize: 22, 
+                    fontWeight: 800, 
+                    color: t.accentInk,
+                    letterSpacing: -0.5,
+                    textShadow: dark ? '0 0 20px rgba(202,255,0,0.2)' : 'none'
+                  }}>
+                    “{styleDNA.vibe}”
+                  </div>
                 </div>
-                <div style={{ 
-                  fontFamily: 'var(--font-display)', 
-                  fontSize: 22, 
-                  fontWeight: 800, 
-                  color: t.accentInk,
-                  letterSpacing: -0.5,
-                  textShadow: dark ? '0 0 20px rgba(202,255,0,0.2)' : 'none'
-                }}>
-                  “{styleDNA.vibe}”
-                </div>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShareVibe();
+                  }}
+                  style={{ 
+                    background: t.accentInk, 
+                    color: t.bg, 
+                    border: 'none', 
+                    padding: '8px 16px', 
+                    borderRadius: 12, 
+                    fontSize: 12, 
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Share ⚡
+                </button>
               </div>
             </div>
           )}
@@ -2153,6 +2211,120 @@ export default function GeneratePage() {
         </div>
       ) : null}
 
+      {isRevealModalOpen && styleDNA && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 1000,
+          background: 'rgba(0,0,0,0.9)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <div style={{
+            maxWidth: 420,
+            width: '100%',
+            background: '#0a0a0a',
+            border: `1px solid ${t.accentInk}33`,
+            borderRadius: 32,
+            padding: 40,
+            textAlign: 'center',
+            boxShadow: `0 0 80px ${t.accentInk}11`,
+            animation: 'scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 24 }}>⚡</div>
+            <h2 style={{ 
+              fontFamily: 'var(--font-display)', 
+              fontSize: 32, 
+              fontWeight: 800, 
+              color: '#fff',
+              marginBottom: 8,
+              letterSpacing: -1
+            }}>
+              We figured you out.
+            </h2>
+            <p style={{ color: t.muted, fontSize: 16, marginBottom: 32 }}>
+              Your writing style is now part of Likhle&apos;s memory.
+            </p>
+
+            <div style={{ 
+              background: 'rgba(255,255,255,0.03)', 
+              borderRadius: 24, 
+              padding: 24, 
+              marginBottom: 32,
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 16,
+              textAlign: 'left'
+            }}>
+              {[
+                { label: 'Tone', value: styleDNA.tone },
+                { label: 'Language', value: styleDNA.language },
+                { label: 'Emoji Style', value: styleDNA.emoji },
+                { label: 'Structure', value: styleDNA.structure },
+              ].map(item => (
+                <div key={item.label}>
+                  <div style={{ fontSize: 10, color: t.muted, fontWeight: 700, textTransform: 'uppercase', marginBottom: 2 }}>{item.label}</div>
+                  <div style={{ fontSize: 15, color: '#fff', fontWeight: 700 }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ 
+              fontFamily: 'var(--font-display)', 
+              fontSize: 20, 
+              fontWeight: 800, 
+              color: t.accentInk,
+              marginBottom: 40,
+              lineHeight: 1.2
+            }}>
+              “Ab hum tere style mein likhenge.”
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <button 
+                onClick={dismissReveal}
+                style={{ 
+                  background: t.accentInk, 
+                  color: '#000', 
+                  border: 'none', 
+                  height: 56, 
+                  borderRadius: 16, 
+                  fontSize: 16, 
+                  fontWeight: 800, 
+                  cursor: 'pointer' 
+                }}
+              >
+                Let&apos;s go
+              </button>
+              <button 
+                onClick={() => {
+                  handleShareVibe();
+                  dismissReveal();
+                }}
+                style={{ 
+                  background: 'transparent', 
+                  color: t.muted, 
+                  border: 'none', 
+                  height: 40, 
+                  fontSize: 14, 
+                  fontWeight: 600, 
+                  cursor: 'pointer' 
+                }}
+              >
+                Share My Vibe ⚡
+              </button>
+            </div>
+          </div>
+          <style jsx>{`
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes scaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+          `}</style>
+        </div>
+      )}
     </div>
   );
 }
