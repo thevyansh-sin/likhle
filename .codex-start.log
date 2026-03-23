@@ -1,0 +1,116 @@
+
+> likhle@0.2.26 start
+> next start
+
+▲ Next.js 16.2.0
+- Local:         http://localhost:3001
+- Network:       http://192.168.31.214:3001
+✓ Ready in 1032ms
+Quality review skipped: Error: 429 {"error":{"message":"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kkw5z7xbemrats8y9m51jg94` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 100000, Requested 628. Please try again in 9m2.592s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+    at ignore-listed frames {
+  status: 429,
+  headers: Headers {
+    date: 'Sun, 22 Mar 2026 05:26:54 GMT',
+    'content-type': 'application/json',
+    'content-length': '384',
+    connection: 'keep-alive',
+    'cache-control': 'private, max-age=0, no-store, no-cache, must-revalidate',
+    'retry-after': '543',
+    server: 'cloudflare',
+    vary: 'Origin',
+    'x-groq-region': 'bom',
+    'x-ratelimit-limit-requests': '1000',
+    'x-ratelimit-limit-tokens': '12000',
+    'x-ratelimit-remaining-requests': '930',
+    'x-ratelimit-remaining-tokens': '119',
+    'x-ratelimit-reset-requests': '1h40m48s',
+    'x-ratelimit-reset-tokens': '59.405s',
+    'x-request-id': 'req_01kma05d25e6evveqmm9wzngpg',
+    'x-should-retry': 'false',
+    'set-cookie': '__cf_bm=_DA6mAaRi9Dew6iWmUs.gJGNEWs.P43KNEAa9_.rkTk-1774157214.7580836-1.0.1.1-FkYsPZAjIHE56CX929QXLx7J6eYCt5F8gCx03ndFG0Cs.5jCMUzti0L2EZp2h9ro2mbsxCSmo2bwBhbj592tQVJZwZJenmkIH0qw5lScDpDfhIUXat8XNb5LpTQc32W8; HttpOnly; Secure; Path=/; Domain=groq.com; Expires=Sun, 22 Mar 2026 05:56:54 GMT',
+    via: '1.1 google',
+    'strict-transport-security': 'max-age=15552000',
+    'cf-cache-status': 'DYNAMIC',
+    'cf-ray': '9e02c8c0383249d7-AGR',
+    'alt-svc': 'h3=":443"; ma=86400'
+  },
+  error: {
+    error: {
+      message: 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kkw5z7xbemrats8y9m51jg94` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 100000, Requested 628. Please try again in 9m2.592s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing',
+      type: 'tokens',
+      code: 'rate_limit_exceeded'
+    }
+  }
+}
+Quality review skipped: Error: 429 {"error":{"message":"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kkw5z7xbemrats8y9m51jg94` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 100000, Requested 756. Please try again in 10m53.184s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+    at ignore-listed frames {
+  status: 429,
+  headers: Headers {
+    date: 'Sun, 22 Mar 2026 05:44:18 GMT',
+    'content-type': 'application/json',
+    'content-length': '386',
+    connection: 'keep-alive',
+    'cache-control': 'private, max-age=0, no-store, no-cache, must-revalidate',
+    'retry-after': '654',
+    server: 'cloudflare',
+    vary: 'Origin',
+    'x-groq-region': 'bom',
+    'x-ratelimit-limit-requests': '1000',
+    'x-ratelimit-limit-tokens': '12000',
+    'x-ratelimit-remaining-requests': '938',
+    'x-ratelimit-remaining-tokens': '11590',
+    'x-ratelimit-reset-requests': '1h29m16.8s',
+    'x-ratelimit-reset-tokens': '2.049s',
+    'x-request-id': 'req_01kma158amfe9tqkxyncds1zw3',
+    'x-should-retry': 'false',
+    via: '1.1 google',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '__cf_bm=GwJV_PFYVhlJyyzxuTVx_xmqfiWCovGU.kY6USk7R6E-1774158258.461077-1.0.1.1-H.ZUgPdWZtMdwLMlzPw26Ug0BhW363fUUiy7vNqEv.p2hl_GmPeCmu9xRdspuHVkW_e8FMqcY5Asm8SIPzwXeZnABUh731kSKu83qUIOnreMKoU3XWpexgJjykjHyaFY; HttpOnly; Secure; Path=/; Domain=groq.com; Expires=Sun, 22 Mar 2026 06:14:18 GMT',
+    'strict-transport-security': 'max-age=15552000',
+    'cf-ray': '9e02e23b5ace7a07-PAT',
+    'alt-svc': 'h3=":443"; ma=86400'
+  },
+  error: {
+    error: {
+      message: 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kkw5z7xbemrats8y9m51jg94` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 100000, Requested 756. Please try again in 10m53.184s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing',
+      type: 'tokens',
+      code: 'rate_limit_exceeded'
+    }
+  }
+}
+Quality review skipped: Error: 429 {"error":{"message":"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kkw5z7xbemrats8y9m51jg94` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 100000, Requested 644. Please try again in 9m16.416s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing","type":"tokens","code":"rate_limit_exceeded"}}
+    at ignore-listed frames {
+  status: 429,
+  headers: Headers {
+    date: 'Sun, 22 Mar 2026 06:01:18 GMT',
+    'content-type': 'application/json',
+    'content-length': '385',
+    connection: 'keep-alive',
+    'cache-control': 'private, max-age=0, no-store, no-cache, must-revalidate',
+    'retry-after': '557',
+    server: 'cloudflare',
+    vary: 'Origin',
+    'x-groq-region': 'bom',
+    'x-ratelimit-limit-requests': '1000',
+    'x-ratelimit-limit-tokens': '12000',
+    'x-ratelimit-remaining-requests': '944',
+    'x-ratelimit-remaining-tokens': '11640',
+    'x-ratelimit-reset-requests': '1h20m38.4s',
+    'x-ratelimit-reset-tokens': '1.799s',
+    'x-request-id': 'req_01kma24cahfe2vxv2jsh1tpgbn',
+    'x-should-retry': 'false',
+    via: '1.1 google',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '__cf_bm=ZqKWYSXLFdrQ96Oeq52Q3HnCwzp8eqvcsBj1j7uZG3s-1774159278.3616834-1.0.1.1-XmZ8sW8sv1smOsuuPS9fyta71rZ.dkD1B6RNmEUWHCcCsKLgHoWfHPxfQajDTx7.xmaiBfcNmzYokt6D01RI062dyJIsFwBY9ZUydxedD1rf.PZAmOIqLCt.Y5wE5ip9; HttpOnly; Secure; Path=/; Domain=groq.com; Expires=Sun, 22 Mar 2026 06:31:18 GMT',
+    'strict-transport-security': 'max-age=15552000',
+    'cf-ray': '9e02fb21c83379fe-PAT',
+    'alt-svc': 'h3=":443"; ma=86400'
+  },
+  error: {
+    error: {
+      message: 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kkw5z7xbemrats8y9m51jg94` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 100000, Requested 644. Please try again in 9m16.416s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing',
+      type: 'tokens',
+      code: 'rate_limit_exceeded'
+    }
+  }
+}

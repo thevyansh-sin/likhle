@@ -125,7 +125,7 @@ export function getInstagramConfig() {
 export async function validateInstagramSetup() {
   const { instagramUserId, metaGraphVersion } = getInstagramConfig();
   const account = await graphRequest(
-    `${instagramUserId}?fields=id,username,account_type,media_count`
+    `${instagramUserId}?fields=id,username,media_count`
   );
 
   return {
@@ -157,15 +157,13 @@ export async function getContainerStatus({ creationId }) {
     throw new Error("creationId is required.");
   }
 
-  const payload = await graphRequest(
-    `${creationId}?fields=id,status_code,status,error_message`
-  );
+  const payload = await graphRequest(`${creationId}?fields=id,status_code,status`);
 
   return {
     creationId: payload.id || creationId,
     statusCode: payload.status_code || null,
     status: payload.status || null,
-    errorMessage: payload.error_message || null,
+    errorMessage: payload.error_message || payload.error?.message || null,
     raw: payload,
   };
 }
