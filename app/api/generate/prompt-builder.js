@@ -374,7 +374,7 @@ export function buildPrompt({
     ? 'Every final result MUST end with 4-6 relevant hashtags on a separate final line.'
     : 'Do not add hashtags.';
   const imageNote = imageDescription
-    ? `IMPORTANT: The user has uploaded a photo. Here is exactly what the photo shows: ${imageDescription}. You MUST write captions that are specifically about THIS image. The captions should directly reference the mood, style, and elements visible in the photo. Do NOT write generic captions.`
+    ? `IMPORTANT: The user has uploaded a photo. Here is the AI Vision JSON profile of the exact photo: ${imageDescription}. You MUST write captions that are specifically about THIS image. Integrate the main subject, vibe, colors, and lighting flawlessly. Do NOT write generic captions.`
     : '';
   const platformNote = platform && platform !== 'Auto Detect'
     ? `Write specifically for this format: ${platform}.`
@@ -482,7 +482,7 @@ export function buildFallbackPrompt({
     ? 'Every final result must end with 4-6 relevant hashtags on a separate final line.'
     : 'Do not add hashtags.';
   const imageNote = imageDescription
-    ? `Use this uploaded image context carefully: ${imageDescription}`
+    ? `Use this structured JSON image profile carefully: ${imageDescription}`
     : 'No image context is provided.';
   const platformNote = platform && platform !== 'Auto Detect'
     ? `Write specifically for ${platform}.`
@@ -561,7 +561,7 @@ export function buildQualityReviewPrompt({
     ? 'Every final result must keep a clean 4-6 hashtag finish on a separate final line.'
     : 'Do not add hashtags.';
   const imageNote = imageDescription
-    ? `The final captions must stay faithful to this uploaded image context: ${imageDescription}`
+    ? `The final captions must stay strictly faithful to this JSON image profile: ${imageDescription}`
     : 'No uploaded image context is available.';
   const platformNote = platform && platform !== 'Auto Detect'
     ? `The final outputs must fit this exact format: ${platform}.`

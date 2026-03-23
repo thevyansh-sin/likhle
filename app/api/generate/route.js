@@ -126,7 +126,10 @@ export async function POST(req) {
         if (!imageDescription) {
           const base64Image = Buffer.from(imageBytes).toString('base64');
 
-          const model = genAI.getGenerativeModel({ model: GEMINI_IMAGE_MODEL });
+          const model = genAI.getGenerativeModel({ 
+            model: GEMINI_IMAGE_MODEL,
+            generationConfig: { responseMimeType: "application/json" }
+          });
           const result = await model.generateContent([
             {
               inlineData: {
@@ -134,7 +137,7 @@ export async function POST(req) {
                 mimeType,
               },
             },
-            'Describe this image in detail. What is the main subject? What is the overall mood and aesthetic? What colors, lighting, and style does it have? What would someone feel looking at this? Be very specific - mention the exact visual elements, artistic style, and emotional tone.',
+            'Analyze this image and return a JSON object with strictly these keys: "mainSubject" (string), "aestheticVibe" (string), "colorPalette" (array of strings), "lighting" (string), and "notableObjects" (array of strings). Be extremely specific and descriptive.',
           ]);
           imageDescription = result.response.text();
 
