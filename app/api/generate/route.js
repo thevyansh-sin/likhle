@@ -4,6 +4,8 @@ import { isPrivilegedAccessRequest } from '../../lib/owner-mode';
 import {
   consumeRateLimit,
   consumeSessionCooldown,
+  consumeAbuseLockout,
+  LOCKOUT_DURATION_SECONDS,
   generationCacheStore,
   imageContextCacheStore,
   IMAGE_CONTEXT_CACHE_TTL_MS,
@@ -102,11 +104,37 @@ function validateImageFile(imageFile) {
   return null;
 }
 
+function lockoutResponse() {
+  return Response.json(
+    {
+      success: false,
+      error: 'Too many requests. Please wait 5 minutes before trying again.',
+      retryAfterSeconds: LOCKOUT_DURATION_SECONDS,
+      lockout: true,
+    },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': String(LOCKOUT_DURATION_SECONDS),
+      },
+    }
+  );
+}
+
 export async function POST(req) {
   const requestStartMs = Date.now();
   try {
     const privilegedAccess = isPrivilegedAccessRequest(req);
     const isRewrite = Boolean(req.headers.get('x-rewrite-action'));
+
+    // Temporary abuse lockout — must trigger before any expensive work begins.
+    if (!privilegedAccess) {
+      const lockout = await consumeAbuseLockout(req, { route: 'generate', rawSessionKey: '' });
+      if (lockout.locked) {
+        return lockoutResponse();
+      }
+    }
+
     const retryAfterSeconds = privilegedAccess ? null : await consumeRateLimit(req, { isRewrite });
 
     if (retryAfterSeconds) {
@@ -183,6 +211,14 @@ export async function POST(req) {
     const rewriteInstruction = parseRewriteInstruction(rewriteInstructionRaw);
     const currentResult = parseCurrentResult(currentResultRaw);
     const sessionKey = parseSessionKey(sessionKeyRaw);
+
+    // Second lockout check with stable server-derived session identity (if provided).
+    if (!privilegedAccess) {
+      const lockout = await consumeAbuseLockout(req, { route: 'generate', rawSessionKey: sessionKeyRaw || '' });
+      if (lockout.locked) {
+        return lockoutResponse();
+      }
+    }
 
     if (rewriteAction && !currentResult) {
       return Response.json({ error: 'Current result required for rewrite.' }, { status: 400 });
@@ -297,143 +333,147 @@ export async function POST(req) {
     }
 
     // ── In-flight deduplication ──────────────────────────────────────────────
-    const lockAcquired = await acquireInflightLock(generationCacheKey);
-    if (!lockAcquired) {
-      // Another request is generating the same thing — wait for its result
-      const inflightResult = await waitForInflightResult(generationCacheKey);
-      if (inflightResult) {
-        logMetric({ event: 'generate', cached: true, latencyMs: Date.now() - requestStartMs });
-        return Response.json({ results: inflightResult, cached: true });
-      }
-      // Other request failed — let this one through as a fresh attempt
-      await acquireInflightLock(generationCacheKey); // re-acquire
-    }
+    // Once we acquire an inflight lock, every early-return path must release it.
+    let lockHeld = false;
+    try {
+      const lockAcquired = await acquireInflightLock(generationCacheKey);
+      lockHeld = lockAcquired;
 
-    const activeSessionRetryAfterSeconds = privilegedAccess
-      ? null
-      : await consumeSessionCooldown(req, sessionKey, rewriteAction);
-
-    if (activeSessionRetryAfterSeconds) {
-      return Response.json(
-        {
-          error: 'That was super fast. Give Likhle a couple seconds, then try again.',
-          retryAfterSeconds: activeSessionRetryAfterSeconds,
-        },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': String(activeSessionRetryAfterSeconds),
-          },
+      if (!lockAcquired) {
+        const inflightResult = await waitForInflightResult(generationCacheKey);
+        if (inflightResult) {
+          logMetric({ event: 'generate', cached: true, latencyMs: Date.now() - requestStartMs });
+          return Response.json({ results: inflightResult, cached: true });
         }
-      );
-    }
+        // Best-effort re-acquire. If it fails, we proceed (dedup is best-effort only).
+        lockHeld = await acquireInflightLock(generationCacheKey);
+      }
 
-    const userStyleProfile = await getStyleProfile(sessionKey);
-    const isStreamRequested = formData.get('stream') === 'true';
+      const activeSessionRetryAfterSeconds = privilegedAccess
+        ? null
+        : await consumeSessionCooldown(req, sessionKey, rewriteAction);
 
-    if (isStreamRequested) {
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream({
-        async start(controller) {
-          let fullText = '';
-          try {
-            // Stage 1: signal analyzing (image context already fetched above)
-            if (imageDescription) {
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ stage: 'analyzing' })}\n\n`));
-            }
+      if (activeSessionRetryAfterSeconds) {
+        return Response.json(
+          {
+            error: 'That was super fast. Give Likhle a couple seconds, then try again.',
+            retryAfterSeconds: activeSessionRetryAfterSeconds,
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': String(activeSessionRetryAfterSeconds),
+            },
+          }
+        );
+      }
 
-            // Stage 2: signal generating
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ stage: 'generating' })}\n\n`));
+      const userStyleProfile = await getStyleProfile(sessionKey);
+      const isStreamRequested = formData.get('stream') === 'true';
 
-            const generator = generateResultsStream({
-              input,
-              tone,
-              hinglish,
-              emoji,
-              hashtags,
-              imageDescription,
-              platform,
-              length,
-              count,
-              avoidResults,
-              rewriteAction,
-              rewriteInstruction,
-              currentResult,
-              userStyleProfile,
-              providerBudget,
-            });
+      if (isStreamRequested) {
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+          async start(controller) {
+            let fullText = '';
+            try {
+              if (imageDescription) {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ stage: 'analyzing' })}\n\n`));
+              }
 
-            for await (const chunk of generator) {
-              fullText += chunk;
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`));
-            }
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ stage: 'generating' })}\n\n`));
 
-            const parsedResults = parseStructuredResults(fullText, {
-              count,
-              tone,
-              hinglish,
-              emoji,
-              hashtags,
-            });
-
-            if (parsedResults.length > 0) {
-              await writeCachedValue(
-                generationCacheStore,
-                generationCacheKey,
-                parsedResults,
-                GENERATION_CACHE_TTL_MS
-              );
-              updateStyleProfile(sessionKey, parsedResults, tone, rewriteAction).catch((profileErr) => {
-                console.error('Style update failed in stream:', profileErr);
+              const generator = generateResultsStream({
+                input,
+                tone,
+                hinglish,
+                emoji,
+                hashtags,
+                imageDescription,
+                platform,
+                length,
+                count,
+                avoidResults,
+                rewriteAction,
+                rewriteInstruction,
+                currentResult,
+                userStyleProfile,
+                providerBudget,
               });
-              logMetric({ event: 'generate', provider: 'groq', latencyMs: Date.now() - requestStartMs });
 
+              for await (const chunk of generator) {
+                fullText += chunk;
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`));
+              }
+
+              const parsedResults = parseStructuredResults(fullText, {
+                count,
+                tone,
+                hinglish,
+                emoji,
+                hashtags,
+              });
+
+              if (parsedResults.length > 0) {
+                await writeCachedValue(
+                  generationCacheStore,
+                  generationCacheKey,
+                  parsedResults,
+                  GENERATION_CACHE_TTL_MS
+                );
+                updateStyleProfile(sessionKey, parsedResults, tone, rewriteAction).catch((profileErr) => {
+                  console.error('Style update failed in stream:', profileErr);
+                });
+                logMetric({ event: 'generate', provider: 'groq', latencyMs: Date.now() - requestStartMs });
+
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({
+                      done: true,
+                      results: parsedResults,
+                      learnedVibe: userStyleProfile?.generation_count >= 3,
+                    })}\n\n`
+                  )
+                );
+              } else {
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({ error: 'AI returned an empty response. Please try again.' })}\n\n`
+                  )
+                );
+              }
+            } catch (streamErr) {
+              console.error('Stream generation error:', streamErr);
+              const providerError = normalizeProviderError(streamErr);
+              logMetric({ event: 'stream_error', provider: 'groq', latencyMs: Date.now() - requestStartMs });
               controller.enqueue(
                 encoder.encode(
                   `data: ${JSON.stringify({
-                    done: true,
-                    results: parsedResults,
-                    learnedVibe: userStyleProfile?.generation_count >= 3,
+                    error: providerError?.message || 'Generation failed',
+                    retryAfterSeconds: providerError?.retryAfterSeconds || null,
                   })}\n\n`
                 )
               );
-            } else {
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ error: 'AI returned an empty response. Please try again.' })}\n\n`)
-              );
+            } finally {
+              await releaseInflightLock(generationCacheKey);
+              controller.close();
             }
-          } catch (streamErr) {
-            console.error('Stream generation error:', streamErr);
-            const providerError = normalizeProviderError(streamErr);
-            logMetric({ event: 'stream_error', provider: 'groq', latencyMs: Date.now() - requestStartMs });
-            controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({
-                  error: providerError?.message || 'Generation failed',
-                  retryAfterSeconds: providerError?.retryAfterSeconds || null,
-                })}\n\n`
-              )
-            );
-          } finally {
-            await releaseInflightLock(generationCacheKey);
-            controller.close();
-          }
-        },
-      });
+          },
+        });
 
-      return new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      });
-    }
+        // Streaming path releases lock inside stream finally.
+        lockHeld = false;
 
-    let lockReleased = false;
-    let results;
-    try {
-      results = await generateResultsWithRecovery({
+        return new Response(stream, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          },
+        });
+      }
+
+      const results = await generateResultsWithRecovery({
         input,
         tone,
         hinglish,
@@ -459,24 +499,21 @@ export async function POST(req) {
       }
 
       await writeCachedValue(generationCacheStore, generationCacheKey, results, GENERATION_CACHE_TTL_MS);
+      logMetric({ event: 'generate', provider: 'groq', latencyMs: Date.now() - requestStartMs });
+
+      updateStyleProfile(sessionKey, results, tone, rewriteAction).catch((styleErr) => {
+        console.error('Style update failed:', styleErr);
+      });
+
+      return Response.json({
+        results,
+        learnedVibe: userStyleProfile?.generation_count >= 3,
+      });
     } finally {
-      if (!lockReleased) {
-        lockReleased = true;
+      if (lockHeld) {
         await releaseInflightLock(generationCacheKey);
       }
     }
-
-    logMetric({ event: 'generate', provider: 'groq', latencyMs: Date.now() - requestStartMs });
-
-    // Fire and forget: update the style profile asynchronously
-    updateStyleProfile(sessionKey, results, tone, rewriteAction).catch(err => {
-      console.error('Style update failed:', err);
-    });
-
-    return Response.json({ 
-      results,
-      learnedVibe: userStyleProfile?.generation_count >= 3 
-    });
   } catch (err) {
     console.error('Error:', err);
     if (err?.code === 'PROVIDER_BUDGET_EXCEEDED') {

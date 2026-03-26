@@ -24,16 +24,25 @@ export const INFLIGHT_MAX_WAIT_MS = 8_000;
 export const CIRCUIT_BREAKER_TTL_MS = 30_000;       // how long circuit stays open
 export const CIRCUIT_BREAKER_THRESHOLD = 3;          // consecutive fails to open
 
+// ─── Abuse Lockout (temporary) ─────────────────────────────────────────────
+export const RATE_LIMIT_WINDOW_SECONDS = 60;
+export const MAX_REQUESTS_PER_WINDOW = 30;
+export const LOCKOUT_DURATION_SECONDS = 300;
+
 // ─── In-Memory Fallback Stores ──────────────────────────────────────────────
 export const rateLimitStore = globalThis.__likhleRateLimitStore || new Map();
 export const generationCacheStore = globalThis.__likhleGenerationCacheStore || new Map();
 export const imageContextCacheStore = globalThis.__likhleImageContextCacheStore || new Map();
 export const sessionCooldownStore = globalThis.__likhleSessionCooldownStore || new Map();
+export const abuseWindowStore = globalThis.__likhleAbuseWindowStore || new Map();
+export const abuseLockoutStore = globalThis.__likhleAbuseLockoutStore || new Map();
 
 if (!globalThis.__likhleRateLimitStore) globalThis.__likhleRateLimitStore = rateLimitStore;
 if (!globalThis.__likhleGenerationCacheStore) globalThis.__likhleGenerationCacheStore = generationCacheStore;
 if (!globalThis.__likhleImageContextCacheStore) globalThis.__likhleImageContextCacheStore = imageContextCacheStore;
 if (!globalThis.__likhleSessionCooldownStore) globalThis.__likhleSessionCooldownStore = sessionCooldownStore;
+if (!globalThis.__likhleAbuseWindowStore) globalThis.__likhleAbuseWindowStore = abuseWindowStore;
+if (!globalThis.__likhleAbuseLockoutStore) globalThis.__likhleAbuseLockoutStore = abuseLockoutStore;
 
 // ─── Redis Client ───────────────────────────────────────────────────────────
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
@@ -110,6 +119,106 @@ export function getClientKey(req) {
   const userAgent = req.headers.get('user-agent') || 'unknown-agent';
   const clientIp = getClientIpFromTrustedProxy(req) || 'untrusted-ip';
   return `${clientIp}:${userAgent}`;
+}
+
+function getTrustedClientIp(req) {
+  return getClientIpFromTrustedProxy(req);
+}
+
+export function getStableRequestIdentity(req, rawSessionKey) {
+  // Priority order:
+  // 1) authenticated user id (not available in this codebase today)
+  // 2) stable server-trusted session identity (derived from trusted client key + provided sessionKey)
+  // 3) trusted client IP
+  // 4) fallback abuse bucket (existing client key logic which may be "untrusted-ip:UA")
+
+  if (typeof rawSessionKey === 'string' && rawSessionKey.trim()) {
+    return {
+      kind: 'session',
+      value: getSessionKey(req, rawSessionKey),
+    };
+  }
+
+  const trustedIp = getTrustedClientIp(req);
+  if (trustedIp) {
+    return {
+      kind: 'trusted_ip',
+      value: trustedIp,
+    };
+  }
+
+  return {
+    kind: 'bucket',
+    value: getClientKey(req),
+  };
+}
+
+export async function consumeAbuseLockout(req, { route = 'generate', rawSessionKey = '' } = {}) {
+  const identity = getStableRequestIdentity(req, rawSessionKey);
+  const idKey = `${route}:${identity.kind}:${identity.value}`;
+
+  const lockKey = `lockout:${idKey}`;
+  const windowKey = `abuse:${idKey}`;
+  const now = Date.now();
+
+  if (redis) {
+    try {
+      const lockoutExpiresAt = await redis.get(lockKey);
+      if (lockoutExpiresAt) {
+        return {
+          locked: true,
+          retryAfterSeconds: LOCKOUT_DURATION_SECONDS,
+          lockoutExpiresAt: Number(lockoutExpiresAt) || null,
+        };
+      }
+
+      const count = await redis.incr(windowKey);
+      if (count === 1) {
+        await redis.expire(windowKey, RATE_LIMIT_WINDOW_SECONDS);
+      }
+
+      if (count > MAX_REQUESTS_PER_WINDOW) {
+        const expiresAt = now + LOCKOUT_DURATION_SECONDS * 1000;
+        await redis.set(lockKey, String(expiresAt), { ex: LOCKOUT_DURATION_SECONDS });
+        return {
+          locked: true,
+          retryAfterSeconds: LOCKOUT_DURATION_SECONDS,
+          lockoutExpiresAt: expiresAt,
+        };
+      }
+
+      return { locked: false };
+    } catch (err) {
+      // Fail closed: if Redis is configured but errors, lock the request rather than allow cost abuse.
+      console.error('Redis consumeAbuseLockout error:', err);
+      const expiresAt = now + LOCKOUT_DURATION_SECONDS * 1000;
+      return { locked: true, retryAfterSeconds: LOCKOUT_DURATION_SECONDS, lockoutExpiresAt: expiresAt };
+    }
+  }
+
+  // Memory fallback (best-effort, per-instance)
+  pruneTimedStore(abuseLockoutStore);
+  const existingLock = abuseLockoutStore.get(lockKey);
+  if (existingLock?.expiresAt && existingLock.expiresAt > now) {
+    return { locked: true, retryAfterSeconds: LOCKOUT_DURATION_SECONDS, lockoutExpiresAt: existingLock.expiresAt };
+  }
+
+  pruneTimedStore(abuseWindowStore);
+  const windowEntry = abuseWindowStore.get(windowKey);
+  if (!windowEntry || windowEntry.expiresAt <= now) {
+    abuseWindowStore.set(windowKey, { value: 1, expiresAt: now + RATE_LIMIT_WINDOW_SECONDS * 1000 });
+    return { locked: false };
+  }
+
+  const nextCount = (windowEntry.value || 0) + 1;
+  abuseWindowStore.set(windowKey, { ...windowEntry, value: nextCount });
+  if (nextCount > MAX_REQUESTS_PER_WINDOW) {
+    const expiresAt = now + LOCKOUT_DURATION_SECONDS * 1000;
+    abuseLockoutStore.set(lockKey, { expiresAt });
+    return { locked: true, retryAfterSeconds: LOCKOUT_DURATION_SECONDS, lockoutExpiresAt: expiresAt };
+  }
+
+  return { locked: false };
 }
 
 function pruneTimedStore(store) {

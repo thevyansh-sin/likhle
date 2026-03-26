@@ -406,6 +406,7 @@ export default function GeneratePage() {
   const [toast, setToast] = useState(null);
   const [statusNotice, setStatusNotice] = useState('');
   const [pendingResultAction, setPendingResultAction] = useState(null);
+  const [lockoutRemainingSeconds, setLockoutRemainingSeconds] = useState(0);
   const fileRef = useRef(null);
   const toastTimeoutRef = useRef(null);
   const outputSectionRef = useRef(null);
@@ -415,6 +416,18 @@ export default function GeneratePage() {
   useEffect(() => {
     setPlaceholder(PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
   }, []);
+
+  useEffect(() => {
+    if (!lockoutRemainingSeconds || lockoutRemainingSeconds <= 0) {
+      return undefined;
+    }
+
+    const intervalId = setInterval(() => {
+      setLockoutRemainingSeconds((prev) => Math.max(0, (prev || 0) - 1));
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [lockoutRemainingSeconds]);
 
   useEffect(() => {
     try {
@@ -1140,6 +1153,13 @@ export default function GeneratePage() {
         const shouldKeepCurrentResults =
           response.status === 429 && (resultIndex !== null || results.length > 0);
 
+        if (response.status === 429 && data?.lockout) {
+          setError('Too many requests. Please wait 5 minutes before trying again.');
+          const retrySeconds = Number(data?.retryAfterSeconds) || 300;
+          setLockoutRemainingSeconds(Math.max(1, Math.min(300, retrySeconds)));
+          return null;
+        }
+
         if (shouldKeepCurrentResults) {
           setStatusNotice(nextError);
           showToast('Current results are still safe. Try again in a moment.');
@@ -1316,6 +1336,10 @@ export default function GeneratePage() {
   };
 
   const handleGenerate = async () => {
+    if (lockoutRemainingSeconds > 0) {
+      setError('Too many requests. Please wait 5 minutes before trying again.');
+      return;
+    }
     shouldFocusOutputRef.current = true;
     const nextResults = await requestGeneration({ count: 3 });
 
@@ -1518,12 +1542,17 @@ export default function GeneratePage() {
   });
 
   const controlsDisabled = loading || pendingResultAction !== null;
+  const controlsDisabledWithLockout = controlsDisabled || lockoutRemainingSeconds > 0;
   const visibleRewriteActions = getRewriteActionsForContext({ tone, selectedOptions });
   const hasPrompt = input.trim().length > 0;
   const isQuotaError =
     /ai quota/i.test(error) || /too many tries right now/i.test(error);
+  const isLockout = lockoutRemainingSeconds > 0;
   const quotaHelperCopy = isQuotaError
     ? 'Try again in 30-60 seconds. If you were testing very fast, give it a small pause and then run it again.'
+    : '';
+  const lockoutHelperCopy = isLockout
+    ? `Too many requests. Please wait 5 minutes before trying again. (${lockoutRemainingSeconds}s)`
     : '';
   const errorCardKicker = isQuotaError ? 'Quota pause' : 'This try broke';
   const errorCardTitle = isQuotaError
@@ -1561,7 +1590,7 @@ export default function GeneratePage() {
       className="gen-surface-card gen-template-card"
       key={template.id}
       onClick={() => handleApplyTemplate(template)}
-      disabled={controlsDisabled}
+      disabled={controlsDisabledWithLockout}
       style={{
         background: t.resultBg,
         border: `1px solid ${t.resultBorder}`,
@@ -1745,7 +1774,7 @@ export default function GeneratePage() {
           <button
             className="gen-submit-button"
             onClick={handleGenerate}
-            disabled={controlsDisabled || !input.trim()}
+            disabled={controlsDisabledWithLockout || !input.trim()}
             style={{ 
               background: loading ? (dark ? '#222' : '#eee') : t.accent, 
               color: loading ? t.muted : '#000', 
@@ -2051,6 +2080,11 @@ export default function GeneratePage() {
                   {quotaHelperCopy}
                 </p>
               )}
+              {lockoutHelperCopy && (
+                <p className="gen-empty-copy" style={{ maxWidth: 680, marginTop: 8 }}>
+                  {lockoutHelperCopy}
+                </p>
+              )}
 
               <div className="gen-empty-chip-row">
                 <span className="gen-empty-chip">{platform}</span>
@@ -2062,7 +2096,7 @@ export default function GeneratePage() {
               </div>
 
               <div className="gen-state-actions">
-                <button onClick={handleGenerate} disabled={controlsDisabled || !hasPrompt} style={primaryActionButtonStyle}>
+                <button onClick={handleGenerate} disabled={controlsDisabledWithLockout || !hasPrompt} style={primaryActionButtonStyle}>
                   Ek baar aur try karo
                 </button>
                 <button onClick={() => setError('')} style={actionButtonStyle}>
@@ -2165,7 +2199,7 @@ export default function GeneratePage() {
                         </button>
                         <button
                           onClick={() => handleRegenerateOption(index)}
-                          disabled={controlsDisabled}
+                          disabled={controlsDisabledWithLockout}
                           aria-label={pendingResultAction?.index === index ? 'Refreshing result' : 'Regenerate result'}
                           title={pendingResultAction?.index === index ? 'Refreshing result' : 'Regenerate result'}
                           style={getResultIconButtonStyle({
