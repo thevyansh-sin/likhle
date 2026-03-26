@@ -1,10 +1,10 @@
-# Recent Changes (likhle v0.6.1)
+# Recent Changes (likhle v0.6.2)
 
 ## Purpose
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.6.1`.
+- Public version is `v0.6.2`.
 - Repo workflow now includes an `upgrades strategy` thread lane with shared read-order docs and a pinned prompt file so long-term planning stays aligned with coding, testing, branding, and socials.
 - Trusted tester browsers can now use a separate admin-mode unlock with its own secret and a 10-day signed cookie instead of sharing the owner-mode secret.
 - Local Instagram container-status polling now uses the fields Meta currently accepts, so post flows no longer break on the deprecated `error_message` lookup during readiness checks.

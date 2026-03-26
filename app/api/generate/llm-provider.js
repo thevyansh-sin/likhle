@@ -91,16 +91,26 @@ export async function requestGeminiJson({
     }
   });
 
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('Google AI timeout')), timeoutMs)
-  );
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
 
-  const result = await Promise.race([
-    generativeModel.generateContent(prompt),
-    timeoutPromise
-  ]);
-
-  return result.response.text();
+  try {
+    const result = await generativeModel.generateContent(prompt, {
+      signal: controller.signal,
+    });
+    return result.response.text();
+  } catch (error) {
+    // Normalize abort into the same timeout error used previously so
+    // provider-error.js can map it to a retryable timeout response.
+    if (controller.signal.aborted) {
+      throw new Error('Google AI timeout');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export async function* requestGeminiStream({
@@ -147,6 +157,7 @@ export async function runGenerationAttempt({
   skipQualityReview = false,
   timeoutMs = PRIMARY_GROQ_REQUEST_TIMEOUT_MS,
   userStyleProfile = null,
+  providerBudget = null,
 }) {
   const requestFn = provider === 'gemini' ? requestGeminiJson : requestGroqJson;
 
@@ -181,6 +192,7 @@ export async function runGenerationAttempt({
     userStyleProfile,
   });
 
+  providerBudget?.consume?.({ kind: 'text_generation' });
   const primaryRaw = await requestFn({
     prompt: primaryPrompt,
     maxTokens: completionTokenBudget,
@@ -215,6 +227,7 @@ export async function runGenerationAttempt({
       userStyleProfile,
     });
 
+    providerBudget?.consume?.({ kind: 'text_generation' });
     const fallbackRaw = await requestFn({
       prompt: fallbackPrompt,
       maxTokens: completionTokenBudget,
@@ -248,6 +261,7 @@ export async function runGenerationAttempt({
     });
 
     try {
+      providerBudget?.consume?.({ kind: 'text_quality_review' });
       const reviewedRaw = await requestFn({
         prompt: qualityReviewPrompt,
         maxTokens: getQualityReviewMaxTokens({ count, lightMode }),
@@ -304,6 +318,7 @@ export async function* generateResultsStream({
   rewriteInstruction,
   currentResult,
   userStyleProfile,
+  providerBudget = null,
 }) {
   const qualityCandidateCount = getQualityCandidateCount({
     count,
@@ -335,6 +350,8 @@ export async function* generateResultsStream({
   });
 
   const streamFn = requestGroqStream; // Default to Groq for streaming
+
+  providerBudget?.consume?.({ kind: 'text_generation' });
   const generator = streamFn({
     prompt: primaryPrompt,
     maxTokens: completionTokenBudget,
@@ -362,6 +379,7 @@ export async function generateResultsWithRecovery({
   rewriteInstruction,
   currentResult,
   userStyleProfile,
+  providerBudget = null,
 }) {
   const isRewriteFlow = Boolean(rewriteInstruction && currentResult);
   const lighterCount = isRewriteFlow ? count : Math.min(count, LIGHT_MODE_MAX_GENERATION_COUNT);
@@ -443,6 +461,7 @@ export async function generateResultsWithRecovery({
         model: attemptPlan.model,
         timeoutMs: attemptPlan.timeoutMs,
         userStyleProfile,
+        providerBudget,
       });
 
       // Record success to reset circuit breaker

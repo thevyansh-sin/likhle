@@ -41,12 +41,75 @@ const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 export const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-export function getClientKey(req) {
+const TRUSTED_PROXY_CIDRS_RAW = process.env.LIKHLE_TRUSTED_PROXY_CIDRS || '';
+const TRUSTED_PROXY_CIDRS = TRUSTED_PROXY_CIDRS_RAW
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+function isValidIpv4(ip) {
+  if (typeof ip !== 'string') return false;
+  if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) return false;
+  const parts = ip.split('.').map((p) => Number(p));
+  return parts.every((n) => Number.isFinite(n) && n >= 0 && n <= 255);
+}
+
+function ipToInt(ip) {
+  // Assumes valid IPv4.
+  return ip
+    .split('.')
+    .reduce((acc, octet) => (acc << 8) + Number(octet), 0) >>> 0;
+}
+
+function isIpInCidr(ip, cidr) {
+  if (!isValidIpv4(ip) || typeof cidr !== 'string' || !cidr.trim()) return false;
+  const [baseIpRaw, prefixLenRaw] = cidr.split('/');
+  const baseIp = baseIpRaw?.trim() || '';
+  if (!isValidIpv4(baseIp)) return false;
+
+  const prefixLen = prefixLenRaw ? Number.parseInt(prefixLenRaw, 10) : 32;
+  if (!Number.isFinite(prefixLen) || prefixLen < 0 || prefixLen > 32) return false;
+
+  const ipInt = ipToInt(ip);
+  const baseInt = ipToInt(baseIp);
+
+  const mask = prefixLen === 0 ? 0 : ((0xffffffff << (32 - prefixLen)) >>> 0);
+  return (ipInt & mask) === (baseInt & mask);
+}
+
+function isTrustedProxyIp(ip) {
+  if (TRUSTED_PROXY_CIDRS.length === 0) return false;
+  return TRUSTED_PROXY_CIDRS.some((cidr) => isIpInCidr(ip, cidr));
+}
+
+function getClientIpFromTrustedProxy(req) {
+  if (TRUSTED_PROXY_CIDRS.length === 0) return null;
+
+  // Security rule: only trust forwarded headers if the *last hop* is a trusted proxy IP.
+  // This prevents direct attackers from spoofing x-forwarded-for / x-real-ip on their own.
   const forwardedFor = req.headers.get('x-forwarded-for');
-  const realIp = req.headers.get('x-real-ip');
+  if (typeof forwardedFor !== 'string' || !forwardedFor.trim()) return null;
+
+  const ips = forwardedFor
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (ips.length < 2) return null;
+
+  const leftMost = ips[0];
+  const rightMost = ips[ips.length - 1];
+
+  if (!isValidIpv4(leftMost) || !isValidIpv4(rightMost)) return null;
+  if (!isTrustedProxyIp(rightMost)) return null;
+
+  return leftMost;
+}
+
+export function getClientKey(req) {
   const userAgent = req.headers.get('user-agent') || 'unknown-agent';
-  const ip = forwardedFor?.split(',')[0]?.trim() || realIp || 'unknown-ip';
-  return `${ip}:${userAgent}`;
+  const clientIp = getClientIpFromTrustedProxy(req) || 'untrusted-ip';
+  return `${clientIp}:${userAgent}`;
 }
 
 function pruneTimedStore(store) {
