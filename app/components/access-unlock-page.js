@@ -18,11 +18,8 @@ const ACCESS_MODE_UI = {
       "Use this only on your own browser. Once unlocked, this device skips Likhle's app-side testing waits while regular users keep the normal protection.",
     activeLabel: 'Owner mode active',
     lockedLabel: 'Owner mode locked',
-    unconfiguredLabel: 'Owner mode not configured',
     lockedCopy:
       'Unlock this hidden page once on your own browser. After that, the site treats only this browser as the owner device.',
-    unconfiguredCopy:
-      'This deployment still needs an OWNER_MODE_TOKEN environment variable before the hidden unlock can work.',
     activeCopyPrefix: 'This browser is unlocked',
     secretLabel: 'Owner secret',
     secretPlaceholder: 'Paste the hidden owner token',
@@ -44,11 +41,8 @@ const ACCESS_MODE_UI = {
       "Use this only on a trusted tester browser. Once unlocked, this device skips Likhle's app-side testing waits without exposing the owner secret.",
     activeLabel: 'Admin mode active',
     lockedLabel: 'Admin mode locked',
-    unconfiguredLabel: 'Admin mode not configured',
     lockedCopy:
       'Unlock this hidden page once on a trusted tester browser. After that, the site treats only that browser as an approved admin tester device.',
-    unconfiguredCopy:
-      'This deployment still needs an ADMIN_MODE_TOKEN environment variable before the hidden unlock can work.',
     activeCopyPrefix: 'This trusted tester browser is unlocked',
     secretLabel: 'Admin secret',
     secretPlaceholder: 'Paste the hidden admin token',
@@ -91,7 +85,6 @@ export default function AccessUnlockPage({ mode = 'owner' }) {
   const [secret, setSecret] = useState('');
   const [accessState, setAccessState] = useState({
     active: false,
-    configured: true,
     expiresAt: null,
     loaded: false,
   });
@@ -117,7 +110,6 @@ export default function AccessUnlockPage({ mode = 'owner' }) {
 
         setAccessState({
           active: Boolean(data.active),
-          configured: Boolean(data.configured),
           expiresAt: typeof data.expiresAt === 'number' ? data.expiresAt : null,
           loaded: true,
         });
@@ -125,7 +117,6 @@ export default function AccessUnlockPage({ mode = 'owner' }) {
         if (!cancelled) {
           setAccessState({
             active: false,
-            configured: false,
             expiresAt: null,
             loaded: true,
           });
@@ -150,7 +141,6 @@ export default function AccessUnlockPage({ mode = 'owner' }) {
 
     setAccessState({
       active: Boolean(data.active),
-      configured: Boolean(data.configured),
       expiresAt: typeof data.expiresAt === 'number' ? data.expiresAt : null,
       loaded: true,
     });
@@ -183,10 +173,14 @@ export default function AccessUnlockPage({ mode = 'owner' }) {
           secret,
         }),
       });
-      const data = await response.json().catch(() => ({}));
+      await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || 'Unlock failed.');
+        if (response.status === 429) {
+          throw new Error('Too many attempts right now. Try again in 5 minutes.');
+        }
+
+        throw new Error('Access denied.');
       }
 
       setSecret('');
@@ -199,7 +193,7 @@ export default function AccessUnlockPage({ mode = 'owner' }) {
     } catch (error) {
       setFeedback({
         tone: 'error',
-        text: error.message || 'Unlock failed.',
+        text: error.message || 'Access denied.',
       });
     } finally {
       setPending(false);
@@ -217,10 +211,14 @@ export default function AccessUnlockPage({ mode = 'owner' }) {
       const response = await fetch(`/api/${accessMode.mode}/unlock`, {
         method: 'DELETE',
       });
-      const data = await response.json().catch(() => ({}));
+      await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || `Could not turn ${accessMode.label.toLowerCase()} mode off.`);
+        if (response.status === 429) {
+          throw new Error('Too many attempts right now. Try again in 5 minutes.');
+        }
+
+        throw new Error(`Could not turn ${accessMode.label.toLowerCase()} mode off.`);
       }
 
       setFeedback({
@@ -241,16 +239,12 @@ export default function AccessUnlockPage({ mode = 'owner' }) {
 
   const stateLabel = accessState.active
     ? accessMode.activeLabel
-    : accessState.configured
-      ? accessMode.lockedLabel
-      : accessMode.unconfiguredLabel;
+    : accessMode.lockedLabel;
   const stateCopy = !accessState.loaded
     ? 'Checking whether this browser is already unlocked.'
     : accessState.active
       ? `${accessMode.activeCopyPrefix}${expiryLabel ? ` until ${expiryLabel}` : ''}. Generate and rewrite requests will skip app-side rate limits and cooldowns here.`
-      : accessState.configured
-        ? accessMode.lockedCopy
-        : accessMode.unconfiguredCopy;
+      : accessMode.lockedCopy;
 
   return (
     <div className="owner-unlock-page">
@@ -282,7 +276,7 @@ export default function AccessUnlockPage({ mode = 'owner' }) {
               value={secret}
               onChange={(event) => setSecret(event.target.value)}
               placeholder={accessMode.secretPlaceholder}
-              disabled={pending || !accessState.configured}
+              disabled={pending}
             />
           </label>
 
@@ -290,7 +284,7 @@ export default function AccessUnlockPage({ mode = 'owner' }) {
             <button
               type="submit"
               className="owner-unlock-primary"
-              disabled={pending || !accessState.configured}
+              disabled={pending}
             >
               {pending ? accessMode.unlockPendingLabel : accessMode.unlockButtonLabel}
             </button>

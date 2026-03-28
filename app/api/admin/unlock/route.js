@@ -1,4 +1,13 @@
-import { NextResponse } from 'next/server';
+import {
+  ACCESS_UNLOCK_DELETE_MAX_REQUESTS,
+  clearAccessRouteFailures,
+  consumeAccessRouteRateLimit,
+  createAccessJsonResponse,
+  createDeniedAccessResponse,
+  createLockedAccessResponse,
+  logAccessAudit,
+  recordAccessRouteFailure,
+} from '../../../lib/access-route-security';
 import {
   createAdminModeSession,
   getAdminModeClearCookieSettings,
@@ -8,46 +17,40 @@ import {
   shouldUseSecureAdminCookie,
 } from '../../../lib/owner-mode';
 
-function createNoStoreJsonResponse(payload, init = {}) {
-  const response = NextResponse.json(payload, init);
-  response.headers.set('Cache-Control', 'no-store');
-  return response;
-}
+const ADMIN_UNLOCK_FAILURE_SCOPE = 'admin:unlock:post';
+const ADMIN_UNLOCK_DELETE_SCOPE = 'admin:unlock:delete';
 
 export async function POST(req) {
-  if (!isAdminModeConfigured()) {
-    return createNoStoreJsonResponse(
-      {
-        error: 'Admin mode is not configured on this deployment yet.',
-      },
-      { status: 503 }
-    );
-  }
-
-  let body;
+  let body = null;
 
   try {
     body = await req.json();
   } catch {
-    return createNoStoreJsonResponse(
-      {
-        error: 'Secret required.',
-      },
-      { status: 400 }
-    );
+    body = null;
   }
 
-  if (!hasMatchingAdminSecret(body?.secret)) {
-    return createNoStoreJsonResponse(
-      {
-        error: 'That admin secret did not match.',
-      },
-      { status: 401 }
-    );
+  const submittedSecret = typeof body?.secret === 'string' ? body.secret : '';
+  const isConfigured = isAdminModeConfigured();
+  const hasMatchingSecret = isConfigured && hasMatchingAdminSecret(submittedSecret);
+
+  if (!hasMatchingSecret) {
+    const failure = await recordAccessRouteFailure(req, {
+      mode: 'admin',
+      scope: ADMIN_UNLOCK_FAILURE_SCOPE,
+      reason: isConfigured ? 'invalid_secret' : 'unconfigured',
+    });
+
+    if (failure.locked) {
+      return createLockedAccessResponse();
+    }
+
+    return createDeniedAccessResponse();
   }
+
+  await clearAccessRouteFailures(req, ADMIN_UNLOCK_FAILURE_SCOPE);
 
   const adminModeSession = createAdminModeSession();
-  const response = createNoStoreJsonResponse({
+  const response = createAccessJsonResponse({
     active: true,
     expiresAt: adminModeSession.expiresAt,
   });
@@ -60,11 +63,28 @@ export async function POST(req) {
     })
   );
 
+  logAccessAudit({
+    event: 'access_unlock_success',
+    mode: 'admin',
+    request: req,
+    reason: 'secret_verified',
+  });
+
   return response;
 }
 
 export async function DELETE(req) {
-  const response = createNoStoreJsonResponse({
+  const rateLimit = await consumeAccessRouteRateLimit(req, {
+    mode: 'admin',
+    scope: ADMIN_UNLOCK_DELETE_SCOPE,
+    maxRequests: ACCESS_UNLOCK_DELETE_MAX_REQUESTS,
+  });
+
+  if (rateLimit.locked) {
+    return createLockedAccessResponse();
+  }
+
+  const response = createAccessJsonResponse({
     active: false,
   });
 
@@ -73,6 +93,13 @@ export async function DELETE(req) {
       secure: shouldUseSecureAdminCookie(req),
     })
   );
+
+  logAccessAudit({
+    event: 'access_unlock_cleared',
+    mode: 'admin',
+    request: req,
+    reason: 'cookie_cleared',
+  });
 
   return response;
 }

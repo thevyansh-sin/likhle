@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram handle: `@likhle.in`
-- Current public version: `v0.6.2`
+- Current public version: `v0.6.3`
 
 ## Tech Stack
 - Next.js 16 App Router
@@ -51,6 +51,7 @@
 - Version changes should stay intentional because the footer shows the public version.
 - Owner mode exists for the owner's browser and should not be removed casually.
 - Admin mode exists for one trusted tester browser and should stay separate from owner mode.
+- Owner/admin unlock and status flows are server-trusted only and should not expose configuration state, raw secret hints, or client-side bypasses.
 
 ## Thread Split
 - `coding`

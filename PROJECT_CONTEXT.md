@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram: `@likhle.in`
-- Current public version: v0.6.2
+- Current public version: v0.6.3
 
 ## Core Brand Rules
 - Keep the site premium, sharp, dark, and modern.
@@ -53,6 +53,7 @@
 - This repo has a public footer version, so version updates should stay intentional.
 - Owner mode exists for the owner's browser and should not be removed casually.
 - Admin mode exists for one trusted tester browser and should stay separate from owner mode.
+- Owner/admin access must stay server-verified through signed cookies and must not depend on client-side flags, localStorage, query params, or hidden-route assumptions.
 
 ## Current Collaboration Split
 - `coding` thread:

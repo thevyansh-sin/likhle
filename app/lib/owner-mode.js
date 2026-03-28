@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
@@ -31,12 +31,8 @@ function getAccessModeMaxAgeMs(mode = 'owner') {
 }
 
 function safeCompare(a, b) {
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-
-  if (left.length !== right.length) {
-    return false;
-  }
+  const left = createHash('sha256').update(String(a ?? '')).digest();
+  const right = createHash('sha256').update(String(b ?? '')).digest();
 
   return timingSafeEqual(left, right);
 }
@@ -107,10 +103,21 @@ export function createAccessModeSession(mode = 'owner') {
 }
 
 export function verifyAccessModeCookieValue(mode = 'owner', cookieValue) {
-  if (!isAccessModeConfigured(mode) || typeof cookieValue !== 'string' || !cookieValue.trim()) {
+  if (!isAccessModeConfigured(mode)) {
     return {
       active: false,
       expiresAt: null,
+      hadCookie: Boolean(typeof cookieValue === 'string' && cookieValue.trim()),
+      reason: 'unconfigured',
+    };
+  }
+
+  if (typeof cookieValue !== 'string' || !cookieValue.trim()) {
+    return {
+      active: false,
+      expiresAt: null,
+      hadCookie: false,
+      reason: 'missing',
     };
   }
 
@@ -121,6 +128,8 @@ export function verifyAccessModeCookieValue(mode = 'owner', cookieValue) {
     return {
       active: false,
       expiresAt: Number.isFinite(expiresAt) ? expiresAt : null,
+      hadCookie: true,
+      reason: !Number.isFinite(expiresAt) || !signature ? 'malformed' : 'expired',
     };
   }
 
@@ -130,12 +139,16 @@ export function verifyAccessModeCookieValue(mode = 'owner', cookieValue) {
     return {
       active: false,
       expiresAt,
+      hadCookie: true,
+      reason: 'invalid_signature',
     };
   }
 
   return {
     active: true,
     expiresAt,
+    hadCookie: true,
+    reason: 'active',
   };
 }
 
@@ -189,11 +202,12 @@ export function getAccessModeCookieSettings(mode = 'owner', { value, expiresAt, 
     name: cookieName,
     value,
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'strict',
     secure,
     path: '/',
     maxAge: maxAgeSeconds,
     expires: new Date(expiresAt),
+    priority: 'high',
   };
 }
 
@@ -204,11 +218,12 @@ export function getAccessModeClearCookieSettings(mode = 'owner', { secure = true
     name: cookieName,
     value: '',
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'strict',
     secure,
     path: '/',
     maxAge: 0,
     expires: new Date(0),
+    priority: 'high',
   };
 }
 

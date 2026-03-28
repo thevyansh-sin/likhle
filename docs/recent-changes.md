@@ -1,10 +1,11 @@
-# Recent Changes (likhle v0.6.2)
+# Recent Changes (likhle v0.6.3)
 
 ## Purpose
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.6.2`.
+- Public version is `v0.6.3`.
+- Owner/admin unlock and status flows now use stricter server-side enforcement only: generic responses, route-specific abuse lockouts, tamper-aware signed cookie verification, and audit logging for unlock failures, lockouts, and invalid privileged-cookie use.
 - Repo workflow now includes an `upgrades strategy` thread lane with shared read-order docs and a pinned prompt file so long-term planning stays aligned with coding, testing, branding, and socials.
 - Shared repo memory now also includes a cross-thread catch-up brief and current-state snapshot so inactive threads can re-sync before reviewing, planning, or testing.
 - Trusted tester browsers can now use a separate admin-mode unlock with its own secret and a 10-day signed cookie instead of sharing the owner-mode secret.
