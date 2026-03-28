@@ -113,11 +113,39 @@ async function postJson(page, path, payload, { headers = {} } = {}) {
 }
 
 test('homepage loads cleanly', async ({ page }) => {
-  await page.goto('/');
+  const response = await page.goto('/');
+  expect(response).toBeTruthy();
 
   await expect(page.getByRole('link', { name: /likhna shuru karo/i }).first()).toBeVisible();
   await expect(page.getByText(/proper creator tool ban gaya hai\./i)).toBeVisible();
   await expect(page.getByText(/Likhle now shows the product it was supposed to be/i)).toBeVisible();
+});
+
+test('deployment-sensitive headers keep CSP nonces and HTTPS-aware security behavior', async ({ browser }) => {
+  const { context, page } = await createIsolatedPage(browser, 'deployment-sensitive-headers');
+
+  const homeResponse = await page.goto('/');
+  expect(homeResponse).toBeTruthy();
+
+  const homeHeaders = homeResponse.headers();
+  const csp = homeHeaders['content-security-policy'] || '';
+  const themeNonce = await page.evaluate(() => document.querySelector('script#theme-init')?.nonce || '');
+
+  expect(themeNonce).toBeTruthy();
+  expect(csp).toContain(`nonce-${themeNonce}`);
+
+  const tamperedAnonymousResponse = await page.request.get('/api/style-dna', {
+    headers: {
+      'user-agent': page._smokeUserAgent,
+      'x-forwarded-proto': 'https',
+      cookie: 'likhle_session=bad.session.value',
+    },
+  });
+  expect(tamperedAnonymousResponse.status()).toBe(200);
+  expect(tamperedAnonymousResponse.headers()['set-cookie']).toContain('likhle_session=');
+  expect(tamperedAnonymousResponse.headers()['set-cookie']).toContain('Secure');
+
+  await context.close();
 });
 
 test('generate page quick-start template prefill auto-generates', async ({ page }) => {
@@ -328,6 +356,44 @@ test('style-dna uses the server-trusted anonymous session and ignores spoofed qu
   expect(first.dna).toEqual(second.dna);
   expect(firstResponse.status()).toBe(200);
   expect(secondResponse.status()).toBe(200);
+
+  await context.close();
+});
+
+test('trusted proxy identity stays distinct behind deployment-style forwarded headers', async ({ browser }) => {
+  const { context, page } = await createIsolatedPage(browser, 'trusted-proxy-identity');
+  const baseHeaders = {
+    'user-agent': page._smokeUserAgent,
+  };
+  const proxyAHeaders = {
+    ...baseHeaders,
+    'x-forwarded-for': '203.0.113.10, 127.0.0.1',
+  };
+  const proxyBHeaders = {
+    ...baseHeaders,
+    'x-forwarded-for': '203.0.113.11, 127.0.0.1',
+  };
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const response = await page.request.get('/api/owner/status', {
+      headers: proxyAHeaders,
+    });
+
+    expect(response.status()).toBe(200);
+  }
+
+  const lockedResponse = await page.request.get('/api/owner/status', {
+    headers: proxyAHeaders,
+  });
+  expect(lockedResponse.status()).toBe(429);
+
+  const freshProxyResponse = await page.request.get('/api/owner/status', {
+    headers: proxyBHeaders,
+  });
+  expect(freshProxyResponse.status()).toBe(200);
+  expect(freshProxyResponse.headers()['cache-control']).toContain('no-store');
+  expect(freshProxyResponse.headers()['cache-control']).toContain('private');
+  expect(freshProxyResponse.headers()['vary']).toContain('Cookie');
 
   await context.close();
 });

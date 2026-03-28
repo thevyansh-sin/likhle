@@ -45,6 +45,7 @@ export default defineConfig({
       HOSTNAME: host,
       PORT: String(port),
       NEXT_TELEMETRY_DISABLED: '1',
+      LIKHLE_TRUSTED_PROXY_CIDRS: '127.0.0.1/32',
       OWNER_MODE_TOKEN: smokeOwnerToken,
       ADMIN_MODE_TOKEN: smokeAdminToken,
       SMOKE_PROVIDER_MOCKS: '1',
