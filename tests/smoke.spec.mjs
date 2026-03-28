@@ -1,8 +1,18 @@
 import { test, expect } from '@playwright/test';
 import { installGenerateApiMock } from './helpers/mock-generate-api.mjs';
 
-const ownerSecret = process.env.OWNER_MODE_TOKEN || 'likhle-owner-test-secret';
-const adminSecret = process.env.ADMIN_MODE_TOKEN || 'likhle-admin-test-secret';
+function requireEnv(name) {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`${name} must be set for smoke tests.`);
+  }
+
+  return value;
+}
+
+const ownerSecret = requireEnv('OWNER_MODE_TOKEN');
+const adminSecret = requireEnv('ADMIN_MODE_TOKEN');
 
 test.describe.configure({ mode: 'serial' });
 

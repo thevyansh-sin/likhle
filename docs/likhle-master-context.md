@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram handle: `@likhle.in`
-- Current public version: `v0.6.3`
+- Current public version: `v0.6.4`
 
 ## Tech Stack
 - Next.js 16 App Router
@@ -34,16 +34,18 @@
 - PWA/service worker: `public/sw.js`
 
 ## Environment Variables
-- `GROQ_API_KEY`
-- `GEMINI_API_KEY`
-- `NEXT_PUBLIC_SITE_URL`
-- `OWNER_MODE_TOKEN`
-- `ADMIN_MODE_TOKEN`
-- `INSTAGRAM_ACCESS_TOKEN`
-- `INSTAGRAM_USER_ID`
-- `META_APP_ID`
-- `META_APP_SECRET`
-- `OPENAI_API_KEY`
+- Private server env:
+  - `GROQ_API_KEY`
+  - `GEMINI_API_KEY`
+  - `OWNER_MODE_TOKEN`
+  - `ADMIN_MODE_TOKEN`
+  - `INSTAGRAM_ACCESS_TOKEN`
+  - `INSTAGRAM_USER_ID`
+  - `META_APP_ID`
+  - `META_APP_SECRET`
+  - `OPENAI_API_KEY`
+- Public env:
+  - `NEXT_PUBLIC_SITE_URL`
 
 ## Workflow Rules
 - Meaningful live website changes should usually bump the public version.
@@ -52,6 +54,7 @@
 - Owner mode exists for the owner's browser and should not be removed casually.
 - Admin mode exists for one trusted tester browser and should stay separate from owner mode.
 - Owner/admin unlock and status flows are server-trusted only and should not expose configuration state, raw secret hints, or client-side bypasses.
+- App-side secret/config access should stay inside the dedicated server-only env layer in `lib/env.js`.
 
 ## Thread Split
 - `coding`

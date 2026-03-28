@@ -1,10 +1,12 @@
-# Recent Changes (likhle v0.6.3)
+# Recent Changes (likhle v0.6.4)
 
 ## Purpose
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.6.3`.
+- Public version is `v0.6.4`.
+- Sensitive app config now flows through a dedicated server-only env module, so GROQ/Gemini/Upstash/access-mode secrets are validated in one place and no longer rely on scattered direct `process.env` reads in app code.
+- Public site URL config now uses a separate safe public-config module, and Playwright smoke unlock secrets now use isolated ephemeral values instead of hardcoded fallback test secrets.
 - Owner/admin unlock and status flows now use stricter server-side enforcement only: generic responses, route-specific abuse lockouts, tamper-aware signed cookie verification, and audit logging for unlock failures, lockouts, and invalid privileged-cookie use.
 - Repo workflow now includes an `upgrades strategy` thread lane with shared read-order docs and a pinned prompt file so long-term planning stays aligned with coding, testing, branding, and socials.
 - Shared repo memory now also includes a cross-thread catch-up brief and current-state snapshot so inactive threads can re-sync before reviewing, planning, or testing.

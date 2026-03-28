@@ -1,4 +1,6 @@
+import 'server-only';
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { getAccessModeSecretFromEnv } from '../../lib/env.js';
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
@@ -75,8 +77,7 @@ function parseCookieHeader(cookieHeader) {
 }
 
 export function getAccessModeSecret(mode = 'owner') {
-  const { envKey } = getAccessModeConfig(mode);
-  return process.env[envKey]?.trim() || '';
+  return getAccessModeSecretFromEnv(mode);
 }
 
 export function isAccessModeConfigured(mode = 'owner') {

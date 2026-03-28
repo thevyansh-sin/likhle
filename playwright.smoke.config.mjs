@@ -1,8 +1,14 @@
+import { randomBytes } from 'node:crypto';
 import { defineConfig, devices } from '@playwright/test';
 
 const port = Number.parseInt(process.env.SMOKE_PORT || '3200', 10);
 const host = process.env.SMOKE_HOST || '127.0.0.1';
 const baseURL = `http://${host}:${port}`;
+const smokeOwnerToken = process.env.OWNER_MODE_TOKEN || `smoke-owner-${randomBytes(18).toString('hex')}`;
+const smokeAdminToken = process.env.ADMIN_MODE_TOKEN || `smoke-admin-${randomBytes(18).toString('hex')}`;
+
+process.env.OWNER_MODE_TOKEN = smokeOwnerToken;
+process.env.ADMIN_MODE_TOKEN = smokeAdminToken;
 
 export default defineConfig({
   testDir: './tests',
@@ -39,8 +45,8 @@ export default defineConfig({
       HOSTNAME: host,
       PORT: String(port),
       NEXT_TELEMETRY_DISABLED: '1',
-      OWNER_MODE_TOKEN: process.env.OWNER_MODE_TOKEN || 'likhle-owner-test-secret',
-      ADMIN_MODE_TOKEN: process.env.ADMIN_MODE_TOKEN || 'likhle-admin-test-secret',
+      OWNER_MODE_TOKEN: smokeOwnerToken,
+      ADMIN_MODE_TOKEN: smokeAdminToken,
     },
   },
 });

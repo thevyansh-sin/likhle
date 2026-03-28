@@ -1,4 +1,5 @@
 import packageJson from '../../package.json';
+import { publicEnv } from '../../lib/public-env';
 
 export const siteName = 'Likhle';
 export const siteTitle = 'The writing tool for how India actually posts';
@@ -7,9 +8,7 @@ export const siteDescription =
 export const siteVersion = packageJson.version;
 export const siteVersionLabel = `v${siteVersion}`;
 export const siteVersionPrefix = 'v';
-const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://likhle.vercel.app';
-
-export const siteUrl = rawSiteUrl.endsWith('/') ? rawSiteUrl.slice(0, -1) : rawSiteUrl;
+export const siteUrl = publicEnv.NEXT_PUBLIC_SITE_URL;
 export const supportEmail = 'likhlesupport@gmail.com';
 export const instagramHandle = '@likhle.in';
 export const instagramUrl = 'https://instagram.com/likhle.in';

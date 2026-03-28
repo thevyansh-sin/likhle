@@ -62,8 +62,7 @@ Then open either:
 ## Reliability notes
 
 - The smoke suite mocks `/api/generate` so quota pressure from Groq/Gemini does not break regression checks.
-- Owner unlock uses a dedicated local fallback secret if `OWNER_MODE_TOKEN` is not set.
-- Admin unlock uses a dedicated local fallback secret if `ADMIN_MODE_TOKEN` is not set.
+- Owner/admin smoke unlock uses isolated ephemeral test secrets when explicit env secrets are not provided.
 - The smoke web server builds and starts a clean local app instance automatically.
 - Results, traces, and failure media go under `test-results/`.
 

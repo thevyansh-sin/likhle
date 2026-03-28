@@ -32,7 +32,7 @@ import { getStyleProfile, updateStyleProfile } from './style-memory';
 import { env } from '../../../lib/env.js';
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash';
+const GEMINI_IMAGE_MODEL = env.GEMINI_IMAGE_MODEL;
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 

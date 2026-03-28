@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram: `@likhle.in`
-- Current public version: v0.6.3
+- Current public version: v0.6.4
 
 ## Core Brand Rules
 - Keep the site premium, sharp, dark, and modern.
@@ -41,11 +41,13 @@
 - PWA/service worker: `public/sw.js`
 
 ## Environment Variables
-- `GROQ_API_KEY`
-- `GEMINI_API_KEY`
-- `NEXT_PUBLIC_SITE_URL`
-- `OWNER_MODE_TOKEN`
-- `ADMIN_MODE_TOKEN`
+- Private server env:
+  - `GROQ_API_KEY`
+  - `GEMINI_API_KEY`
+  - `OWNER_MODE_TOKEN`
+  - `ADMIN_MODE_TOKEN`
+- Public env:
+  - `NEXT_PUBLIC_SITE_URL`
 
 ## Workflow Rules
 - Meaningful live website changes should usually bump the public version.
@@ -54,6 +56,7 @@
 - Owner mode exists for the owner's browser and should not be removed casually.
 - Admin mode exists for one trusted tester browser and should stay separate from owner mode.
 - Owner/admin access must stay server-verified through signed cookies and must not depend on client-side flags, localStorage, query params, or hidden-route assumptions.
+- App-side env access should stay centralized in `lib/env.js` for private config and `lib/public-env.js` for safe public config.
 
 ## Current Collaboration Split
 - `coding` thread:

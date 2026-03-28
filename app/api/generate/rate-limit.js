@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis';
+import { env } from '../../../lib/env.js';
 
 // ─── Rate Limiting ─────────────────────────────────────────────────────────
 export const RATE_LIMIT_WINDOW_MS = 60 * 1000;
@@ -45,12 +46,12 @@ if (!globalThis.__likhleAbuseWindowStore) globalThis.__likhleAbuseWindowStore = 
 if (!globalThis.__likhleAbuseLockoutStore) globalThis.__likhleAbuseLockoutStore = abuseLockoutStore;
 
 // ─── Redis Client ───────────────────────────────────────────────────────────
-const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+const redisUrl = env.UPSTASH_REDIS_REST_URL;
+const redisToken = env.UPSTASH_REDIS_REST_TOKEN;
 export const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const TRUSTED_PROXY_CIDRS_RAW = process.env.LIKHLE_TRUSTED_PROXY_CIDRS || '';
+const TRUSTED_PROXY_CIDRS_RAW = env.LIKHLE_TRUSTED_PROXY_CIDRS;
 const TRUSTED_PROXY_CIDRS = TRUSTED_PROXY_CIDRS_RAW
   .split(',')
   .map((s) => s.trim())

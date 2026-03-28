@@ -18,9 +18,9 @@ import { env } from '../../../lib/env.js';
 const groq = new Groq({ apiKey: env.GROQ_API_KEY });
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 
-export const PRIMARY_GROQ_MODEL = process.env.GROQ_PRIMARY_MODEL || 'llama-3.3-70b-versatile';
-export const FALLBACK_GROQ_MODEL = process.env.GROQ_FALLBACK_MODEL || 'llama-3.1-8b-instant';
-export const GEMINI_TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash';
+export const PRIMARY_GROQ_MODEL = env.GROQ_PRIMARY_MODEL;
+export const FALLBACK_GROQ_MODEL = env.GROQ_FALLBACK_MODEL;
+export const GEMINI_TEXT_MODEL = env.GEMINI_TEXT_MODEL;
 
 export const LIGHT_MODE_MAX_GENERATION_COUNT = 3;
 export const MAX_TRANSIENT_RETRIES = 3;
@@ -483,4 +483,3 @@ export async function generateResultsWithRecovery({
 
   throw lastTransientError || new Error('Generation failed');
 }
-
