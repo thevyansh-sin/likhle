@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis';
 import { env } from '../../../lib/env.js';
+import { getAnonymousSessionStateFromRequest, hashAnonymousSessionId } from '../../lib/anonymous-session';
 
 // ─── Rate Limiting ─────────────────────────────────────────────────────────
 export const RATE_LIMIT_WINDOW_MS = 60 * 1000;
@@ -129,14 +130,15 @@ function getTrustedClientIp(req) {
 export function getStableRequestIdentity(req, rawSessionKey) {
   // Priority order:
   // 1) authenticated user id (not available in this codebase today)
-  // 2) stable server-trusted session identity (derived from trusted client key + provided sessionKey)
+  // 2) stable server-trusted anonymous session cookie
   // 3) trusted client IP
   // 4) fallback abuse bucket (existing client key logic which may be "untrusted-ip:UA")
 
-  if (typeof rawSessionKey === 'string' && rawSessionKey.trim()) {
+  const anonymousSession = getAnonymousSessionStateFromRequest(req);
+  if (anonymousSession.active && anonymousSession.sessionId) {
     return {
-      kind: 'session',
-      value: getSessionKey(req, rawSessionKey),
+      kind: 'anon_session',
+      value: hashAnonymousSessionId(anonymousSession.sessionId),
     };
   }
 
@@ -273,8 +275,9 @@ export async function consumeRateLimit(req, { isRewrite = false } = {}) {
 }
 
 export function getSessionKey(req, rawSessionKey) {
-  if (typeof rawSessionKey === 'string' && rawSessionKey.trim()) {
-    return `${getClientKey(req)}:${rawSessionKey.trim().slice(0, 80)}`;
+  const anonymousSession = getAnonymousSessionStateFromRequest(req);
+  if (anonymousSession.active && anonymousSession.sessionId) {
+    return `anon:${hashAnonymousSessionId(anonymousSession.sessionId)}`;
   }
   return getClientKey(req);
 }

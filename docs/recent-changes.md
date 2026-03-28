@@ -1,10 +1,13 @@
-# Recent Changes (likhle v0.6.5)
+# Recent Changes (likhle v0.6.6)
 
 ## Purpose
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.6.5`.
+- Public version is `v0.6.6`.
+- Style-memory identity is now bound to a signed, httpOnly anonymous session cookie instead of a client-controlled `sessionKey`, so another browser cannot fetch or poison the same profile just by changing local state or query params.
+- Anonymous style-memory reads are now rate-limited, Redis profile keys are derived from hashed session identifiers, and style-memory records now expire after about 14 days instead of lingering indefinitely.
+- Generator local history and favorites remain browser-local only, while server-side style-memory is now explicitly separated from that local storage model.
 - Input handling is now stricter across sensitive routes: `/api/generate`, owner/admin unlock, and `/api/style-dna` all fail closed on malformed payloads or unknown fields instead of loosely normalizing bad input.
 - Generator local history, favorites, session keys, streamed partial output, and query-prefill state are now sanitized and bounded before entering UI state, so malformed local/browser data cannot poison the page state as easily.
 - JSON-LD script serialization now escapes unsafe characters before inline injection, reducing the chance of accidental script-breakout if future structured-data content ever becomes less trusted.

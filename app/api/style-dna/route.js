@@ -1,24 +1,54 @@
+import { NextResponse } from 'next/server';
+import {
+  ACCESS_STATUS_MAX_REQUESTS,
+  consumeAccessRouteRateLimit,
+  createLockedAccessResponse,
+  logAccessAudit,
+} from '../../lib/access-route-security';
 import { getStyleProfile, getStyleDNA } from '../generate/style-memory';
-import { validateStyleDnaSessionKey } from '../../lib/request-validation';
+import {
+  ensureAnonymousSession,
+  getAnonymousSessionCookieSettings,
+  shouldUseSecureAnonymousSessionCookie,
+} from '../../lib/anonymous-session';
 
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const validation = validateStyleDnaSessionKey(searchParams.get('sessionKey'));
+  const rateLimit = await consumeAccessRouteRateLimit(request, {
+    mode: 'style_memory',
+    scope: 'style-dna:get',
+    maxRequests: ACCESS_STATUS_MAX_REQUESTS,
+  });
 
-  if (!validation.success) {
-    return Response.json({ error: 'Invalid request' }, { status: 400 });
+  if (rateLimit.locked) {
+    return createLockedAccessResponse();
   }
 
-  try {
-    const profile = await getStyleProfile(validation.sessionKey);
-    const dna = getStyleDNA(profile);
+  const anonymousSession = ensureAnonymousSession(request);
 
-    if (!dna) {
-      return Response.json({ dna: null });
+  try {
+    const profile = await getStyleProfile(anonymousSession.sessionId);
+    const dna = getStyleDNA(profile);
+    const response = NextResponse.json({ dna: dna || null });
+
+    if (anonymousSession.shouldSetCookie && anonymousSession.cookieValue) {
+      response.cookies.set(
+        getAnonymousSessionCookieSettings({
+          value: anonymousSession.cookieValue,
+          expiresAt: anonymousSession.expiresAt,
+          secure: shouldUseSecureAnonymousSessionCookie(request),
+        })
+      );
     }
 
-    return Response.json({ dna });
+    return response;
   } catch (error) {
+    logAccessAudit({
+      event: 'style_dna_fetch_error',
+      mode: 'style_memory',
+      request,
+      outcome: 'warn',
+      reason: 'backend_error',
+    });
     console.error('Style DNA fetch error:', error);
     return Response.json({ error: 'Failed to fetch style DNA' }, { status: 500 });
   }

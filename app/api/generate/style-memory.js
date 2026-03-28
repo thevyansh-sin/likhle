@@ -1,17 +1,30 @@
 import { redis } from './rate-limit';
+import { hashAnonymousSessionId } from '../../lib/anonymous-session';
 import { parseStyleProfileRecord } from '../../lib/request-validation';
 
 const STYLE_PROFILE_KEY_PREFIX = 'likhle:style:';
+const STYLE_PROFILE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
 const UPDATE_WEIGHT = 0.35; // 35% weight to the new generation, 65% to historical
 const HINGLISH_KEYWORDS = [
   'hai', 'kya', 'nahi', 'bhi', 'toh', 'ka', 'ki', 'tha', 'raha', 'se', 'tha', 'rha', 'hoga', 'mera', 'apna', 'tum', 'aap', 'yaar', 'bhai', 'behen', 'deshi', 'desi', 'mast', 'gazab'
 ];
+
+function getStyleProfileKey(sessionId) {
+  return `${STYLE_PROFILE_KEY_PREFIX}${hashAnonymousSessionId(sessionId)}`;
+}
 
 /**
  * Extracts stylistic signals from one or more generation results.
  */
 export function extractStyleSignals(results, selectedTone) {
   if (!Array.isArray(results) || results.length === 0) return null;
+  const eligibleResults = results
+    .filter((res) => typeof res?.text === 'string' && res.text.trim())
+    .slice(0, 3);
+
+  if (eligibleResults.length === 0) {
+    return null;
+  }
 
   let totalEmojiCount = 0;
   let totalHinglishCount = 0;
@@ -19,8 +32,8 @@ export function extractStyleSignals(results, selectedTone) {
   let totalLineBreaks = 0;
   let totalWords = 0;
 
-  results.forEach(res => {
-    const text = res.text || '';
+  eligibleResults.forEach((res) => {
+    const text = res.text.slice(0, 1200);
     // Emoji detection (basic range)
     const emojis = text.match(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu) || [];
     totalEmojiCount += emojis.length;
@@ -39,7 +52,11 @@ export function extractStyleSignals(results, selectedTone) {
     totalSentenceLength += text.length;
   });
 
-  const count = results.length;
+  if (!totalWords) {
+    return null;
+  }
+
+  const count = eligibleResults.length;
   return {
     emoji_density: totalEmojiCount / totalWords,
     hinglish_ratio: totalHinglishCount / totalWords,
@@ -57,7 +74,7 @@ export async function getStyleProfile(sessionKey) {
   if (!sessionKey || !redis) return null;
 
   try {
-    const data = await redis.get(`${STYLE_PROFILE_KEY_PREFIX}${sessionKey}`);
+    const data = await redis.get(getStyleProfileKey(sessionKey));
     if (!data) {
       return null;
     }
@@ -83,10 +100,10 @@ export async function updateStyleProfile(sessionKey, results, selectedTone, rewr
     const existingProfile = await getStyleProfile(sessionKey);
 
     if (!existingProfile) {
-      await redis.set(`${STYLE_PROFILE_KEY_PREFIX}${sessionKey}`, JSON.stringify({
+      await redis.set(getStyleProfileKey(sessionKey), JSON.stringify({
         ...currentSignals,
         last_updated: Date.now()
-      }));
+      }), { px: STYLE_PROFILE_TTL_MS });
       return;
     }
 
@@ -101,7 +118,7 @@ export async function updateStyleProfile(sessionKey, results, selectedTone, rewr
       last_updated: Date.now()
     };
 
-    await redis.set(`${STYLE_PROFILE_KEY_PREFIX}${sessionKey}`, JSON.stringify(newProfile));
+    await redis.set(getStyleProfileKey(sessionKey), JSON.stringify(newProfile), { px: STYLE_PROFILE_TTL_MS });
   } catch (err) {
     console.error('Error updating style profile:', err);
   }

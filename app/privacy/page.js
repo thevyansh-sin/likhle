@@ -3,7 +3,7 @@ import { buildMetadata } from '../lib/site';
 
 export const metadata = buildMetadata({
   title: 'Privacy Policy',
-  description: 'How Likhle handles prompts, images, analytics, and browser-stored history.',
+  description: 'How Likhle handles prompts, images, analytics, browser-stored history, and short-lived anonymous style memory.',
   path: '/privacy',
   keywords: ['privacy policy', 'AI privacy', 'prompt privacy'],
 });
@@ -14,7 +14,7 @@ export default function PrivacyPage() {
       eyebrow="Privacy Policy"
       title="How Likhle handles your data"
       description="This page explains what information Likhle may process when you use the website, why it is used, and what stays only in your browser."
-      updatedLabel="Last updated: March 20, 2026"
+      updatedLabel="Last updated: March 28, 2026"
     >
       <div className="info-grid">
         <section className="info-card">
@@ -24,6 +24,7 @@ export default function PrivacyPage() {
             <li>Optional images you upload to help generate better results.</li>
             <li>Basic technical and usage data such as browser, device, approximate location signals, and page interactions through analytics tools.</li>
             <li>Recent generation history saved locally in your browser if you use that feature.</li>
+            <li>A short-lived anonymous style-memory profile that helps the generator stay closer to your writing habits within the same browser context.</li>
           </ul>
         </section>
 
@@ -31,6 +32,9 @@ export default function PrivacyPage() {
           <h2 className="info-card-title">What stays in your browser</h2>
           <p className="info-text">
             Your recent generation history is saved using browser storage on your own device so you can reopen past results later. That local history is not meant to be a permanent cloud backup and can be cleared from your browser at any time.
+          </p>
+          <p className="info-text" style={{ marginTop: 12 }}>
+            Likhle also uses a server-trusted anonymous session cookie to keep style-memory tied to the same browser context without exposing that identifier to page scripts. Clearing site cookies or full site data severs that anonymous style-memory link.
           </p>
         </section>
       </div>
@@ -41,6 +45,7 @@ export default function PrivacyPage() {
           <li>To generate captions, bios, hooks, and other text outputs you request.</li>
           <li>To analyze uploaded images so the generated text matches the image context more closely.</li>
           <li>To keep the site secure, reduce abuse, and manage rate limiting.</li>
+          <li>To maintain a limited anonymous writing-style profile so repeat generations in the same browser feel more consistent.</li>
           <li>To understand site usage and improve the product experience over time.</li>
         </ul>
       </section>
@@ -62,7 +67,7 @@ export default function PrivacyPage() {
       <section className="info-section">
         <h2 className="info-section-title">Retention</h2>
         <p className="info-text">
-          Likhle does not present itself as a long-term cloud storage product. Local browser history remains on your device until you clear it. Server, hosting, analytics, and AI providers may retain logs or request data for limited operational, safety, debugging, or legal reasons under their own policies.
+          Likhle does not present itself as a long-term cloud storage product. Local browser history remains on your device until you clear it. Anonymous server-side style-memory data is retained for a limited period and currently expires after about 14 days of inactivity. Server, hosting, analytics, and AI providers may retain logs or request data for limited operational, safety, debugging, or legal reasons under their own policies.
         </p>
       </section>
 
@@ -71,6 +76,7 @@ export default function PrivacyPage() {
         <ul className="info-list">
           <li>Do not upload sensitive or confidential images or text.</li>
           <li>Clear browser storage if you do not want local history saved on the device.</li>
+          <li>Clear site cookies/site data if you want to reset the anonymous style-memory tied to this browser.</li>
           <li>Limit cookies and analytics through your browser settings where available.</li>
           <li>Stop using the service if you do not agree with this policy.</li>
         </ul>

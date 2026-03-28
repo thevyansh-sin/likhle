@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { z } from 'zod';
-import { normalizePlainText, normalizeSessionKey, normalizeSingleLineText, normalizeStringArray } from './input-safety';
+import { normalizePlainText, normalizeSingleLineText, normalizeStringArray } from './input-safety';
 import { MAX_GENERATION_COUNT, REWRITE_ACTIONS } from '../api/generate/prompt-builder';
 
 const TONE_OPTIONS = ['Aesthetic', 'Funny', 'Savage', 'Motivational', 'Romantic', 'Professional', 'Desi'];
@@ -30,7 +30,6 @@ const GENERATE_ALLOWED_KEYS = new Set([
   'rewriteAction',
   'rewriteInstruction',
   'currentResult',
-  'sessionKey',
 ]);
 
 const rewriteActionKeys = Object.keys(REWRITE_ACTIONS);
@@ -88,8 +87,6 @@ const generateFormSchema = z
       .transform((value) => normalizePlainText(value, { maxLength: 240 })),
     currentResult: optionalRawTextSchema
       .transform((value) => normalizePlainText(value, { maxLength: 1200 })),
-    sessionKey: optionalRawTextSchema
-      .transform((value) => normalizeSessionKey(value, { maxLength: 80 })),
     image: z.any().nullable().optional(),
   })
   .strict();
@@ -102,13 +99,6 @@ const unlockBodySchema = z
       .pipe(z.string().min(1).max(256)),
   })
   .strict();
-
-const styleDnaQuerySchema = z.object({
-  sessionKey: z
-    .string()
-    .transform((value) => normalizeSessionKey(value, { maxLength: 80 }))
-    .pipe(z.string().min(8).max(80)),
-});
 
 const styleProfileSchema = z
   .object({
@@ -162,7 +152,6 @@ export function validateGenerateFormData(formData) {
       rewriteAction: getSingleFormValue(formData, 'rewriteAction'),
       rewriteInstruction: getSingleFormValue(formData, 'rewriteInstruction'),
       currentResult: getSingleFormValue(formData, 'currentResult'),
-      sessionKey: getSingleFormValue(formData, 'sessionKey'),
       image: formData.get('image'),
     };
   } catch {
@@ -218,7 +207,6 @@ export function validateGenerateFormData(formData) {
       rewriteAction: parsed.data.rewriteAction,
       rewriteInstruction: parsed.data.rewriteInstruction,
       currentResult: parsed.data.currentResult,
-      sessionKey: parsed.data.sessionKey,
       image: parsed.data.image instanceof File ? parsed.data.image : null,
     },
   };
@@ -227,21 +215,6 @@ export function validateGenerateFormData(formData) {
 export function getSubmittedSecretFromBody(body) {
   const parsed = unlockBodySchema.safeParse(body);
   return parsed.success ? parsed.data.secret : '';
-}
-
-export function validateStyleDnaSessionKey(value) {
-  const parsed = styleDnaQuerySchema.safeParse({ sessionKey: value });
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: 'Invalid request',
-    };
-  }
-
-  return {
-    success: true,
-    sessionKey: parsed.data.sessionKey,
-  };
 }
 
 export function parseStyleProfileRecord(value) {

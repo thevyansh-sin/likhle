@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram handle: `@likhle.in`
-- Current public version: `v0.6.5`
+- Current public version: `v0.6.6`
 
 ## Tech Stack
 - Next.js 16 App Router
@@ -37,6 +37,7 @@
 - Private server env:
   - `GROQ_API_KEY`
   - `GEMINI_API_KEY`
+  - `ANONYMOUS_SESSION_SIGNING_SECRET` (optional explicit override)
   - `OWNER_MODE_TOKEN`
   - `ADMIN_MODE_TOKEN`
   - `INSTAGRAM_ACCESS_TOKEN`
@@ -56,6 +57,7 @@
 - Owner/admin unlock and status flows are server-trusted only and should not expose configuration state, raw secret hints, or client-side bypasses.
 - App-side secret/config access should stay inside the dedicated server-only env layer in `lib/env.js`.
 - User-controlled payloads, query strings, local browser cache/state, and generated text should stay validated and rendered as plain text unless a strict sanitizer/allowlist is explicitly introduced.
+- Anonymous style-memory must stay bound to the signed server-trusted session cookie, not a client-provided localStorage/query identifier.
 
 ## Thread Split
 - `coding`

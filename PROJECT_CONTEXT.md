@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram: `@likhle.in`
-- Current public version: v0.6.5
+- Current public version: v0.6.6
 
 ## Core Brand Rules
 - Keep the site premium, sharp, dark, and modern.
@@ -44,6 +44,7 @@
 - Private server env:
   - `GROQ_API_KEY`
   - `GEMINI_API_KEY`
+  - `ANONYMOUS_SESSION_SIGNING_SECRET` (optional explicit override)
   - `OWNER_MODE_TOKEN`
   - `ADMIN_MODE_TOKEN`
 - Public env:
@@ -58,6 +59,7 @@
 - Owner/admin access must stay server-verified through signed cookies and must not depend on client-side flags, localStorage, query params, or hidden-route assumptions.
 - App-side env access should stay centralized in `lib/env.js` for private config and `lib/public-env.js` for safe public config.
 - Untrusted input should fail closed at the route boundary and generated/user text should stay plain-text rendered unless a strict sanitizer is intentionally introduced.
+- Style-memory identity must stay server-trusted and cookie-bound, not controlled through localStorage or query params.
 
 ## Current Collaboration Split
 - `coding` thread:

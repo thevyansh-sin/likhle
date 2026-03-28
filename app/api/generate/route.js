@@ -25,6 +25,11 @@ import { generateResultsWithRecovery, generateResultsStream } from './llm-provid
 import { getStyleProfile, updateStyleProfile } from './style-memory';
 import { env } from '../../../lib/env.js';
 import { validateGenerateFormData } from '../../lib/request-validation';
+import {
+  ensureAnonymousSession,
+  getAnonymousSessionCookieSettings,
+  shouldUseSecureAnonymousSessionCookie,
+} from '../../lib/anonymous-session';
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 const GEMINI_IMAGE_MODEL = env.GEMINI_IMAGE_MODEL;
@@ -109,15 +114,49 @@ function lockoutResponse() {
   );
 }
 
+function attachAnonymousSessionCookie(request, response, anonymousSession) {
+  if (
+    !anonymousSession?.shouldSetCookie ||
+    !anonymousSession?.cookieValue ||
+    typeof response?.headers?.append !== 'function'
+  ) {
+    return response;
+  }
+
+  const cookieSettings = getAnonymousSessionCookieSettings({
+    value: anonymousSession.cookieValue,
+    expiresAt: anonymousSession.expiresAt,
+    secure: shouldUseSecureAnonymousSessionCookie(request),
+  });
+
+  const serializedCookie = [
+    `${cookieSettings.name}=${encodeURIComponent(cookieSettings.value)}`,
+    `Path=${cookieSettings.path}`,
+    `Max-Age=${cookieSettings.maxAge}`,
+    `Expires=${cookieSettings.expires.toUTCString()}`,
+    'HttpOnly',
+    `SameSite=${cookieSettings.sameSite}`,
+    cookieSettings.priority ? `Priority=${cookieSettings.priority}` : null,
+    cookieSettings.secure ? 'Secure' : null,
+  ]
+    .filter(Boolean)
+    .join('; ');
+
+  response.headers.append('Set-Cookie', serializedCookie);
+  return response;
+}
+
 export async function POST(req) {
   const requestStartMs = Date.now();
   try {
     const privilegedAccess = isPrivilegedAccessRequest(req);
+    const anonymousSession = ensureAnonymousSession(req);
+    const styleSessionId = anonymousSession.sessionId;
     const isRewrite = Boolean(req.headers.get('x-rewrite-action'));
 
     // Temporary abuse lockout — must trigger before any expensive work begins.
     if (!privilegedAccess) {
-      const lockout = await consumeAbuseLockout(req, { route: 'generate', rawSessionKey: '' });
+      const lockout = await consumeAbuseLockout(req, { route: 'generate' });
       if (lockout.locked) {
         return lockoutResponse();
       }
@@ -167,14 +206,12 @@ export async function POST(req) {
       rewriteAction,
       rewriteInstruction,
       currentResult,
-      sessionKey,
       stream: isStreamRequested,
     } = validation.data;
-    const sessionKeyRaw = sessionKey;
 
     // Second lockout check with stable server-derived session identity (if provided).
     if (!privilegedAccess) {
-      const lockout = await consumeAbuseLockout(req, { route: 'generate', rawSessionKey: sessionKeyRaw || '' });
+      const lockout = await consumeAbuseLockout(req, { route: 'generate' });
       if (lockout.locked) {
         return lockoutResponse();
       }
@@ -289,8 +326,12 @@ export async function POST(req) {
 
     if (cachedResults) {
       logMetric({ event: 'generate', cached: true, latencyMs: Date.now() - requestStartMs });
-      return Response.json({ results: cachedResults, cached: true });
-    }
+          return attachAnonymousSessionCookie(
+            req,
+            Response.json({ results: cachedResults, cached: true }),
+            anonymousSession
+          );
+        }
 
     // ── In-flight deduplication ──────────────────────────────────────────────
     // Once we acquire an inflight lock, every early-return path must release it.
@@ -311,7 +352,7 @@ export async function POST(req) {
 
       const activeSessionRetryAfterSeconds = privilegedAccess
         ? null
-        : await consumeSessionCooldown(req, sessionKey, rewriteAction);
+        : await consumeSessionCooldown(req, '', rewriteAction);
 
       if (activeSessionRetryAfterSeconds) {
         return Response.json(
@@ -328,7 +369,7 @@ export async function POST(req) {
         );
       }
 
-    const userStyleProfile = await getStyleProfile(sessionKey);
+      const userStyleProfile = await getStyleProfile(styleSessionId);
 
       if (isStreamRequested) {
         const encoder = new TextEncoder();
@@ -380,7 +421,7 @@ export async function POST(req) {
                   parsedResults,
                   GENERATION_CACHE_TTL_MS
                 );
-                updateStyleProfile(sessionKey, parsedResults, tone, rewriteAction).catch((profileErr) => {
+                updateStyleProfile(styleSessionId, parsedResults, tone, rewriteAction).catch((profileErr) => {
                   console.error('Style update failed in stream:', profileErr);
                 });
                 logMetric({ event: 'generate', provider: 'groq', latencyMs: Date.now() - requestStartMs });
@@ -423,13 +464,13 @@ export async function POST(req) {
         // Streaming path releases lock inside stream finally.
         lockHeld = false;
 
-        return new Response(stream, {
+        return attachAnonymousSessionCookie(req, new Response(stream, {
           headers: {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
           },
-        });
+        }), anonymousSession);
       }
 
       const results = await generateResultsWithRecovery({
@@ -460,14 +501,18 @@ export async function POST(req) {
       await writeCachedValue(generationCacheStore, generationCacheKey, results, GENERATION_CACHE_TTL_MS);
       logMetric({ event: 'generate', provider: 'groq', latencyMs: Date.now() - requestStartMs });
 
-      updateStyleProfile(sessionKey, results, tone, rewriteAction).catch((styleErr) => {
+      updateStyleProfile(styleSessionId, results, tone, rewriteAction).catch((styleErr) => {
         console.error('Style update failed:', styleErr);
       });
 
-      return Response.json({
-        results,
-        learnedVibe: userStyleProfile?.generation_count >= 3,
-      });
+      return attachAnonymousSessionCookie(
+        req,
+        Response.json({
+          results,
+          learnedVibe: userStyleProfile?.generation_count >= 3,
+        }),
+        anonymousSession
+      );
     } finally {
       if (lockHeld) {
         await releaseInflightLock(generationCacheKey);
