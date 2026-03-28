@@ -12,6 +12,7 @@ import {
 import { ensureHashtagFinish } from './hashtags';
 import { isTransientProviderError, getRetryDelayMs } from './provider-error';
 import { isCircuitOpen, recordProviderFailure, recordProviderSuccess } from './rate-limit';
+import { getSmokeAttemptTimeoutMs } from './real-provider-smoke';
 import { env } from '../../../lib/env.js';
 
 
@@ -380,6 +381,7 @@ export async function generateResultsWithRecovery({
   currentResult,
   userStyleProfile,
   providerBudget = null,
+  smokeMode = null,
 }) {
   const isRewriteFlow = Boolean(rewriteInstruction && currentResult);
   const lighterCount = isRewriteFlow ? count : Math.min(count, LIGHT_MODE_MAX_GENERATION_COUNT);
@@ -434,7 +436,10 @@ export async function generateResultsWithRecovery({
         },
       ];
 
-  const attemptPlans = fullAttemptPlans.slice(0, MAX_TRANSIENT_RETRIES + 1);
+  const attemptPlans = fullAttemptPlans.slice(0, MAX_TRANSIENT_RETRIES + 1).map((plan, attemptIndex) => ({
+    ...plan,
+    timeoutMs: getSmokeAttemptTimeoutMs(smokeMode, attemptIndex, plan.timeoutMs),
+  }));
   let lastTransientError = null;
 
   for (let attemptIndex = 0; attemptIndex < attemptPlans.length; attemptIndex += 1) {

@@ -22,6 +22,10 @@ import {
   parseStructuredResults,
 } from './prompt-builder';
 import { generateResultsWithRecovery, generateResultsStream } from './llm-provider';
+import {
+  getRealProviderSmokeMode,
+  getSmokeProviderBudgetLimit,
+} from './real-provider-smoke';
 import { getStyleProfile, updateStyleProfile } from './style-memory';
 import { env } from '../../../lib/env.js';
 import { validateGenerateFormData } from '../../lib/request-validation';
@@ -162,6 +166,7 @@ function logGenerateSecurityEvent(request, event, reason, details = {}) {
 export async function POST(req) {
   const requestStartMs = Date.now();
   try {
+    const smokeMode = getRealProviderSmokeMode(req);
     const privilegedAccess = isPrivilegedAccessRequest(req);
     const anonymousSession = ensureAnonymousSession(req);
     const styleSessionId = anonymousSession.sessionId;
@@ -232,7 +237,9 @@ export async function POST(req) {
       return Response.json({ error: 'Current result required for rewrite.' }, { status: 400 });
     }
 
-    const providerBudget = createProviderBudget(MAX_PROVIDER_CALLS_PER_REQUEST);
+    const providerBudget = createProviderBudget(
+      getSmokeProviderBudgetLimit(smokeMode) ?? MAX_PROVIDER_CALLS_PER_REQUEST
+    );
 
     let imageDescription = null;
     let imageCacheKey = '';
@@ -413,6 +420,7 @@ export async function POST(req) {
                 currentResult,
                 userStyleProfile,
                 providerBudget,
+                smokeMode,
               });
 
               for await (const chunk of generator) {
@@ -503,6 +511,7 @@ export async function POST(req) {
         currentResult,
         userStyleProfile,
         providerBudget,
+        smokeMode,
       });
 
       if (results.length === 0) {
