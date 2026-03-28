@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram: `@likhle.in`
-- Current public version: v0.6.6
+- Current public version: v0.6.7
 
 ## Core Brand Rules
 - Keep the site premium, sharp, dark, and modern.
@@ -60,6 +60,7 @@
 - App-side env access should stay centralized in `lib/env.js` for private config and `lib/public-env.js` for safe public config.
 - Untrusted input should fail closed at the route boundary and generated/user text should stay plain-text rendered unless a strict sanitizer is intentionally introduced.
 - Style-memory identity must stay server-trusted and cookie-bound, not controlled through localStorage or query params.
+- Browser security headers and CSP should stay centralized, restrictive, and compatible with the existing nonce-based theme/analytics/JSON-LD script model.
 
 ## Current Collaboration Split
 - `coding` thread:

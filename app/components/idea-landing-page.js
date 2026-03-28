@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import Link from 'next/link';
 import { ideaPages } from '../idea-pages-data';
 import { serializeJsonForHtmlScript } from '../lib/input-safety';
@@ -51,7 +52,9 @@ function buildIdeaPrompt(page, idea) {
   return `Create 4 fresh ${page.platform.toLowerCase()} options inspired by this line: "${idea}". Keep the vibe ${page.defaultTone.toLowerCase()}, but make the writing original and post-ready.`;
 }
 
-export default function IdeaLandingPage({ page }) {
+export default async function IdeaLandingPage({ page }) {
+  const headerStore = await headers();
+  const nonce = headerStore.get('x-csp-nonce') || undefined;
   const faqSchema = buildFaqSchema(page);
   const itemListSchema = buildItemListSchema(page);
   const ideaCount = page.ideaGroups.reduce((count, group) => count + group.items.length, 0);
@@ -64,10 +67,12 @@ export default function IdeaLandingPage({ page }) {
     <main className="seo-page">
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{ __html: serializeJsonForHtmlScript(faqSchema) }}
       />
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{ __html: serializeJsonForHtmlScript(itemListSchema) }}
       />
 

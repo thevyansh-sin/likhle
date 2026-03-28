@@ -1,4 +1,5 @@
 import { DM_Sans, Syne } from 'next/font/google';
+import { headers } from 'next/headers';
 import Script from 'next/script';
 import './globals.css';
 import OwnerModeBadge from './components/owner-mode-badge';
@@ -33,7 +34,7 @@ export const metadata = {
   creator: siteName,
   publisher: siteName,
   category: 'AI writing tool',
-  referrer: 'origin-when-cross-origin',
+  referrer: 'strict-origin-when-cross-origin',
   manifest: '/manifest.webmanifest',
   alternates: {
     canonical: '/',
@@ -118,22 +119,28 @@ const structuredData = [
   },
 ];
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const headerStore = await headers();
+  const nonce = headerStore.get('x-csp-nonce') || undefined;
+
   return (
     <html lang="en-IN" className={`${syne.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <body>
         <Script
           id="theme-init"
           strategy="beforeInteractive"
+          nonce={nonce}
           dangerouslySetInnerHTML={{ __html: getThemeInitScript() }}
         />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-EBEXGB44Y4"
           strategy="afterInteractive"
+          nonce={nonce}
         />
         <Script
           id="google-analytics"
           strategy="afterInteractive"
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
@@ -147,6 +154,7 @@ export default function RootLayout({ children }) {
           <script
             key={item['@type']}
             type="application/ld+json"
+            nonce={nonce}
             dangerouslySetInnerHTML={{ __html: serializeJsonForHtmlScript(item) }}
           />
         ))}

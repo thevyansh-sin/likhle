@@ -1,10 +1,13 @@
-# Recent Changes (likhle v0.6.6)
+# Recent Changes (likhle v0.6.7)
 
 ## Purpose
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.6.6`.
+- Public version is `v0.6.7`.
+- Security headers are now centralized in middleware with a nonce-based CSP, hard frame blocking, nosniff, stricter referrer policy, and a restrictive permissions policy instead of relying on scattered defaults.
+- Theme init, Google Analytics bootstrap, and JSON-LD scripts now run under request-scoped CSP nonces, so the app keeps its current behavior without reopening broad inline-script execution.
+- Sensitive owner/admin unlock/status routes plus `/api/generate` and `/api/style-dna` now carry explicit no-store cache headers from the shared header layer to reduce browser/proxy caching risk.
 - Style-memory identity is now bound to a signed, httpOnly anonymous session cookie instead of a client-controlled `sessionKey`, so another browser cannot fetch or poison the same profile just by changing local state or query params.
 - Anonymous style-memory reads are now rate-limited, Redis profile keys are derived from hashed session identifiers, and style-memory records now expire after about 14 days instead of lingering indefinitely.
 - Generator local history and favorites remain browser-local only, while server-side style-memory is now explicitly separated from that local storage model.

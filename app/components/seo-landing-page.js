@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import Link from 'next/link';
 import { ideaPages } from '../idea-pages-data';
 import { serializeJsonForHtmlScript } from '../lib/input-safety';
@@ -20,7 +21,9 @@ function buildFaqSchema(page) {
   };
 }
 
-export default function SEOLandingPage({ page }) {
+export default async function SEOLandingPage({ page }) {
+  const headerStore = await headers();
+  const nonce = headerStore.get('x-csp-nonce') || undefined;
   const relatedPages = seoPages.filter((item) => item.slug !== page.slug).slice(0, 4);
   const relatedIdeaPages = ideaPages
     .filter((item) => item.relatedGeneratorSlugs?.includes(page.slug))
@@ -31,6 +34,7 @@ export default function SEOLandingPage({ page }) {
     <main className="seo-page">
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{ __html: serializeJsonForHtmlScript(faqSchema) }}
       />
 

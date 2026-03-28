@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import InfoPageLayout from '../components/info-page-layout';
 import { serializeJsonForHtmlScript } from '../lib/input-safety';
 import { buildMetadata } from '../lib/site';
@@ -57,7 +58,10 @@ const faqSchema = {
   })),
 };
 
-export default function FAQPage() {
+export default async function FAQPage() {
+  const headerStore = await headers();
+  const nonce = headerStore.get('x-csp-nonce') || undefined;
+
   return (
     <InfoPageLayout
       eyebrow="FAQ"
@@ -67,6 +71,7 @@ export default function FAQPage() {
     >
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{ __html: serializeJsonForHtmlScript(faqSchema) }}
       />
       <div className="info-faq-list">
