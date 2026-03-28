@@ -1,6 +1,6 @@
 {
   "name": "likhle",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -26,9 +26,8 @@
     "@google/generative-ai": "^0.24.1",
     "@upstash/redis": "^1.37.0",
     "dotenv": "^17.3.1",
-    "groq-sdk": "^1.1.1",
-    "next": "16.2.0",
-    "node-fetch": "^3.3.2",
+    "groq-sdk": "^1.1.2",
+    "next": "16.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-icons": "^5.6.0"
@@ -39,15 +38,35 @@
     ]
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@modelcontextprotocol/sdk": "^1.28.0",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
-    "eslint-config-next": "16.2.0",
+    "eslint-config-next": "16.2.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
-    "openai": "^6.32.0",
+    "openai": "^6.33.0",
     "tailwindcss": "^4",
     "zod": "^4.3.6"
+  },
+  "overrides": {
+    "router": {
+      "path-to-regexp": "8.4.0"
+    },
+    "micromatch": {
+      "picomatch": "2.3.2"
+    },
+    "lint-staged": {
+      "picomatch": "4.0.4"
+    },
+    "tinyglobby": {
+      "picomatch": "4.0.4"
+    },
+    "minimatch@3.1.5": {
+      "brace-expansion": "1.1.13"
+    },
+    "minimatch@10.2.4": {
+      "brace-expansion": "5.0.5"
+    }
   }
 }

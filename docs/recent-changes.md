@@ -1,10 +1,12 @@
-# Recent Changes (likhle v0.6.7)
+# Recent Changes (likhle v0.6.8)
 
 ## Purpose
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.6.7`.
+- Public version is `v0.6.8`.
+- Package supply-chain hardening removed the unused top-level `node-fetch` runtime dependency, bumped a small set of compatible top-level packages, and added targeted overrides for previously vulnerable transitive packages.
+- `npm audit` is back to zero findings after pinning safe transitive versions for `path-to-regexp`, `picomatch`, and `brace-expansion` instead of doing a broad dependency churn.
 - Security headers are now centralized in middleware with a nonce-based CSP, hard frame blocking, nosniff, stricter referrer policy, and a restrictive permissions policy instead of relying on scattered defaults.
 - Theme init, Google Analytics bootstrap, and JSON-LD scripts now run under request-scoped CSP nonces, so the app keeps its current behavior without reopening broad inline-script execution.
 - Sensitive owner/admin unlock/status routes plus `/api/generate` and `/api/style-dna` now carry explicit no-store cache headers from the shared header layer to reduce browser/proxy caching risk.

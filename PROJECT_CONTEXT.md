@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram: `@likhle.in`
-- Current public version: v0.6.7
+- Current public version: v0.6.8
 
 ## Core Brand Rules
 - Keep the site premium, sharp, dark, and modern.
@@ -61,6 +61,7 @@
 - Untrusted input should fail closed at the route boundary and generated/user text should stay plain-text rendered unless a strict sanitizer is intentionally introduced.
 - Style-memory identity must stay server-trusted and cookie-bound, not controlled through localStorage or query params.
 - Browser security headers and CSP should stay centralized, restrictive, and compatible with the existing nonce-based theme/analytics/JSON-LD script model.
+- Dependency upgrades should stay surgical and audited; prefer compatible patch bumps and targeted `overrides` for transitive vulnerabilities over broad package churn.
 
 ## Current Collaboration Split
 - `coding` thread:

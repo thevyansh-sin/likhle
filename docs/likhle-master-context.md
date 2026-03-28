@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram handle: `@likhle.in`
-- Current public version: `v0.6.7`
+- Current public version: `v0.6.8`
 
 ## Tech Stack
 - Next.js 16 App Router
@@ -59,6 +59,7 @@
 - User-controlled payloads, query strings, local browser cache/state, and generated text should stay validated and rendered as plain text unless a strict sanitizer/allowlist is explicitly introduced.
 - Anonymous style-memory must stay bound to the signed server-trusted session cookie, not a client-provided localStorage/query identifier.
 - Security headers and CSP should stay centralized and nonce-based so theme init, analytics, and JSON-LD remain allowed without reopening broad inline-script risk.
+- Dependency updates should stay surgical, audited, and compatible with the current Next 16 line; use targeted overrides for vulnerable transitives instead of broad churn when possible.
 
 ## Thread Split
 - `coding`
