@@ -26,7 +26,7 @@ export const CIRCUIT_BREAKER_THRESHOLD = 3;          // consecutive fails to ope
 
 // ─── Abuse Lockout (temporary) ─────────────────────────────────────────────
 export const RATE_LIMIT_WINDOW_SECONDS = 60;
-export const MAX_REQUESTS_PER_WINDOW = 30;
+export const MAX_REQUESTS_PER_WINDOW = 8;
 export const LOCKOUT_DURATION_SECONDS = 300;
 
 // ─── In-Memory Fallback Stores ──────────────────────────────────────────────
@@ -462,4 +462,3 @@ export function logMetric({ event, provider = 'none', latencyMs = null, cached =
   redis.expire(key, 7 * 24 * 3600).catch(() => {});
   redis.expire(`latency:${day}`, 7 * 24 * 3600).catch(() => {});
 }
-
