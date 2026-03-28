@@ -16,6 +16,7 @@ import {
   isOwnerModeConfigured,
   shouldUseSecureOwnerCookie,
 } from '../../../lib/owner-mode';
+import { getSubmittedSecretFromBody } from '../../../lib/request-validation';
 
 const OWNER_UNLOCK_FAILURE_SCOPE = 'owner:unlock:post';
 const OWNER_UNLOCK_DELETE_SCOPE = 'owner:unlock:delete';
@@ -29,7 +30,7 @@ export async function POST(req) {
     body = null;
   }
 
-  const submittedSecret = typeof body?.secret === 'string' ? body.secret : '';
+  const submittedSecret = getSubmittedSecretFromBody(body);
   const isConfigured = isOwnerModeConfigured();
   const hasMatchingSecret = isConfigured && hasMatchingOwnerSecret(submittedSecret);
 

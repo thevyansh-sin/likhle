@@ -1,10 +1,13 @@
-# Recent Changes (likhle v0.6.4)
+# Recent Changes (likhle v0.6.5)
 
 ## Purpose
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.6.4`.
+- Public version is `v0.6.5`.
+- Input handling is now stricter across sensitive routes: `/api/generate`, owner/admin unlock, and `/api/style-dna` all fail closed on malformed payloads or unknown fields instead of loosely normalizing bad input.
+- Generator local history, favorites, session keys, streamed partial output, and query-prefill state are now sanitized and bounded before entering UI state, so malformed local/browser data cannot poison the page state as easily.
+- JSON-LD script serialization now escapes unsafe characters before inline injection, reducing the chance of accidental script-breakout if future structured-data content ever becomes less trusted.
 - Sensitive app config now flows through a dedicated server-only env module, so GROQ/Gemini/Upstash/access-mode secrets are validated in one place and no longer rely on scattered direct `process.env` reads in app code.
 - Public site URL config now uses a separate safe public-config module, and Playwright smoke unlock secrets now use isolated ephemeral values instead of hardcoded fallback test secrets.
 - Owner/admin unlock and status flows now use stricter server-side enforcement only: generic responses, route-specific abuse lockouts, tamper-aware signed cookie verification, and audit logging for unlock failures, lockouts, and invalid privileged-cookie use.

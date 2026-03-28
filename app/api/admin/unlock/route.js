@@ -16,6 +16,7 @@ import {
   isAdminModeConfigured,
   shouldUseSecureAdminCookie,
 } from '../../../lib/owner-mode';
+import { getSubmittedSecretFromBody } from '../../../lib/request-validation';
 
 const ADMIN_UNLOCK_FAILURE_SCOPE = 'admin:unlock:post';
 const ADMIN_UNLOCK_DELETE_SCOPE = 'admin:unlock:delete';
@@ -29,7 +30,7 @@ export async function POST(req) {
     body = null;
   }
 
-  const submittedSecret = typeof body?.secret === 'string' ? body.secret : '';
+  const submittedSecret = getSubmittedSecretFromBody(body);
   const isConfigured = isAdminModeConfigured();
   const hasMatchingSecret = isConfigured && hasMatchingAdminSecret(submittedSecret);
 

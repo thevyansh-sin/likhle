@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ideaPages } from '../idea-pages-data';
+import { serializeJsonForHtmlScript } from '../lib/input-safety';
 import { siteVersion, siteVersionPrefix } from '../lib/site';
 import { seoPagesBySlug } from '../seo-pages-data';
 import ThemeToggle from './theme-toggle';
@@ -63,11 +64,11 @@ export default function IdeaLandingPage({ page }) {
     <main className="seo-page">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonForHtmlScript(faqSchema) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonForHtmlScript(itemListSchema) }}
       />
 
       <nav className="info-nav">

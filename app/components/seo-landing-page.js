@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ideaPages } from '../idea-pages-data';
+import { serializeJsonForHtmlScript } from '../lib/input-safety';
 import { siteVersion, siteVersionPrefix } from '../lib/site';
 import { seoPages } from '../seo-pages-data';
 import ThemeToggle from './theme-toggle';
@@ -30,7 +31,7 @@ export default function SEOLandingPage({ page }) {
     <main className="seo-page">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonForHtmlScript(faqSchema) }}
       />
 
       <nav className="info-nav">

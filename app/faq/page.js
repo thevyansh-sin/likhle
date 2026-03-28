@@ -1,4 +1,5 @@
 import InfoPageLayout from '../components/info-page-layout';
+import { serializeJsonForHtmlScript } from '../lib/input-safety';
 import { buildMetadata } from '../lib/site';
 
 const faqItems = [
@@ -66,7 +67,7 @@ export default function FAQPage() {
     >
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonForHtmlScript(faqSchema) }}
       />
       <div className="info-faq-list">
         {faqItems.map((item) => (

@@ -15,6 +15,7 @@ import {
 } from 'react-icons/lu';
 import { siteVersion, siteVersionPrefix } from '../lib/site';
 import { SITE_THEME_DEFAULT, SITE_THEME_STORAGE_KEY } from '../lib/theme';
+import { normalizePlainText, normalizeSessionKey, normalizeSingleLineText } from '../lib/input-safety';
 import { templateLibrary } from '../template-library';
 
 const PLACEHOLDERS = [
@@ -124,6 +125,10 @@ const SESSION_KEY_STORAGE_KEY = 'likhle-session-key';
 const REVEAL_SHOWN_STORAGE_KEY = 'likhle-reveal-shown';
 const MAX_HISTORY_ITEMS = 10;
 const MAX_FAVORITES_ITEMS = 24;
+const MAX_UI_INPUT_CHARS = 2500;
+const MAX_RESULT_TEXT_CHARS = 1200;
+const MAX_STORAGE_ID_CHARS = 120;
+const MAX_SIGNATURE_CHARS = 400;
 
 function formatHistoryTime(value) {
   try {
@@ -150,6 +155,10 @@ function getFavoriteSignature({ text, input, platform, length, tone }) {
 
 function createResultId() {
   return `result-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function createStorageItemId(prefix) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function getResultText(result) {
@@ -219,6 +228,92 @@ function normalizeResultItems(results, fallbackActions) {
   return results
     .map((result) => normalizeResultItem(result, fallbackActions))
     .filter(Boolean);
+}
+
+function normalizeStoredRewriteSuggestions(rawSuggestions, fallbackActions) {
+  return normalizeRewriteSuggestions(rawSuggestions, fallbackActions).map((suggestion) => ({
+    label: suggestion.label,
+    instruction: suggestion.instruction,
+  }));
+}
+
+function normalizeStoredHistoryEntry(entry) {
+  if (!entry || typeof entry !== 'object') {
+    return null;
+  }
+
+  const tone = TONES.includes(entry.tone) ? entry.tone : 'Aesthetic';
+  const platform = PLATFORM_OPTIONS.includes(entry.platform) ? entry.platform : 'Auto Detect';
+  const length = LENGTH_OPTIONS.includes(entry.length) ? entry.length : 'Medium';
+  const selectedOptions = normalizeSelectedOptions(entry.selectedOptions);
+  const fallbackActions = getRewriteActionsForContext({ tone, selectedOptions });
+  const results = normalizeResultItems(entry.results, fallbackActions).map((item) => ({
+    text: item.text,
+    rewriteSuggestions: normalizeStoredRewriteSuggestions(item.rewriteSuggestions, fallbackActions),
+  }));
+
+  if (results.length === 0) {
+    return null;
+  }
+
+  const input = normalizePlainText(entry.input, { maxLength: MAX_UI_INPUT_CHARS });
+  const id = normalizeSingleLineText(entry.id, { maxLength: MAX_STORAGE_ID_CHARS }) || createStorageItemId('history');
+  const createdAt =
+    typeof entry.createdAt === 'number' && Number.isFinite(entry.createdAt) && entry.createdAt > 0
+      ? entry.createdAt
+      : Date.now();
+
+  return {
+    id,
+    input,
+    tone,
+    platform,
+    length,
+    selectedOptions,
+    results,
+    createdAt,
+    hadImage: Boolean(entry.hadImage),
+  };
+}
+
+function normalizeStoredFavoriteEntry(entry) {
+  if (!entry || typeof entry !== 'object') {
+    return null;
+  }
+
+  const text = normalizePlainText(entry.text, { maxLength: MAX_RESULT_TEXT_CHARS });
+  if (!text) {
+    return null;
+  }
+
+  const tone = TONES.includes(entry.tone) ? entry.tone : 'Aesthetic';
+  const platform = PLATFORM_OPTIONS.includes(entry.platform) ? entry.platform : 'Auto Detect';
+  const length = LENGTH_OPTIONS.includes(entry.length) ? entry.length : 'Medium';
+  const selectedOptions = normalizeSelectedOptions(entry.selectedOptions);
+  const fallbackActions = getRewriteActionsForContext({ tone, selectedOptions });
+  const input = normalizePlainText(entry.input, { maxLength: MAX_UI_INPUT_CHARS });
+  const signature =
+    normalizeSingleLineText(entry.signature, { maxLength: MAX_SIGNATURE_CHARS }) ||
+    getFavoriteSignature({ text, input, platform, length, tone });
+  const id = normalizeSingleLineText(entry.id, { maxLength: MAX_STORAGE_ID_CHARS }) || createStorageItemId('favorite');
+  const createdAt =
+    typeof entry.createdAt === 'number' && Number.isFinite(entry.createdAt) && entry.createdAt > 0
+      ? entry.createdAt
+      : Date.now();
+
+  return {
+    id,
+    signature,
+    text,
+    rewriteSuggestions: normalizeStoredRewriteSuggestions(entry.rewriteSuggestions, fallbackActions),
+    input,
+    tone,
+    platform,
+    length,
+    selectedOptions,
+    createdAt,
+    hadImage: Boolean(entry.hadImage),
+  };
 }
 
 function legacySanitizeOptionLabel(option) {
@@ -458,7 +553,7 @@ export default function GeneratePage() {
 
   useEffect(() => {
     try {
-      const storedSessionKey = window.localStorage.getItem(SESSION_KEY_STORAGE_KEY);
+      const storedSessionKey = normalizeSessionKey(window.localStorage.getItem(SESSION_KEY_STORAGE_KEY), { maxLength: 80 });
 
       if (storedSessionKey) {
         sessionKeyRef.current = storedSessionKey;
@@ -486,7 +581,7 @@ export default function GeneratePage() {
         const parsedHistory = JSON.parse(storedHistory);
 
         if (Array.isArray(parsedHistory)) {
-          setHistory(parsedHistory);
+          setHistory(parsedHistory.map((entry) => normalizeStoredHistoryEntry(entry)).filter(Boolean).slice(0, MAX_HISTORY_ITEMS));
         }
       }
     } catch (historyError) {
@@ -504,7 +599,7 @@ export default function GeneratePage() {
         const parsedFavorites = JSON.parse(storedFavorites);
 
         if (Array.isArray(parsedFavorites)) {
-          setFavorites(parsedFavorites);
+          setFavorites(parsedFavorites.map((entry) => normalizeStoredFavoriteEntry(entry)).filter(Boolean).slice(0, MAX_FAVORITES_ITEMS));
         }
       }
     } catch (favoritesError) {
@@ -559,7 +654,7 @@ export default function GeneratePage() {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
-    const prompt = searchParams.get('prompt');
+    const prompt = normalizePlainText(searchParams.get('prompt'), { maxLength: MAX_UI_INPUT_CHARS });
     const nextPlatform = searchParams.get('platform');
     const nextLength = searchParams.get('length');
     const nextTone = searchParams.get('tone');
@@ -1204,13 +1299,14 @@ export default function GeneratePage() {
                     .replace(/\\r/g, '')
                     .replace(/\\"/g, '"')
                     .replace(/\\t/g, '  ');
+                  const safeText = normalizePlainText(cleaned, { maxLength: MAX_RESULT_TEXT_CHARS });
 
-                  if (cleaned !== lastExtractedText) {
-                    lastExtractedText = cleaned;
+                  if (safeText && safeText !== lastExtractedText) {
+                    lastExtractedText = safeText;
                     setResults([
                       {
                         id: 'streaming-active',
-                        text: cleaned,
+                        text: safeText,
                         rewriteSuggestions: [],
                       },
                     ]);
@@ -1269,7 +1365,7 @@ export default function GeneratePage() {
   const fetchStyleDNA = async (forceReveal = false) => {
     if (!sessionKeyRef.current) return;
     try {
-      const resp = await fetch(`/api/style-dna?sessionKey=${sessionKeyRef.current}`);
+      const resp = await fetch(`/api/style-dna?sessionKey=${encodeURIComponent(sessionKeyRef.current)}`);
       const data = await resp.json();
       if (data.dna) {
         setStyleDNA(data.dna);

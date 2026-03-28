@@ -19,17 +19,12 @@ import {
 } from './rate-limit';
 import { normalizeProviderError } from './provider-error';
 import {
-  parseGenerationCount,
-  parseAvoidResults,
-  parseRewriteAction,
-  parseRewriteInstruction,
-  parseCurrentResult,
-  parseSessionKey,
   parseStructuredResults,
 } from './prompt-builder';
 import { generateResultsWithRecovery, generateResultsStream } from './llm-provider';
 import { getStyleProfile, updateStyleProfile } from './style-memory';
 import { env } from '../../../lib/env.js';
+import { validateGenerateFormData } from '../../lib/request-validation';
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 const GEMINI_IMAGE_MODEL = env.GEMINI_IMAGE_MODEL;
@@ -38,13 +33,6 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // ─── Abuse/Cost Guards ──────────────────────────────────────────────────────
 const MAX_REQUEST_BYTES = 7 * 1024 * 1024; // 5MB image + parsing overhead
-const MAX_INPUT_CHARS = 2500;
-const MAX_TONE_CHARS = 30;
-const MAX_PLATFORM_CHARS = 40;
-const MAX_AVOID_RESULTS_RAW_CHARS = 8000;
-const MAX_REWRITE_INSTRUCTION_RAW_CHARS = 800;
-const MAX_CURRENT_RESULT_RAW_CHARS = 4000;
-const MAX_SESSION_KEY_RAW_CHARS = 200;
 const MAX_PROVIDER_CALLS_PER_REQUEST = 6; // includes image analysis + all generation retries/fallbacks
 const GEMINI_IMAGE_ANALYSIS_TIMEOUT_MS = 20_000;
 
@@ -159,58 +147,30 @@ export async function POST(req) {
     }
 
     const formData = await req.formData();
-    const inputRaw = formData.get('input');
-    const toneRaw = formData.get('tone');
-    const platformRaw = formData.get('platform');
-    const avoidResultsRaw = formData.get('avoidResults');
-    const rewriteInstructionRaw = formData.get('rewriteInstruction');
-    const currentResultRaw = formData.get('currentResult');
-    const sessionKeyRaw = formData.get('sessionKey');
+    const validation = validateGenerateFormData(formData);
 
-    const input = typeof inputRaw === 'string' ? inputRaw.trim() : '';
-    if (!input) {
-      return Response.json({ error: 'Input required' }, { status: 400 });
-    }
-    if (input.length > MAX_INPUT_CHARS) {
-      return Response.json({ error: 'Input too long' }, { status: 413 });
+    if (!validation.success) {
+      return Response.json({ error: validation.error }, { status: 400 });
     }
 
-    const tone = typeof toneRaw === 'string' ? toneRaw.trim() : 'Aesthetic';
-    if (tone.length > MAX_TONE_CHARS) {
-      return Response.json({ error: 'Invalid tone length' }, { status: 413 });
-    }
-
-    const hinglish = formData.get('hinglish') === 'true';
-    const emoji = formData.get('emoji') === 'true';
-    const hashtags = formData.get('hashtags') === 'true';
-    const imageFile = formData.get('image');
-
-    const platform = typeof platformRaw === 'string' ? platformRaw.trim() : 'Auto Detect';
-    if (platform.length > MAX_PLATFORM_CHARS) {
-      return Response.json({ error: 'Invalid platform length' }, { status: 413 });
-    }
-
-    const length = formData.get('length') || 'Medium';
-    const count = parseGenerationCount(formData.get('count'));
-
-    if (typeof avoidResultsRaw === 'string' && avoidResultsRaw.length > MAX_AVOID_RESULTS_RAW_CHARS) {
-      return Response.json({ error: 'avoidResults payload too large' }, { status: 413 });
-    }
-    if (typeof rewriteInstructionRaw === 'string' && rewriteInstructionRaw.length > MAX_REWRITE_INSTRUCTION_RAW_CHARS) {
-      return Response.json({ error: 'rewriteInstruction payload too large' }, { status: 413 });
-    }
-    if (typeof currentResultRaw === 'string' && currentResultRaw.length > MAX_CURRENT_RESULT_RAW_CHARS) {
-      return Response.json({ error: 'currentResult payload too large' }, { status: 413 });
-    }
-    if (typeof sessionKeyRaw === 'string' && sessionKeyRaw.length > MAX_SESSION_KEY_RAW_CHARS) {
-      return Response.json({ error: 'sessionKey payload too large' }, { status: 413 });
-    }
-
-    const avoidResults = parseAvoidResults(avoidResultsRaw);
-    const rewriteAction = parseRewriteAction(formData.get('rewriteAction'));
-    const rewriteInstruction = parseRewriteInstruction(rewriteInstructionRaw);
-    const currentResult = parseCurrentResult(currentResultRaw);
-    const sessionKey = parseSessionKey(sessionKeyRaw);
+    const {
+      input,
+      tone,
+      hinglish,
+      emoji,
+      hashtags,
+      image: imageFile,
+      platform,
+      length,
+      count,
+      avoidResults,
+      rewriteAction,
+      rewriteInstruction,
+      currentResult,
+      sessionKey,
+      stream: isStreamRequested,
+    } = validation.data;
+    const sessionKeyRaw = sessionKey;
 
     // Second lockout check with stable server-derived session identity (if provided).
     if (!privilegedAccess) {
@@ -368,8 +328,7 @@ export async function POST(req) {
         );
       }
 
-      const userStyleProfile = await getStyleProfile(sessionKey);
-      const isStreamRequested = formData.get('stream') === 'true';
+    const userStyleProfile = await getStyleProfile(sessionKey);
 
       if (isStreamRequested) {
         const encoder = new TextEncoder();

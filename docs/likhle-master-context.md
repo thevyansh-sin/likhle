@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram handle: `@likhle.in`
-- Current public version: `v0.6.4`
+- Current public version: `v0.6.5`
 
 ## Tech Stack
 - Next.js 16 App Router
@@ -55,6 +55,7 @@
 - Admin mode exists for one trusted tester browser and should stay separate from owner mode.
 - Owner/admin unlock and status flows are server-trusted only and should not expose configuration state, raw secret hints, or client-side bypasses.
 - App-side secret/config access should stay inside the dedicated server-only env layer in `lib/env.js`.
+- User-controlled payloads, query strings, local browser cache/state, and generated text should stay validated and rendered as plain text unless a strict sanitizer/allowlist is explicitly introduced.
 
 ## Thread Split
 - `coding`

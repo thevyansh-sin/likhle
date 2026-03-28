@@ -1,15 +1,16 @@
 import { getStyleProfile, getStyleDNA } from '../generate/style-memory';
+import { validateStyleDnaSessionKey } from '../../lib/request-validation';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const sessionKey = searchParams.get('sessionKey');
+  const validation = validateStyleDnaSessionKey(searchParams.get('sessionKey'));
 
-  if (!sessionKey) {
-    return Response.json({ error: 'Missing sessionKey' }, { status: 400 });
+  if (!validation.success) {
+    return Response.json({ error: 'Invalid request' }, { status: 400 });
   }
 
   try {
-    const profile = await getStyleProfile(sessionKey);
+    const profile = await getStyleProfile(validation.sessionKey);
     const dna = getStyleDNA(profile);
 
     if (!dna) {

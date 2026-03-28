@@ -6,6 +6,7 @@ import { PWAProvider } from './components/pwa-provider';
 import ScrollReveal from './components/scroll-reveal';
 import ScrollToTop from './components/scroll-to-top';
 import { SiteThemeProvider } from './components/site-theme-provider';
+import { serializeJsonForHtmlScript } from './lib/input-safety';
 import {
   absoluteUrl,
   instagramHandle,
@@ -146,7 +147,7 @@ export default function RootLayout({ children }) {
           <script
             key={item['@type']}
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(item) }}
+            dangerouslySetInnerHTML={{ __html: serializeJsonForHtmlScript(item) }}
           />
         ))}
         <PWAProvider />

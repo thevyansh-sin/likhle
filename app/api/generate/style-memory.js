@@ -1,4 +1,5 @@
 import { redis } from './rate-limit';
+import { parseStyleProfileRecord } from '../../lib/request-validation';
 
 const STYLE_PROFILE_KEY_PREFIX = 'likhle:style:';
 const UPDATE_WEIGHT = 0.35; // 35% weight to the new generation, 65% to historical
@@ -57,7 +58,12 @@ export async function getStyleProfile(sessionKey) {
 
   try {
     const data = await redis.get(`${STYLE_PROFILE_KEY_PREFIX}${sessionKey}`);
-    return data ? (typeof data === 'string' ? JSON.parse(data) : data) : null;
+    if (!data) {
+      return null;
+    }
+
+    const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+    return parseStyleProfileRecord(parsedData);
   } catch (err) {
     console.error('Error fetching style profile:', err);
     return null;
