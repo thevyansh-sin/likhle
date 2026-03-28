@@ -47,6 +47,7 @@ export default defineConfig({
       NEXT_TELEMETRY_DISABLED: '1',
       OWNER_MODE_TOKEN: smokeOwnerToken,
       ADMIN_MODE_TOKEN: smokeAdminToken,
+      SMOKE_PROVIDER_MOCKS: '1',
     },
   },
 });

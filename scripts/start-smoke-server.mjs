@@ -1,9 +1,12 @@
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
+import path from 'node:path';
 
 const host = process.env.HOSTNAME || '127.0.0.1';
 const port = process.env.PORT || '3200';
 const shouldSkipBuild = process.env.SMOKE_SKIP_BUILD === '1';
+const shouldMockProviders = process.env.SMOKE_PROVIDER_MOCKS === '1';
 const require = createRequire(import.meta.url);
 const nextCliPath = require.resolve('next/dist/bin/next');
 let activeServer = null;
@@ -41,12 +44,22 @@ async function main() {
     await runCommand(process.execPath, [nextCliPath, 'build'], 'next build');
   }
 
+  const serverEnv = { ...process.env };
+
+  if (shouldMockProviders) {
+    const mockProviderUrl = pathToFileURL(
+      path.resolve(process.cwd(), 'tests/helpers/mock-provider-fetch.mjs')
+    ).href;
+    const existingNodeOptions = serverEnv.NODE_OPTIONS ? `${serverEnv.NODE_OPTIONS} ` : '';
+    serverEnv.NODE_OPTIONS = `${existingNodeOptions}--import=${mockProviderUrl}`.trim();
+  }
+
   activeServer = spawn(
     process.execPath,
     [nextCliPath, 'start', '--hostname', host, '--port', port],
     {
       stdio: 'inherit',
-      env: process.env,
+      env: serverEnv,
     }
   );
 

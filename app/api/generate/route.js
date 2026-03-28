@@ -228,15 +228,6 @@ export async function POST(req) {
       stream: isStreamRequested,
     } = validation.data;
 
-    // Second lockout check with stable server-derived session identity (if provided).
-    if (!privilegedAccess) {
-      const lockout = await consumeAbuseLockout(req, { route: 'generate' });
-      if (lockout.locked) {
-        logGenerateSecurityEvent(req, 'access_route_lockout', 'abuse_lockout');
-        return lockoutResponse();
-      }
-    }
-
     if (rewriteAction && !currentResult) {
       return Response.json({ error: 'Current result required for rewrite.' }, { status: 400 });
     }

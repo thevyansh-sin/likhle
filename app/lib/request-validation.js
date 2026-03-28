@@ -138,8 +138,16 @@ export function validateGenerateFormData(formData) {
 
   let rawData;
   try {
+    const rawInput = getSingleFormValue(formData, 'input') ?? '';
+    if (typeof rawInput !== 'string' || rawInput.length > 2500) {
+      return {
+        success: false,
+        error: 'Invalid request payload',
+      };
+    }
+
     rawData = {
-      input: getSingleFormValue(formData, 'input') ?? '',
+      input: rawInput,
       tone: getSingleFormValue(formData, 'tone'),
       platform: getSingleFormValue(formData, 'platform'),
       length: getSingleFormValue(formData, 'length'),
