@@ -133,6 +133,8 @@ Use one short line at the top of a message when possible:
   - `docs/likhle-master-context.md`
   - `docs/brand-rules.md`
   - `docs/recent-changes.md`
+  - `docs/thread-catchup-brief.md`
+  - `docs/website-current-state.md`
   - `docs/thread-read-order.md`
   - `docs/known-risk-areas.md`
   - `docs/upgrades-strategy-thread-prompt.md`

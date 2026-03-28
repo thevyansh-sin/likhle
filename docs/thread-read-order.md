@@ -7,6 +7,7 @@ Read first:
 1. `docs/likhle-master-context.md`
 2. `docs/recent-changes.md`
 3. `docs/brand-rules.md` if the task touches UI or product presentation
+4. `docs/thread-catchup-brief.md` if the thread was inactive or the task depends on recent repo changes
 
 After meaningful repo/workflow changes:
 - update `docs/recent-changes.md`
@@ -21,6 +22,7 @@ Read first:
 1. `docs/brand-rules.md`
 2. `docs/likhle-master-context.md`
 3. `docs/recent-changes.md` if the work depends on current product state
+4. `docs/thread-catchup-brief.md` when restarting after inactivity or reviewing the latest live site
 
 Main job:
 - visual direction
@@ -32,6 +34,7 @@ Read first:
 1. `docs/brand-rules.md`
 2. `docs/likhle-master-context.md`
 3. `docs/recent-changes.md`
+4. `docs/thread-catchup-brief.md` when planning around the current live product/tooling
 
 Main job:
 - captions
@@ -45,6 +48,7 @@ Read first:
 2. `docs/recent-changes.md`
 3. `docs/known-risk-areas.md`
 4. `docs/bug-report-template.md`
+5. `docs/thread-catchup-brief.md` if the thread was away while the product/tooling changed
 
 Main job:
 - QA
@@ -71,6 +75,7 @@ Read first:
 2. `docs/brand-rules.md`
 3. `docs/recent-changes.md`
 4. `docs/upgrades-strategy-thread-prompt.md`
+5. `docs/thread-catchup-brief.md`
 
 Main job:
 - future upgrade ideas
@@ -91,3 +96,4 @@ Important rule:
 - If something is for later, save it in `later upgrades/`.
 - If a thread does not need a file, skip it.
 - If a task changes the live website meaningfully, the coding thread should keep `docs/recent-changes.md` current.
+- If a thread was inactive for a while, use `docs/thread-catchup-brief.md` before giving strong advice.
