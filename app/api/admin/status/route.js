@@ -21,6 +21,13 @@ export async function GET(req) {
   });
 
   if (rateLimit.locked) {
+    logAccessAudit({
+      event: 'access_route_lockout',
+      mode: 'admin',
+      request: req,
+      outcome: 'warn',
+      reason: 'status_rate_limit',
+    });
     return createLockedAccessResponse();
   }
 

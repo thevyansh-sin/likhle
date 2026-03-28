@@ -9,6 +9,7 @@ import { getStyleProfile, getStyleDNA } from '../generate/style-memory';
 import {
   ensureAnonymousSession,
   getAnonymousSessionCookieSettings,
+  isSuspiciousAnonymousSessionReason,
   shouldUseSecureAnonymousSessionCookie,
 } from '../../lib/anonymous-session';
 
@@ -20,10 +21,27 @@ export async function GET(request) {
   });
 
   if (rateLimit.locked) {
+    logAccessAudit({
+      event: 'access_route_lockout',
+      mode: 'style_memory',
+      request,
+      outcome: 'warn',
+      reason: 'rate_limit',
+    });
     return createLockedAccessResponse();
   }
 
   const anonymousSession = ensureAnonymousSession(request);
+
+  if (anonymousSession.shouldSetCookie && isSuspiciousAnonymousSessionReason(anonymousSession.previousReason)) {
+    logAccessAudit({
+      event: 'access_cookie_invalid',
+      mode: 'style_memory',
+      request,
+      outcome: 'warn',
+      reason: anonymousSession.previousReason,
+    });
+  }
 
   try {
     const profile = await getStyleProfile(anonymousSession.sessionId);

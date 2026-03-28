@@ -42,6 +42,13 @@ export async function POST(req) {
     });
 
     if (failure.locked) {
+      logAccessAudit({
+        event: 'access_route_lockout',
+        mode: 'owner',
+        request: req,
+        outcome: 'warn',
+        reason: 'unlock_failure',
+      });
       return createLockedAccessResponse();
     }
 
@@ -82,6 +89,13 @@ export async function DELETE(req) {
   });
 
   if (rateLimit.locked) {
+    logAccessAudit({
+      event: 'access_route_lockout',
+      mode: 'owner',
+      request: req,
+      outcome: 'warn',
+      reason: 'unlock_delete_rate_limit',
+    });
     return createLockedAccessResponse();
   }
 

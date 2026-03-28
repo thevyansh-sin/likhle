@@ -25,9 +25,11 @@ import { generateResultsWithRecovery, generateResultsStream } from './llm-provid
 import { getStyleProfile, updateStyleProfile } from './style-memory';
 import { env } from '../../../lib/env.js';
 import { validateGenerateFormData } from '../../lib/request-validation';
+import { logAccessAudit } from '../../lib/access-route-security';
 import {
   ensureAnonymousSession,
   getAnonymousSessionCookieSettings,
+  isSuspiciousAnonymousSessionReason,
   shouldUseSecureAnonymousSessionCookie,
 } from '../../lib/anonymous-session';
 
@@ -146,6 +148,17 @@ function attachAnonymousSessionCookie(request, response, anonymousSession) {
   return response;
 }
 
+function logGenerateSecurityEvent(request, event, reason, details = {}) {
+  logAccessAudit({
+    event,
+    mode: 'generate',
+    request,
+    outcome: 'warn',
+    reason,
+    details,
+  });
+}
+
 export async function POST(req) {
   const requestStartMs = Date.now();
   try {
@@ -154,10 +167,15 @@ export async function POST(req) {
     const styleSessionId = anonymousSession.sessionId;
     const isRewrite = Boolean(req.headers.get('x-rewrite-action'));
 
+    if (anonymousSession.shouldSetCookie && isSuspiciousAnonymousSessionReason(anonymousSession.previousReason)) {
+      logGenerateSecurityEvent(req, 'access_cookie_invalid', anonymousSession.previousReason);
+    }
+
     // Temporary abuse lockout — must trigger before any expensive work begins.
     if (!privilegedAccess) {
       const lockout = await consumeAbuseLockout(req, { route: 'generate' });
       if (lockout.locked) {
+        logGenerateSecurityEvent(req, 'access_route_lockout', 'abuse_lockout');
         return lockoutResponse();
       }
     }
@@ -165,6 +183,7 @@ export async function POST(req) {
     const retryAfterSeconds = privilegedAccess ? null : await consumeRateLimit(req, { isRewrite });
 
     if (retryAfterSeconds) {
+      logGenerateSecurityEvent(req, 'access_route_lockout', 'rate_limit', { retryAfterSeconds });
       return Response.json(
         {
           error: 'Too many tries right now. Please wait about 1 minute and try again.',
@@ -213,6 +232,7 @@ export async function POST(req) {
     if (!privilegedAccess) {
       const lockout = await consumeAbuseLockout(req, { route: 'generate' });
       if (lockout.locked) {
+        logGenerateSecurityEvent(req, 'access_route_lockout', 'abuse_lockout');
         return lockoutResponse();
       }
     }
@@ -355,6 +375,9 @@ export async function POST(req) {
         : await consumeSessionCooldown(req, '', rewriteAction);
 
       if (activeSessionRetryAfterSeconds) {
+        logGenerateSecurityEvent(req, 'access_route_repeat_attempt', 'session_cooldown', {
+          retryAfterSeconds: activeSessionRetryAfterSeconds,
+        });
         return Response.json(
           {
             error: 'That was super fast. Give Likhle a couple seconds, then try again.',
@@ -521,6 +544,7 @@ export async function POST(req) {
   } catch (err) {
     console.error('Error:', err);
     if (err?.code === 'PROVIDER_BUDGET_EXCEEDED') {
+      logGenerateSecurityEvent(req, 'access_provider_budget_exhausted', 'provider_budget_exceeded');
       return Response.json({ error: 'Request too expensive. Please try again later.' }, { status: 429 });
     }
     const providerError = normalizeProviderError(err);

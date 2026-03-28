@@ -140,6 +140,10 @@ export function ensureAnonymousSession(request) {
   };
 }
 
+export function isSuspiciousAnonymousSessionReason(reason) {
+  return reason === 'malformed' || reason === 'invalid_signature';
+}
+
 export function shouldUseSecureAnonymousSessionCookie(request) {
   const forwardedProto = request?.headers?.get?.('x-forwarded-proto')?.split(',')[0]?.trim();
   if (forwardedProto) {
