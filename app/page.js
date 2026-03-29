@@ -297,7 +297,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="seo-link-grid">
+        <div className="seo-link-grid seo-link-grid--home">
           {generatorCards.map((card) => (
             <Link key={card.href} href={card.href} className="seo-link-card" data-reveal data-reveal-delay="0.02s">
               <span className="seo-link-kicker">{card.kicker}</span>
