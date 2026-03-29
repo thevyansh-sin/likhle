@@ -374,7 +374,7 @@ export default function Home() {
               Generator kholo, vibe set karo, aur jo line kaam ki lage usko seedha le jao.
             </p>
           </div>
-          <Link href="/generate" className="btn-primary btn-lg">Open the generator →</Link>
+          <Link href="/generate" className="btn-primary btn-lg">Try it free →</Link>
         </div>
       </section>
 
