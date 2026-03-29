@@ -16,7 +16,7 @@
 - Live URL: `https://likhle.vercel.app`
 - Support email: `likhlesupport@gmail.com`
 - Instagram: `@likhle.in`
-- Current public version: v0.6.8
+- Current public version: v0.6.9
 
 ## Core Brand Rules
 - Keep the site premium, sharp, dark, and modern.

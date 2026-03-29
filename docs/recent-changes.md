@@ -1,10 +1,11 @@
-# Recent Changes (likhle v0.6.8)
+# Recent Changes (likhle v0.6.9)
 
 ## Purpose
 Use this file as a quick human-readable memory of meaningful recent project changes.
 
 ## Current Snapshot
-- Public version is `v0.6.8`.
+- Public version is `v0.6.9`.
+- Homepage refinement pass shipped with a sharper creator-specific hero, more believable above-the-fold proof, a more grounded Likhle-style demo card, outcome-led `What changed` tiles, more intentional generator/idea lanes, and a cleaner final CTA while keeping the existing homepage structure and premium dark identity intact.
 - Package supply-chain hardening removed the unused top-level `node-fetch` runtime dependency, bumped a small set of compatible top-level packages, and added targeted overrides for previously vulnerable transitive packages.
 - `npm audit` is back to zero findings after pinning safe transitive versions for `path-to-regexp`, `picomatch`, and `brace-expansion` instead of doing a broad dependency churn.
 - Security headers are now centralized in middleware with a nonce-based CSP, hard frame blocking, nosniff, stricter referrer policy, and a restrictive permissions policy instead of relying on scattered defaults.
