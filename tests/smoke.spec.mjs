@@ -116,7 +116,7 @@ test('homepage loads cleanly', async ({ page }) => {
   const response = await page.goto('/');
   expect(response).toBeTruthy();
 
-  await expect(page.getByRole('link', { name: /generator kholo/i }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: /likhle/i }).first()).toBeVisible();
   await expect(page.getByText(/the way India actually posts\./i)).toBeVisible();
   await expect(page.getByText(/Six changes that get you to a usable line faster/i)).toBeVisible();
 });

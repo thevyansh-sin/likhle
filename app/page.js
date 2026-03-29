@@ -197,7 +197,7 @@ export default function Home() {
               phir output lo jo actually postable lage.
             </p>
             <div className="hero-actions">
-              <Link href="/generate" className="btn-primary">Generator kholo →</Link>
+              <Link href="/generate" className="btn-primary">Likhle →</Link>
               <a href="#features" className="btn-ghost">See what&apos;s new</a>
             </div>
             <div className="hero-note">Free • No signup • Browser history saved • Regenerate one result</div>
