@@ -116,9 +116,9 @@ test('homepage loads cleanly', async ({ page }) => {
   const response = await page.goto('/');
   expect(response).toBeTruthy();
 
-  await expect(page.getByRole('link', { name: /likhna shuru karo/i }).first()).toBeVisible();
-  await expect(page.getByText(/proper creator tool ban gaya hai\./i)).toBeVisible();
-  await expect(page.getByText(/Likhle now shows the product it was supposed to be/i)).toBeVisible();
+  await expect(page.getByRole('link', { name: /generator kholo/i }).first()).toBeVisible();
+  await expect(page.getByText(/the way India actually posts\./i)).toBeVisible();
+  await expect(page.getByText(/Six changes that get you to a usable line faster/i)).toBeVisible();
 });
 
 test('deployment-sensitive headers keep CSP nonces and HTTPS-aware security behavior', async ({ browser }) => {

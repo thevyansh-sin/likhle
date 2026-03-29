@@ -3,88 +3,144 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import ThemeToggle from './components/theme-toggle';
-import { ideaPages } from './idea-pages-data';
 import { siteVersion, siteVersionPrefix } from './lib/site';
-import { seoPages } from './seo-pages-data';
 
-const words = ['Captions', 'Bios', 'Hooks', 'Hashtags', 'Status'];
+const words = ['Captions', 'Bios', 'Hooks', 'Statuses', 'Hinglish lines'];
 const marqueeItems = [
-  'Platform Selector ✦',
-  'Length Control ✦',
+  'Exact Format First ✦',
+  'Tone Control ✦',
+  'Image Reference ✦',
   'Quick Templates ✦',
-  'Image Preview ✦',
-  'Save History ✦',
   'Regenerate One ✦',
-  'Copy All ✦',
+  'Browser History ✦',
   'Download Text ✦',
   'Hinglish Mode ✦',
   'No Signup ✦',
+  'Post-Ready Output ✦',
 ];
 const featureCards = [
   {
-    eyebrow: 'Templates',
-    title: 'Start from ready-made ideas',
-    desc: 'Use built-in templates like Goa sunset, birthday post, gym transformation, study hook, wedding dump, and more to fill the prompt instantly.',
+    eyebrow: 'Start faster',
+    title: 'Blank prompt se seedha first draft tak',
+    desc: 'Quick templates hand you the opening setup, so you are not inventing the scene from scratch every time.',
   },
   {
-    eyebrow: 'Precision',
-    title: 'Choose the exact format first',
-    desc: 'Instagram caption, bio, Reels hook, WhatsApp status, LinkedIn bio, or Twitter/X bio. No more hoping the AI guesses correctly.',
+    eyebrow: 'Stay on-format',
+    title: 'Caption maango toh caption hi milta hai',
+    desc: 'Pick the format first so captions, bios, hooks, and statuses stop bleeding into the wrong output type.',
   },
   {
-    eyebrow: 'Visual',
-    title: 'Add an image reference first',
-    desc: 'Upload a photo, preview it, or paste a screenshot so Likhle catches the mood, setting, and style before writing.',
+    eyebrow: 'Match the photo',
+    title: 'Image ke vibe ke saath line aati hai',
+    desc: 'Add a reference image and the caption lands closer to the real post instead of a generic mood guess.',
   },
   {
-    eyebrow: 'Speed',
-    title: 'Regenerate only one result',
-    desc: 'If 3 options are good and 1 feels weak, refresh only that card and keep the rest exactly as they are.',
+    eyebrow: 'Fix one result',
+    title: 'Ek off line ke liye batch dubara nahi',
+    desc: 'Refresh the weak card only and keep the good options that were already working.',
   },
   {
-    eyebrow: 'Memory',
-    title: 'Your recent ideas stay saved',
-    desc: 'Likhle now keeps recent generations in browser history, so you can come back later and reuse what worked.',
+    eyebrow: 'Keep what worked',
+    title: 'Jo usable tha, woh browser mein rehta hai',
+    desc: 'Recent history keeps strong ideas close, so a good line is still there when you come back later.',
   },
   {
-    eyebrow: 'Output',
-    title: 'Copy everything or download it',
-    desc: 'Take one caption, all captions, or save the full result as a text file without juggling tabs or notes.',
+    eyebrow: 'Take it out fast',
+    title: 'Copy karo, download karo, aur done',
+    desc: 'Lift one result or the full set without moving your workflow into Notes, chats, or another tab.',
   },
 ];
 const workflowSteps = [
   {
     step: '01',
-    title: 'Describe the vibe',
-    desc: 'Write one plain-language prompt about your photo, post, mood, or page.',
+    title: 'Describe the post',
+    desc: 'Photo dump ho, reel ho, ya bio update. Seedha bolo kis cheez ke liye line chahiye.',
   },
   {
     step: '02',
-    title: 'Set the controls',
-    desc: 'Pick platform, length, tone, and extras like Hinglish, emojis, or hashtags.',
+    title: 'Lock the vibe',
+    desc: 'Format, tone, length, Hinglish, emojis, hashtags, aur image reference pehle set karo.',
   },
   {
     step: '03',
-    title: 'Save the best one',
-    desc: 'Copy, download, regenerate one option, or reopen it later from recent history.',
+    title: 'Take the line that works',
+    desc: 'Best result copy karo, weak one regenerate karo, ya baad mein history se reopen karo.',
   },
 ];
 const proofCards = [
   {
-    title: 'Platform-aware output',
-    note: 'Caption, bio, hook, ya status ke hisaab se line shape hoti hai.',
+    title: 'Exact format first',
+    note: 'Caption, bio, hook, ya status. Output wrong lane mein nahi girta.',
   },
   {
-    title: 'Template starters built in',
-    note: 'Quick starts se blank box ka pressure kam ho jata hai.',
+    title: 'Image-aware lines',
+    note: 'Photo ka mood pehle pakdo, fir caption zyada close aata hai.',
   },
   {
-    title: 'Recent history saved',
-    note: 'Jo kaam ki line thi, woh browser mein ready rehti hai.',
+    title: 'Regenerate just one',
+    note: 'Ek weak option refresh karo, poora batch dobara mat ghumaao.',
   },
   {
-    title: 'Copy or download fast',
-    note: 'Best option uthao ya poora batch ek shot mein save karo.',
+    title: 'No signup, history saved',
+    note: 'Good lines browser mein rehti hain, account banane ka wait nahi.',
+  },
+];
+const generatorCards = [
+  {
+    href: '/instagram-caption-generator',
+    kicker: 'Photo posts',
+    title: 'Instagram captions',
+    desc: 'For dumps, travel posts, birthdays, cafe shots, aur everyday posting jo caption maangta hai.',
+  },
+  {
+    href: '/reels-hook-generator',
+    kicker: 'Short-form video',
+    title: 'Reels hooks',
+    desc: 'For edits, tutorials, POVs, and opening lines that need to stop the scroll faster.',
+  },
+  {
+    href: '/whatsapp-status-generator',
+    kicker: 'Mood drops',
+    title: 'WhatsApp statuses',
+    desc: 'For one-liners, late-night thoughts, soft flexes, and daily chaos updates.',
+  },
+  {
+    href: '/hinglish-caption-generator',
+    kicker: 'Local tone',
+    title: 'Hinglish captions',
+    desc: 'For lines that should sound natural, local, and not like forced Hindi-English.',
+  },
+  {
+    href: '/linkedin-bio-generator',
+    kicker: 'Professional intro',
+    title: 'LinkedIn bios',
+    desc: 'For students, freshers, creators, and builders who need a cleaner introduction.',
+  },
+];
+const ideaGuideCards = [
+  {
+    href: '/50-savage-instagram-caption-ideas',
+    kicker: 'Savage mood',
+    title: 'Savage captions',
+    desc: 'For low-effort attitude, clean boundaries, and slightly rude energy that still reads well.',
+  },
+  {
+    href: '/hinglish-caption-ideas',
+    kicker: 'Local vibe',
+    title: 'Hinglish caption ideas',
+    desc: 'For lines that should feel casual, Indian, and actually usable in a real post.',
+  },
+  {
+    href: '/birthday-caption-ideas',
+    kicker: 'Soft or hype',
+    title: 'Birthday captions',
+    desc: 'For best-friend posts, family dumps, main-character birthdays, ya low-key wishes.',
+  },
+  {
+    href: '/100-whatsapp-status-ideas',
+    kicker: 'Daily mood',
+    title: 'Status ideas',
+    desc: 'For funny, tired, overthinking, romantic, and late-night status energy.',
   },
 ];
 
@@ -126,26 +182,25 @@ export default function Home() {
       <section className="hero" data-reveal>
         <div className="hero-grid">
           <div className="hero-copy" data-reveal data-reveal-delay="0.04s">
-            <div className="hero-badge">🇮🇳 Built for Indian creators and side-hustlers</div>
+            <div className="hero-badge">🇮🇳 Built for how India actually posts</div>
             <h1 className="hero-title">
-              AI-powered
+              Write
               <br />
               <span className="word-swap" style={{ opacity: visible ? 1 : 0 }}>
                 {words[wordIndex]}
               </span>
               <br />
-              that finally feel in your control
+              the way India actually posts.
             </h1>
             <p className="hero-sub">
-              Prompt likho. Platform select karo. Length choose karo. Image add karo.
-              <br />
-              Likhle ab sirf caption box nahi raha, proper creator tool ban gaya hai.
+              Caption, bio, hook, status, ya Hinglish line. Format, vibe, length, aur image reference pehle set karo,
+              phir output lo jo actually postable lage.
             </p>
             <div className="hero-actions">
-              <Link href="/generate" className="btn-primary">Likhna shuru karo 🚀</Link>
+              <Link href="/generate" className="btn-primary">Generator kholo →</Link>
               <a href="#features" className="btn-ghost">See what&apos;s new</a>
             </div>
-            <div className="hero-note">Free • No signup • Hindi + English • Browser history saved</div>
+            <div className="hero-note">Free • No signup • Browser history saved • Regenerate one result</div>
 
             <div className="hero-proof-grid">
               {proofCards.map((card) => (
@@ -163,34 +218,36 @@ export default function Home() {
                 <span className="demo-dot" />
                 <span className="demo-dot" />
                 <span className="demo-dot" />
-                <span className="demo-status">Live creator workflow</span>
+                <span className="demo-status">Actual creator flow</span>
               </div>
 
               <div className="demo-block">
-                <span className="demo-label">Prompt</span>
-                <p className="demo-text">Goa sunset photo, make it aesthetic but not cringe.</p>
+                <span className="demo-label">Prompt + photo</span>
+                <p className="demo-text">Delhi cafe photo dump. Thoda witty, thoda Hinglish, bilkul try-hard nahi.</p>
               </div>
 
               <div className="demo-chip-row">
                 <span className="demo-chip demo-chip-active">Instagram caption</span>
-                <span className="demo-chip">Medium length</span>
-                <span className="demo-chip">Aesthetic tone</span>
+                <span className="demo-chip">Short</span>
+                <span className="demo-chip">Witty tone</span>
               </div>
 
               <div className="demo-result-card">
-                <div className="demo-result-label">Fresh result</div>
+                <div className="demo-result-top">
+                  <div className="demo-result-label">Post-ready output</div>
+                  <div className="demo-result-score">Hinglish on</div>
+                </div>
                 <p className="demo-result-text">
-                  sunset, sea breeze, and zero unnecessary drama. Goa really knows how to romanticize life. ✨
+                  good coffee, louder laughs, aur Delhi ki woh evening jo camera roll mein rehne layak thi.
                   <br />
-                  <br />
-                  #GoaDiaries #SunsetMood #BeachEnergy
+                  bas enough chaos for a dump, not enough for drama.
                 </p>
               </div>
 
               <div className="demo-meta-row">
-                <span className="demo-meta-pill">Regenerate one result</span>
-                <span className="demo-meta-pill">Save in recent history</span>
-                <span className="demo-meta-pill">Copy the full set</span>
+                <span className="demo-meta-pill">Regenerate one</span>
+                <span className="demo-meta-pill">Copy caption</span>
+                <span className="demo-meta-pill">Save to recent</span>
               </div>
             </div>
           </div>
@@ -206,11 +263,11 @@ export default function Home() {
       </div>
 
       <section className="features" id="features" data-reveal>
-        <div className="section-header">
+        <div className="section-header section-header--compact">
           <span className="section-kicker">What changed</span>
-          <h2 className="section-title">Likhle now shows the product it was supposed to be</h2>
+          <h2 className="section-title">Six changes that get you to a usable line faster</h2>
           <p className="section-copy">
-            More control for the user, better output quality, and fewer annoying repeat steps.
+            Less guesswork up front, better context from the post, and way less wasted rework once something is already close.
           </p>
         </div>
 
@@ -231,21 +288,21 @@ export default function Home() {
         <span className="section-divider-line" />
       </div>
 
-      <section className="seo-links-section" data-reveal>
-        <div className="section-header">
+      <section className="seo-links-section seo-links-section--home" data-reveal>
+        <div className="section-header section-header--compact">
           <span className="section-kicker">Popular Generators</span>
-          <h2 className="section-title">Browse focused pages for the main use cases</h2>
+          <h2 className="section-title">Open the exact generator you need first</h2>
           <p className="section-copy">
-            These landing pages target real search intent and drop people into the right generator flow faster.
+            If you already know the format, jump straight into the right lane instead of starting from scratch.
           </p>
         </div>
 
         <div className="seo-link-grid">
-          {seoPages.map((page) => (
-            <Link key={page.slug} href={`/${page.slug}`} className="seo-link-card" data-reveal data-reveal-delay="0.02s">
-              <span className="seo-link-kicker">{page.eyebrow}</span>
-              <h3 className="seo-link-title">{page.shortTitle}</h3>
-              <p className="seo-link-desc">{page.description}</p>
+          {generatorCards.map((card) => (
+            <Link key={card.href} href={card.href} className="seo-link-card" data-reveal data-reveal-delay="0.02s">
+              <span className="seo-link-kicker">{card.kicker}</span>
+              <h3 className="seo-link-title">{card.title}</h3>
+              <p className="seo-link-desc">{card.desc}</p>
             </Link>
           ))}
         </div>
@@ -257,21 +314,21 @@ export default function Home() {
         <span className="section-divider-line" />
       </div>
 
-      <section className="idea-links-section" data-reveal>
-        <div className="section-header">
+      <section className="idea-links-section idea-links-section--home" data-reveal>
+        <div className="section-header section-header--compact">
           <span className="section-kicker">Idea Guides</span>
-          <h2 className="section-title">Static pages for people who search with a very specific mood in mind</h2>
+          <h2 className="section-title">Pick a mood and start from there</h2>
           <p className="section-copy">
-            These pages are packed with real examples first, then push people into the right generator setup when they want fresh options.
+            Use these when you already know the vibe and just need a sharper starting point.
           </p>
         </div>
 
         <div className="seo-related-grid">
-          {ideaPages.slice(0, 4).map((page) => (
-            <Link key={page.slug} href={`/${page.slug}`} className="seo-related-card" data-reveal data-reveal-delay="0.02s">
-              <span className="seo-card-kicker">{page.eyebrow}</span>
-              <h3 className="seo-card-title">{page.shortTitle}</h3>
-              <p className="seo-card-text">{page.description}</p>
+          {ideaGuideCards.map((card) => (
+            <Link key={card.href} href={card.href} className="seo-related-card" data-reveal data-reveal-delay="0.02s">
+              <span className="seo-card-kicker">{card.kicker}</span>
+              <h3 className="seo-card-title">{card.title}</h3>
+              <p className="seo-card-text">{card.desc}</p>
             </Link>
           ))}
         </div>
@@ -284,15 +341,15 @@ export default function Home() {
       </div>
 
       <section className="workflow" id="workflow" data-reveal>
-        <div className="section-header">
+        <div className="section-header section-header--compact">
           <span className="section-kicker">How it works</span>
-          <h2 className="section-title">Simple flow, smarter result</h2>
+          <h2 className="section-title">Describe it, tune it, keep the line</h2>
           <p className="section-copy">
-            The homepage now explains the actual experience instead of sounding like a generic AI tool.
+            The flow is quick on purpose: tell Likhle what the post is, lock the vibe, and take the result that feels worth posting.
           </p>
         </div>
 
-        <div className="workflow-grid">
+        <div className="workflow-grid workflow-grid--quiet">
           {workflowSteps.map((item) => (
             <div key={item.step} className="workflow-card" data-reveal data-reveal-delay="0.03s">
               <div className="workflow-step">{item.step}</div>
@@ -309,13 +366,15 @@ export default function Home() {
         <span className="section-divider-line" />
       </div>
 
-      <section className="cta-section" data-reveal>
-        <div className="cta-shell">
-          <h2 className="cta-title">Ready to go from idea to post in one tab?</h2>
-          <p className="cta-sub">
-            Whether it&apos;s a trip dump caption, LinkedIn bio, WhatsApp status, or Reels hook, Likhle gets there faster now.
-          </p>
-          <Link href="/generate" className="btn-primary btn-lg">Start for free →</Link>
+      <section className="cta-section cta-section--home" data-reveal>
+        <div className="cta-shell cta-shell--home">
+          <div className="cta-copy-block">
+            <h2 className="cta-title">One rough idea se post-ready line tak.</h2>
+            <p className="cta-sub">
+              Generator kholo, vibe set karo, aur jo line kaam ki lage usko seedha le jao.
+            </p>
+          </div>
+          <Link href="/generate" className="btn-primary btn-lg">Open the generator →</Link>
         </div>
       </section>
 
