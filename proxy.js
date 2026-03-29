@@ -41,15 +41,33 @@ function isSensitivePath(pathname) {
 }
 
 export function proxy(request) {
+  const isDevelopment = process.env.NODE_ENV !== 'production';
   const requestHeaders = new Headers(request.headers);
-  const nonce = createNonce();
-  requestHeaders.set('x-csp-nonce', nonce);
+  const nonce = isDevelopment ? undefined : createNonce();
+
+  if (nonce) {
+    requestHeaders.set('x-csp-nonce', nonce);
+  } else {
+    requestHeaders.delete('x-csp-nonce');
+  }
 
   const response = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   });
+
+  if (isDevelopment) {
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set(
+      'Permissions-Policy',
+      'accelerometer=(), autoplay=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), browsing-topics=()'
+    );
+    response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+    return response;
+  }
 
   const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
   const isHttps = forwardedProto
